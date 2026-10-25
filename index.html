@@ -88,7 +88,7 @@
             overflow: hidden;
         }
 
-        /* Background Motif Batik Jawa Klasik (Menggunakan SVG Pattern & Gradasi Premium) */
+        /* Background Motif Batik Lokal (batik-bg.jpg) */
         .batik-overlay {
             position: absolute;
             top: 0;
@@ -96,12 +96,10 @@
             right: 0;
             height: 220px;
             background-color: #2b170b;
-            background-image: 
-                linear-gradient(to bottom, rgba(20, 16, 12, 0.3), rgba(20, 16, 12, 0.95)),
-                radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.25) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(212, 175, 55, 0.2) 0%, transparent 50%),
-                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='%23d4af37' fill-opacity='0.18'%3E%3Cpath d='M40 0l40 40-40 40L0 40zM40 15L15 40l25 25 25-25z'/%3E%3Ccircle cx='40' cy='40' r='8'/%3E%3C/g%3E%3C/svg%3E");
-            background-size: cover, auto, auto, 60px 60px;
+            background-image: linear-gradient(to bottom, rgba(20, 16, 12, 0.4), rgba(20, 16, 12, 0.95)), 
+                              url('batik-bg.jpg');
+            background-size: cover;
+            background-position: center;
             z-index: 0;
             border-bottom: 2px solid var(--primary);
         }
@@ -121,19 +119,15 @@
             gap: 12px;
         }
 
-        .logo-icon {
-            width: 44px;
-            height: 44px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 2px solid var(--primary);
+        /* Logo Baru Menggunakan logo-abseno.png */
+        .logo-icon-img {
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: var(--font-heading);
-            font-size: 24px;
-            color: var(--primary);
+            object-fit: cover;
+            border: 2px solid var(--primary);
             box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
+            background: rgba(0, 0, 0, 0.6);
         }
 
         .brand-title {
@@ -372,13 +366,13 @@
 
     <header>
         <div class="brand-box">
-            <div class="logo-icon">O</div>
+            <!-- Menggunakan logo lokal logo-abseno.png -->
+            <img src="logo-abseno.png" alt="Logo AbsenO" class="logo-icon-img" onerror="this.style.display='none'">
             <div>
                 <div class="brand-title">AbsenO</div>
                 <div class="brand-subtitle">Sistem Presensi QR Code</div>
             </div>
         </div>
-        <!-- Ikon Topi Sarjana -->
         <i class="fa-solid fa-graduation-cap" style="font-size: 20px; color: var(--primary);"></i>
     </header>
 
@@ -673,7 +667,7 @@
 
     function exportCSV() {
         let csv = 'NIS,Nama,Kelas,Waktu,Status\n';
-        attendanceLogs.append || attendanceLogs.forEach(l => {
+        attendanceLogs.forEach(l => {
             csv += `"${l.nis}","${l.nama}","${l.kelas}","${l.waktu}","${l.status}"\n`;
         });
         const blob = new Blob([csv], { type: 'text/csv' });
