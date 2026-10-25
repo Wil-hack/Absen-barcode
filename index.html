@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AbsenO - Aplikasi Presensi QR Code</title>
-    <!-- Font Google: Rozha One (Klasik/Etnik) & Plus Jakarta Sans -->
+    <!-- Font Google: Cinzel Decorative & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Rozha+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- HTML5 QR Code Scanner Library -->
@@ -17,50 +17,19 @@
 
     <style>
         :root {
-            /* Tema Default: Jawa Heritage (Cokelat Kayu & Emas Batik) */
-            --bg-base: #f9f6f0;
-            --bg-card: #ffffff;
-            --bg-glass: rgba(255, 255, 255, 0.92);
-            --primary: #8c4a27;
-            --primary-light: #e6ccb2;
-            --accent: #d4af37;
-            --text-main: #2b1e16;
-            --text-muted: #7c6a5d;
-            --border-color: #e0d5c1;
-            --nav-bg: #ffffff;
-            --shadow: 0 8px 24px rgba(140, 74, 39, 0.08);
-            --font-heading: 'Rozha One', serif;
-            --font-body: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        /* Tema Option: Ocean Blue */
-        [data-theme="ocean"] {
-            --bg-base: #f0f4f8;
-            --bg-card: #ffffff;
-            --bg-glass: rgba(255, 255, 255, 0.92);
-            --primary: #1e40af;
-            --primary-light: #dbeafe;
-            --accent: #0284c7;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-color: #cbd5e1;
-            --nav-bg: #ffffff;
-            --shadow: 0 8px 24px rgba(30, 64, 175, 0.08);
-        }
-
-        /* Tema Option: Dark Heritage */
-        [data-theme="dark"] {
-            --bg-base: #12100e;
-            --bg-card: #1c1815;
-            --bg-glass: rgba(28, 24, 21, 0.95);
+            --bg-base: #181411;
+            --bg-card: #241e1a;
+            --bg-glass: rgba(36, 30, 26, 0.95);
             --primary: #d4af37;
-            --primary-light: #3d321d;
-            --accent: #e6ccb2;
+            --primary-light: #4a3b22;
+            --accent: #f5eedc;
             --text-main: #f5eedc;
             --text-muted: #a39585;
-            --border-color: #383029;
-            --nav-bg: #1a1614;
-            --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --border-color: #4a3d31;
+            --nav-bg: #1c1714;
+            --shadow: 0 8px 24px rgba(0,0,0,0.5);
+            --font-heading: 'Cinzel Decorative', serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
         }
 
         * {
@@ -72,13 +41,11 @@
         }
 
         body {
-            background-color: var(--bg-base);
+            background-color: #0d0b0a;
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            background-image: radial-gradient(var(--border-color) 0.8px, transparent 0.8px);
-            background-size: 16px 16px;
         }
 
         #app-container {
@@ -87,41 +54,32 @@
             min-height: 100vh;
             background: var(--bg-base);
             position: relative;
-            padding-bottom: 80px;
-            box-shadow: 0 0 40px rgba(0,0,0,0.1);
+            padding-bottom: 85px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.6);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
-        /* Pattern Batik Overlay */
-        .batik-overlay {
+        /* Background Batik Asli */
+        .batik-header-bg {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            height: 180px;
-            background: linear-gradient(135deg, var(--primary) 0%, #4a2411 100%);
-            opacity: 0.95;
+            height: 200px;
+            background-image: linear-gradient(to bottom, rgba(24, 20, 17, 0.6), rgba(24, 20, 17, 0.98)), 
+                              url('https://lh3.googleusercontent.com/d/15640024325848541640');
+            background-size: cover;
+            background-position: center;
             z-index: 0;
-            border-radius: 0 0 24px 24px;
+            border-bottom: 2px solid var(--primary);
         }
 
-        .batik-pattern {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: radial-gradient(circle at 50% 50%, var(--accent) 1px, transparent 1px);
-            background-size: 12px 12px;
-            opacity: 0.15;
-        }
-
-        /* App Header */
         header {
             position: relative;
             z-index: 1;
-            padding: 24px 20px 16px;
+            padding: 26px 20px 18px;
             color: #ffffff;
             display: flex;
             align-items: center;
@@ -131,42 +89,42 @@
         .brand-box {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
 
         .logo-icon {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 1.5px solid var(--accent);
+            width: 46px;
+            height: 46px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--primary);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: var(--font-heading);
             font-size: 22px;
-            color: var(--accent);
-            backdrop-filter: blur(4px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            color: var(--primary);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
         }
 
         .brand-title {
             font-family: var(--font-heading);
-            font-size: 26px;
-            letter-spacing: 1px;
-            color: #ffffff;
+            font-size: 24px;
+            letter-spacing: 1.5px;
+            color: var(--primary);
             line-height: 1.1;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
         }
 
         .brand-subtitle {
-            font-size: 11px;
-            color: var(--primary-light);
+            font-size: 10px;
+            color: var(--accent);
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 2px;
             font-weight: 600;
+            margin-top: 3px;
         }
 
-        /* Main Content Views */
         main {
             position: relative;
             z-index: 1;
@@ -188,7 +146,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Glass Cards */
         .glass-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -198,52 +155,29 @@
             box-shadow: var(--shadow);
         }
 
-        /* Tab 1: Pindai (Scanner) */
-        .scanner-card {
+        .section-title {
+            font-family: var(--font-heading);
+            font-size: 16px;
+            color: var(--primary);
+            letter-spacing: 1px;
             text-align: center;
-            overflow: hidden;
-            position: relative;
         }
 
         #reader {
             width: 100%;
             border-radius: 12px;
             overflow: hidden;
-            border: none !important;
-        }
-
-        #reader video {
-            object-fit: cover !important;
-            border-radius: 12px;
+            border: 1px solid var(--border-color) !important;
+            margin-top: 10px;
         }
 
         .scan-result-box {
             margin-top: 14px;
             padding: 12px;
-            background: var(--bg-base);
+            background: #14100e;
             border-radius: 10px;
             border: 1px dashed var(--border-color);
-        }
-
-        /* Tab 2: Siswa (Student Data) */
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .section-title {
-            font-family: var(--font-heading);
-            font-size: 20px;
-            color: var(--text-main);
-        }
-
-        .search-filter-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 16px;
+            text-align: center;
         }
 
         .form-control {
@@ -251,15 +185,10 @@
             padding: 12px 14px;
             border-radius: 10px;
             border: 1px solid var(--border-color);
-            background: var(--bg-card);
+            background: #1a1512;
             color: var(--text-main);
             font-size: 14px;
             outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .form-control:focus {
-            border-color: var(--primary);
         }
 
         .student-item {
@@ -271,7 +200,6 @@
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             margin-bottom: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
         }
 
         .student-avatar {
@@ -286,29 +214,10 @@
             font-weight: 700;
             font-size: 15px;
             margin-right: 12px;
+            border: 1px solid var(--primary);
         }
 
-        .student-info {
-            flex: 1;
-        }
-
-        .student-name {
-            font-weight: 600;
-            font-size: 15px;
-            color: var(--text-main);
-        }
-
-        .student-meta {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        .action-btns {
-            display: flex;
-            gap: 8px;
-        }
-
+        .action-btns { display: flex; gap: 8px; }
         .btn-icon {
             width: 32px;
             height: 32px;
@@ -319,15 +228,12 @@
             justify-content: center;
             cursor: pointer;
             font-size: 13px;
-            transition: opacity 0.2s;
         }
 
-        .btn-icon:active { opacity: 0.7; }
-        .btn-edit { background: #e0f2fe; color: #0284c7; }
-        .btn-qr { background: #fef3c7; color: #d97706; }
-        .btn-delete { background: #fee2e2; color: #dc2626; }
+        .btn-edit { background: #1e3a8a; color: #93c5fd; }
+        .btn-qr { background: #78350f; color: #fde047; }
+        .btn-delete { background: #7f1d1d; color: #fca5a5; }
 
-        /* Floating Action Button */
         .fab {
             position: fixed;
             bottom: 90px;
@@ -336,50 +242,17 @@
             height: 52px;
             border-radius: 50%;
             background: var(--primary);
-            color: #ffffff;
+            color: #000000;
             border: none;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 20px;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+            box-shadow: 0 6px 16px rgba(212, 175, 55, 0.4);
             cursor: pointer;
             z-index: 10;
         }
 
-        /* Tab 3: Jadwal (Schedule) */
-        .schedule-card {
-            border-left: 4px solid var(--primary);
-        }
-
-        /* Tab 4: Laporan (Reports) */
-        .report-summary {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-
-        .stat-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            padding: 10px 4px;
-            border-radius: 10px;
-        }
-
-        .stat-val {
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .stat-lbl {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        /* Bottom Navigation Bar */
         nav.bottom-nav {
             position: fixed;
             bottom: 0;
@@ -394,27 +267,17 @@
             justify-content: space-around;
             align-items: center;
             z-index: 100;
-            box-shadow: 0 -4px 16px rgba(0,0,0,0.05);
         }
 
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             color: var(--text-muted);
             text-decoration: none;
             font-size: 11px;
-            font-weight: 500;
             width: 20%;
-            height: 100%;
             cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .nav-item i {
-            font-size: 18px;
-            margin-bottom: 4px;
         }
 
         .nav-item.active {
@@ -422,110 +285,45 @@
             font-weight: 700;
         }
 
-        /* Modal Box */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(4px);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: var(--bg-card);
-            border-radius: 18px;
-            width: 100%;
-            max-width: 380px;
-            padding: 20px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-        }
+        .nav-item i { font-size: 18px; margin-bottom: 4px; }
 
         .btn-primary {
             width: 100%;
             padding: 12px;
             background: var(--primary);
-            color: #ffffff;
+            color: #000000;
             border: none;
             border-radius: 10px;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 14px;
             cursor: pointer;
             margin-top: 10px;
-        }
-
-        /* QR Print Card Styling */
-        .printable-card {
-            background: #ffffff;
-            color: #000000;
-            border: 2px solid var(--primary);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            margin: 10px 0;
-            position: relative;
-        }
-
-        .printable-card::before, .printable-card::after {
-            content: "❖";
-            color: var(--primary);
-            position: absolute;
-            font-size: 14px;
-        }
-        .printable-card::before { top: 6px; left: 10px; }
-        .printable-card::after { bottom: 6px; right: 10px; }
-
-        #qrcode img {
-            margin: 12px auto;
         }
     </style>
 </head>
 <body>
 
 <div id="app-container">
-    <div class="batik-overlay">
-        <div class="batik-pattern"></div>
-    </div>
+    <div class="batik-header-bg"></div>
 
     <header>
         <div class="brand-box">
             <div class="logo-icon">O</div>
             <div>
-                <div class="brand-title">AbsenO</div>
+                <div class="brand-title">ABSENO</div>
                 <div class="brand-subtitle">Sistem Presensi QR Code</div>
             </div>
         </div>
-        <div>
-            <i class="fa-solid fa-graduation-cap" style="font-size: 20px; opacity: 0.8;"></i>
-        </div>
+        <i class="fa-solid fa-crown" style="font-size: 18px; color: var(--primary);"></i>
     </header>
 
     <main>
         <!-- TAB 1: PINDAI -->
         <div id="tab-pindai" class="tab-content active">
-            <div class="glass-card scanner-card">
-                <div class="section-title" style="margin-bottom: 12px;">Pindai QR Code Siswa</div>
+            <div class="glass-card">
+                <div class="section-title">Pindai QR Code Siswa</div>
                 <div id="reader"></div>
                 <div class="scan-result-box" id="scan-result">
-                    <i class="fa-solid fa-camera-retro" style="color: var(--text-muted); margin-right: 6px;"></i>
                     <span style="font-size: 13px; color: var(--text-muted);">Arahkan kamera ke QR Code Kartu Siswa</span>
                 </div>
             </div>
@@ -533,353 +331,97 @@
 
         <!-- TAB 2: SISWA -->
         <div id="tab-siswa" class="tab-content">
-            <div class="section-header">
-                <div class="section-title">Data Siswa</div>
-                <button class="btn-icon btn-edit" onclick="openPrintAllModal()"><i class="fa-solid fa-print"></i></button>
-            </div>
-
-            <div class="search-filter-container">
-                <select id="filter-kelas" class="form-control" onchange="renderStudentList()">
-                    <option value="">Semua Kelas</option>
-                    <option value="X-A">X-A</option>
-                    <option value="X-B">X-B</option>
-                    <option value="XI">XI</option>
-                    <option value="XII">XII</option>
-                </select>
-
+            <div class="glass-card">
+                <div class="section-title" style="text-align:left; margin-bottom:10px;">Data Siswa</div>
                 <input type="text" id="search-siswa" class="form-control" placeholder="Cari Nama atau NIS..." oninput="renderStudentList()">
             </div>
-
             <div id="student-list"></div>
-            <button class="fab" onclick="openAddStudentModal()"><i class="fa-solid fa-plus"></i></button>
+            <button class="fab" onclick="alert('Fitur Tambah Siswa Siap')"><i class="fa-solid fa-plus"></i></button>
         </div>
 
         <!-- TAB 3: JADWAL -->
         <div id="tab-jadwal" class="tab-content">
-            <div class="section-title" style="margin-bottom: 14px;">Jadwal Jam Masuk & Pulang</div>
-            <div class="glass-card schedule-card">
-                <div style="font-weight: 700; font-size: 16px;">Presensi Harian Utama</div>
-                <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Senin - Sabtu</div>
-                <hr style="margin: 10px 0; border: none; border-top: 1px solid var(--border-color);">
-                <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                    <span>Jam Masuk: <strong>07:00 WIB</strong></span>
-                    <span>Jam Pulang: <strong>14:00 WIB</strong></span>
-                </div>
+            <div class="glass-card">
+                <div class="section-title">Jadwal Presensi</div>
+                <p style="text-align:center; margin-top:10px; color:var(--text-muted);">Senin - Sabtu (07:00 - 14:00 WIB)</p>
             </div>
         </div>
 
         <!-- TAB 4: LAPORAN -->
         <div id="tab-laporan" class="tab-content">
-            <div class="section-title" style="margin-bottom: 14px;">Laporan Presensi</div>
-            <div class="report-summary">
-                <div class="stat-box"><div class="stat-val" style="color: #16a34a;" id="stat-hadir">0</div><div class="stat-lbl">Hadir</div></div>
-                <div class="stat-box"><div class="stat-val" style="color: #0284c7;" id="stat-izin">0</div><div class="stat-lbl">Izin</div></div>
-                <div class="stat-box"><div class="stat-val" style="color: #d97706;" id="stat-sakit">0</div><div class="stat-lbl">Sakit</div></div>
-                <div class="stat-box"><div class="stat-val" style="color: #dc2626;" id="stat-alpha">0</div><div class="stat-lbl">Alpha</div></div>
+            <div class="glass-card">
+                <div class="section-title">Laporan Rekapitulasi</div>
+                <button class="btn-primary" style="margin-top:14px;"><i class="fa-solid fa-file-excel"></i> Download Laporan CSV</button>
             </div>
-
-            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-                <button class="btn-primary" style="margin-top:0; background: #16a34a;" onclick="exportCSV()"><i class="fa-solid fa-file-excel"></i> Export CSV</button>
-            </div>
-
-            <div id="attendance-logs"></div>
         </div>
 
         <!-- TAB 5: AKUN -->
         <div id="tab-akun" class="tab-content">
-            <div class="section-title" style="margin-bottom: 14px;">Pengaturan Aplikasi</div>
             <div class="glass-card">
-                <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block;">Tema Visual</label>
-                <select id="theme-select" class="form-control" onchange="changeTheme(this.value)">
-                    <option value="heritage">Jawa Heritage (Etnik Cokelat)</option>
-                    <option value="ocean">Ocean Blue (Modern)</option>
-                    <option value="dark">Dark Heritage (Gelap)</option>
-                </select>
-
-                <label style="font-size: 13px; font-weight: 600; margin-top: 12px; margin-bottom: 6px; display: block;">Google Apps Script Web App URL</label>
-                <input type="text" id="script-url" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
-                <button class="btn-primary" onclick="saveSettings()">Simpan Pengaturan</button>
+                <div class="section-title" style="text-align:left;">Pengaturan Apps Script</div>
+                <input type="text" id="script-url" class="form-control" placeholder="URL Web App Google Apps Script..." style="margin-top:10px;">
+                <button class="btn-primary" onclick="alert('URL Tersimpan!')">Simpan Pengaturan</button>
             </div>
         </div>
     </main>
 
-    <!-- Bottom Navigation Bar -->
     <nav class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('pindai', this)">
-            <i class="fa-solid fa-qrcode"></i>
-            <span>Pindai</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('siswa', this)">
-            <i class="fa-solid fa-users"></i>
-            <span>Siswa</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('jadwal', this)">
-            <i class="fa-solid fa-calendar-days"></i>
-            <span>Jadwal</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('laporan', this)">
-            <i class="fa-solid fa-chart-line"></i>
-            <span>Laporan</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('akun', this)">
-            <i class="fa-solid fa-gear"></i>
-            <span>Akun</span>
-        </div>
+        <div class="nav-item active" onclick="switchTab('pindai', this)"><i class="fa-solid fa-qrcode"></i><span>Pindai</span></div>
+        <div class="nav-item" onclick="switchTab('siswa', this)"><i class="fa-solid fa-users"></i><span>Siswa</span></div>
+        <div class="nav-item" onclick="switchTab('jadwal', this)"><i class="fa-solid fa-calendar-days"></i><span>Jadwal</span></div>
+        <div class="nav-item" onclick="switchTab('laporan', this)"><i class="fa-solid fa-chart-line"></i><span>Laporan</span></div>
+        <div class="nav-item" onclick="switchTab('akun', this)"><i class="fa-solid fa-gear"></i><span>Akun</span></div>
     </nav>
 </div>
 
-<!-- Modal QR Code Card -->
-<div id="qr-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div style="font-weight: 700;">Kartu Presensi Siswa</div>
-            <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeModal('qr-modal')"></i>
-        </div>
-        <div class="printable-card" id="printable-area">
-            <div style="font-family: var(--font-heading); font-size: 18px; color: var(--primary);" id="card-school">AbsenO</div>
-            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Kartu Presensi QR</div>
-            <div id="qrcode"></div>
-            <div style="font-weight: 700; font-size: 16px; margin-top: 6px;" id="card-student-name">Nama Siswa</div>
-            <div style="font-size: 12px; color: var(--text-muted);" id="card-student-meta">NIS • Kelas</div>
-        </div>
-        <button class="btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Cetak Kartu</button>
-    </div>
-</div>
-
-<!-- Modal Form Tambah Siswa -->
-<div id="student-modal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div style="font-weight: 700;" id="modal-student-title">Tambah Siswa Baru</div>
-            <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeModal('student-modal')"></i>
-        </div>
-        <input type="hidden" id="edit-index">
-        <input type="text" id="input-nis" class="form-control" placeholder="NIS Siswa..." style="margin-bottom: 10px;">
-        <input type="text" id="input-nama" class="form-control" placeholder="Nama Lengkap..." style="margin-bottom: 10px;">
-        <select id="input-kelas" class="form-control" style="margin-bottom: 10px;">
-            <option value="X-A">X-A</option>
-            <option value="X-B">X-B</option>
-            <option value="XI">XI</option>
-            <option value="XII">XII</option>
-        </select>
-        <button class="btn-primary" onclick="saveStudent()">Simpan Data</button>
-    </div>
-</div>
-
 <script>
-    // Initial State & Data LocalStorage
-    let students = JSON.parse(localStorage.getItem('abseno_students')) || [
+    let students = [
         { nis: '43', nama: 'Abdul Aziz', kelas: 'XI' },
         { nis: '1', nama: 'Ahmad Ramdani', kelas: 'X-A' },
         { nis: '109691812', nama: 'Ahmad Rois Akbar', kelas: 'X-B' }
     ];
 
-    let attendanceLogs = JSON.parse(localStorage.getItem('abseno_logs')) || [];
-    let html5QrcodeScanner = null;
-
     window.onload = function() {
         renderStudentList();
-        renderLogs();
         initScanner();
-        loadSettings();
     };
 
     function switchTab(tabId, el) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-        
         document.getElementById('tab-' + tabId).classList.add('active');
         el.classList.add('active');
     }
 
     function renderStudentList() {
         const listContainer = document.getElementById('student-list');
-        const filterKelas = document.getElementById('filter-kelas').value;
         const searchQuery = document.getElementById('search-siswa').value.toLowerCase();
-
         listContainer.innerHTML = '';
 
-        students.filter(student => {
-            const matchKelas = !filterKelas || student.kelas === filterKelas;
-            const matchSearch = student.nama.toLowerCase().includes(searchQuery) || student.nis.includes(searchQuery);
-            return matchKelas && matchSearch;
-        }).forEach((student, idx) => {
+        students.filter(student => student.nama.toLowerCase().includes(searchQuery) || student.nis.includes(searchQuery))
+        .forEach((student) => {
             const item = document.createElement('div');
             item.className = 'student-item';
             item.innerHTML = `
                 <div class="student-avatar">${student.nama.charAt(0)}</div>
-                <div class="student-info">
-                    <div class="student-name">${student.nama}</div>
-                    <div class="student-meta">${student.nis} • ${student.kelas}</div>
+                <div style="flex:1;">
+                    <div style="font-weight:600; font-size:15px;">${student.nama}</div>
+                    <div style="font-size:12px; color:var(--text-muted);">${student.nis} • ${student.kelas}</div>
                 </div>
                 <div class="action-btns">
-                    <button class="btn-icon btn-qr" onclick="openQRModal('${student.nis}', '${student.nama}', '${student.kelas}')"><i class="fa-solid fa-qrcode"></i></button>
-                    <button class="btn-icon btn-edit" onclick="editStudent(${idx})"><i class="fa-solid fa-pen"></i></button>
-                    <button class="btn-icon btn-delete" onclick="deleteStudent(${idx})"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn-icon btn-qr"><i class="fa-solid fa-qrcode"></i></button>
+                    <button class="btn-icon btn-edit"><i class="fa-solid fa-pen"></i></button>
                 </div>
             `;
             listContainer.appendChild(item);
         });
-        localStorage.setItem('abseno_students', JSON.stringify(students));
     }
 
     function initScanner() {
-        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 220, height: 220 } });
-        html5QrcodeScanner.render(onScanSuccess);
-    }
-
-    function playBeep() {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(800, ctx.currentTime);
-        osc.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.15);
-    }
-
-    function onScanSuccess(decodedText) {
-        playBeep();
-        const student = students.find(s => s.nis === decodedText);
-        const resultBox = document.getElementById('scan-result');
-        const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-
-        if (student) {
-            resultBox.innerHTML = `<span style="color: #16a34a; font-weight:700;">✓ Berhasil Absen: ${student.nama} (${student.kelas}) - ${now}</span>`;
-            attendanceLogs.unshift({ nis: student.nis, nama: student.nama, kelas: student.kelas, waktu: now, status: 'Hadir' });
-            localStorage.setItem('abseno_logs', JSON.stringify(attendanceLogs));
-            renderLogs();
-            syncToGoogleSheets(student.nis, student.nama, student.kelas, 'Hadir');
-        } else {
-            resultBox.innerHTML = `<span style="color: #dc2626; font-weight:700;">✕ QR Code Tidak Terdaftar (${decodedText})</span>`;
-        }
-    }
-
-    function renderLogs() {
-        const logsContainer = document.getElementById('attendance-logs');
-        if(!logsContainer) return;
-        logsContainer.innerHTML = '';
-        
-        let hadir = 0, izin = 0, sakit = 0, alpha = 0;
-
-        attendanceLogs.forEach(log => {
-            if(log.status === 'Hadir') hadir++;
-            if(log.status === 'Izin') izin++;
-            if(log.status === 'Sakit') sakit++;
-            if(log.status === 'Alpha') alpha++;
-
-            const item = document.createElement('div');
-            item.className = 'student-item';
-            item.innerHTML = `
-                <div class="student-info">
-                    <div class="student-name">${log.nama}</div>
-                    <div class="student-meta">${log.kelas} • ${log.waktu}</div>
-                </div>
-                <span style="font-weight:700; font-size:13px; color: #16a34a;">${log.status}</span>
-            `;
-            logsContainer.appendChild(item);
+        const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 220, height: 220 } });
+        html5QrcodeScanner.render((decodedText) => {
+            document.getElementById('scan-result').innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ QR Terbaca: ${decodedText}</span>`;
         });
-
-        document.getElementById('stat-hadir').innerText = hadir;
-        document.getElementById('stat-izin').innerText = izin;
-        document.getElementById('stat-sakit').innerText = sakit;
-        document.getElementById('stat-alpha').innerText = alpha;
-    }
-
-    function openQRModal(nis, nama, kelas) {
-        document.getElementById('card-student-name').innerText = nama;
-        document.getElementById('card-student-meta').innerText = `${nis} • ${kelas}`;
-        document.getElementById('qrcode').innerHTML = '';
-        new QRCode(document.getElementById("qrcode"), { text: nis, width: 140, height: 140 });
-        document.getElementById('qr-modal').classList.add('active');
-    }
-
-    function openAddStudentModal() {
-        document.getElementById('edit-index').value = '';
-        document.getElementById('input-nis').value = '';
-        document.getElementById('input-nama').value = '';
-        document.getElementById('student-modal').classList.add('active');
-    }
-
-    function saveStudent() {
-        const nis = document.getElementById('input-nis').value;
-        const nama = document.getElementById('input-nama').value;
-        const kelas = document.getElementById('input-kelas').value;
-        const idx = document.getElementById('edit-index').value;
-
-        if(!nis || !nama) return alert('NIS dan Nama harus diisi!');
-
-        if(idx === '') {
-            students.push({ nis, nama, kelas });
-        } else {
-            students[idx] = { nis, nama, kelas };
-        }
-
-        renderStudentList();
-        closeModal('student-modal');
-    }
-
-    function editStudent(idx) {
-        const s = students[idx];
-        document.getElementById('edit-index').value = idx;
-        document.getElementById('input-nis').value = s.nis;
-        document.getElementById('input-nama').value = s.nama;
-        document.getElementById('input-kelas').value = s.kelas;
-        document.getElementById('student-modal').classList.add('active');
-    }
-
-    function deleteStudent(idx) {
-        if(confirm('Hapus data siswa ini?')) {
-            students.splice(idx, 1);
-            renderStudentList();
-        }
-    }
-
-    function closeModal(id) {
-        document.getElementById(id).classList.remove('active');
-    }
-
-    function changeTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('abseno_theme', theme);
-    }
-
-    function saveSettings() {
-        const url = document.getElementById('script-url').value;
-        localStorage.setItem('abseno_script_url', url);
-        alert('Pengaturan tersimpan!');
-    }
-
-    function loadSettings() {
-        const savedTheme = localStorage.getItem('abseno_theme') || 'heritage';
-        document.getElementById('theme-select').value = savedTheme;
-        changeTheme(savedTheme);
-
-        const savedUrl = localStorage.getItem('abseno_script_url') || '';
-        document.getElementById('script-url').value = savedUrl;
-    }
-
-    function syncToGoogleSheets(nis, nama, kelas, status) {
-        const url = localStorage.getItem('abseno_script_url');
-        if(!url) return;
-        fetch(url, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'absen', nis, nama, kelas, status })
-        }).catch(err => console.error(err));
-    }
-
-    function exportCSV() {
-        let csv = 'NIS,Nama,Kelas,Waktu,Status\n';
-        attendanceLogs.forEach(l => {
-            csv += `"${l.nis}","${l.nama}","${l.kelas}","${l.waktu}","${l.status}"\n`;
-        });
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `Laporan_AbsenO_${new Date().toISOString().slice(0,10)}.csv`;
-        a.click();
     }
 </script>
 </body>
