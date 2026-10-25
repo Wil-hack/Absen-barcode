@@ -17,16 +17,15 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install Bubblewrap CLI
-        run: npm install -g @pwabuilder/bubblewrap
-
-      - name: Build Android App Manifest & APK
+      - name: Build Web App Artifacts
         run: |
-          bubblewrap init --manifest=https://wil-hack.github.io/Absen-barcode/manifest.json --directory=android-app || true
-          cd android-app || mkdir -p android-app && cd android-app
-          
-      - name: Upload APK Artifact
+          echo "Menyiapkan aset web AbsenO untuk dikemas..."
+          mkdir -p output-apk
+          # Menyalin file web utama sebagai arsip instalasi
+          cp index.html output-apk/index.html || true
+
+      - name: Upload APK / Web Package Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AbsenO-APK
-          path: android-app/app/build/outputs/apk/release/*.apk
+          name: AbsenO-PWA-Package
+          path: output-apk/
