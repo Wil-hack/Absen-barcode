@@ -29,13 +29,14 @@ jobs:
       run: |
         cordova create myApp com.abseno.app AbsenO
         
-        if [ -f index.html ]; then
-          cp index.html myApp/www/index.html
-        fi
+        # Menghapus folder www bawaan kosong dari cordova
+        rm -rf myApp/www/*
         
-        if [ -f logo-abseno.png ]; then
-          cp logo-abseno.png myApp/www/logo-abseno.png
-        fi
+        # Menyalin SELURUH file dan folder proyek web (HTML, CSS, JS, Gambar/Batik) ke dalam folder www Cordova
+        cp -r ./* myApp/www/ 2>/dev/null || true
+        
+        # Membersihkan file konfigurasi github/workflow agar tidak ikut terbawa ke dalam aplikasi APK
+        rm -rf myApp/www/.github myApp/www/myApp myApp/www/platforms myApp/www/plugins myApp/www/node_modules
         
         cd myApp
         
@@ -52,9 +53,6 @@ jobs:
             <preference name="BackgroundColor" value="#14100c" />
             <preference name="ShowSplashScreen" value="false" />
             <preference name="AutoHideSplashScreen" value="true" />
-            <platform name="android">
-                <icon src="www/logo-abseno.png" />
-            </platform>
         </widget>
         EOT
 
