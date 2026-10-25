@@ -342,6 +342,12 @@
             margin-top: 10px;
         }
 
+        .btn-secondary {
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -421,7 +427,7 @@
             <button class="fab" onclick="openAddStudentModal()"><i class="fa-solid fa-plus"></i></button>
         </div>
 
-        <!-- TAB 3: JADWAL (Kini Bisa Diubah/Atur Jam Masuk & Pulang) -->
+        <!-- TAB 3: JADWAL -->
         <div id="tab-jadwal" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Atur Jam Presensi</div>
@@ -451,15 +457,45 @@
             </div>
         </div>
 
-        <!-- TAB 4: LAPORAN -->
+        <!-- TAB 4: LAPORAN (Harian, Mingguan, Bulanan) -->
         <div id="tab-laporan" class="tab-content">
             <div class="glass-card">
-                <div class="section-title">Laporan Presensi</div>
-                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                <div class="section-title">Laporan & Rekap Absen</div>
+                
+                <label style="font-size: 13px; margin-bottom: 4px; display: block;">Pilih Mode Laporan</label>
+                <select id="mode-laporan" class="form-control" onchange="toggleReportMode()" style="margin-bottom: 10px;">
+                    <option value="harian">1. Rekap Harian (Bisa Pilih Tanggal)</option>
+                    <option value="mingguan">2. Rekap Mingguan (7 Hari Terakhir)</option>
+                    <option value="bulanan">3. Rekap 1 Bulan Penuh</option>
+                </select>
+
+                <!-- Filter Harian -->
+                <div id="box-filter-harian" style="display: flex; gap: 8px; margin-bottom: 10px;">
                     <input type="date" id="filter-tanggal" class="form-control" onchange="renderLogs()">
+                    <button class="btn-primary btn-secondary" style="width: auto; margin-top:0;" onclick="setTodayFilter()">Hari Ini</button>
                 </div>
+
+                <!-- Filter Mingguan -->
+                <div id="box-filter-mingguan" style="display: none; margin-bottom: 10px;">
+                    <div style="font-size: 12px; color: var(--text-muted); padding: 4px 0;">Menampilkan rekap kehadiran selama 7 hari ke belakang.</div>
+                </div>
+
+                <!-- Filter Bulanan -->
+                <div id="box-filter-bulanan" style="display: none; gap: 8px; margin-bottom: 10px;">
+                    <input type="month" id="filter-bulan" class="form-control" onchange="renderLogs()">
+                </div>
+
                 <button class="btn-primary" onclick="exportCSV()"><i class="fa-solid fa-file-excel"></i> Download CSV</button>
             </div>
+
+            <!-- Ringkasan Kalkulasi -->
+            <div id="summary-card" class="glass-card" style="display: none;">
+                <div class="section-title" id="summary-title" style="font-size: 15px;">Ringkasan Kehadiran</div>
+                <div id="summary-content" style="font-size: 13px; color: var(--text-muted);">
+                    Memuat kalkulasi...
+                </div>
+            </div>
+
             <div id="attendance-logs"></div>
         </div>
 
@@ -539,7 +575,10 @@
 
     window.onload = function() {
         renderStudentList();
-        document.getElementById('filter-tanggal').value = new Date().toISOString().slice(0,10);
+        const today = new Date().toISOString().slice(0,10);
+        document.getElementById('filter-tanggal').value = today;
+        document.getElementById('filter-bulan').value = today.slice(0,7);
+        
         renderLogs();
         initScanner();
         loadSettings();
@@ -617,24 +656,111 @@
         });
     }
 
+    function toggleReportMode() {
+        const mode = document.getElementById('mode-laporan').value;
+        document.getElementById('box-filter-harian').style.display = (mode === 'harian') ? 'flex' : 'none';
+        document.getElementById('box-filter-mingguan').style.display = (mode === 'mingguan') ? 'block' : 'none';
+        document.getElementById('box-filter-bulanan').style.display = (mode === 'bulanan') ? 'flex' : 'none';
+        document.getElementById('summary-card').style.display = (mode === 'harian') ? 'none' : 'block';
+        renderLogs();
+    }
+
+    function setTodayFilter() {
+        document.getElementById('filter-tanggal').value = new Date().toISOString().slice(0,10);
+        renderLogs();
+    }
+
     function renderLogs() {
         const logsContainer = document.getElementById('attendance-logs');
-        const filterTanggal = document.getElementById('filter-tanggal').value;
+        const mode = document.getElementById('mode-laporan').value;
         if(!logsContainer) return;
         logsContainer.innerHTML = '';
 
-        attendanceLogs.filter(log => !filterTanggal || log.tanggal === filterTanggal).forEach(log => {
-            const item = document.createElement('div');
-            item.className = 'student-item';
-            item.innerHTML = `
-                <div style="flex:1;">
-                    <div style="font-weight:600; font-size:14px;">${log.nama}</div>
-                    <div style="font-size:12px; color:var(--text-muted);">${log.kelas} • ${log.tanggal || 'Hari ini'} (${log.waktu})</div>
-                </div>
-                <span style="font-weight:700; font-size:13px; color: #4ade80;">${log.status}</span>
-            `;
-            logsContainer.appendChild(item);
-        });
+        if(mode === 'harian') {
+            const filterTanggal = document.getElementById('filter-tanggal').value;
+            attendanceLogs.filter(log => !filterTanggal || log.tanggal === filterTanggal).forEach(log => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <div style="flex:1;">
+                        <div style="font-weight:600; font-size:14px;">${log.nama}</div>
+                        <div style="font-size:12px; color:var(--text-muted);">${log.kelas} • ${log.tanggal || 'Hari ini'} (${log.waktu})</div>
+                    </div>
+                    <span style="font-weight:700; font-size:13px; color: #4ade80;">${log.status}</span>
+                `;
+                logsContainer.appendChild(item);
+            });
+        } 
+        else if(mode === 'mingguan') {
+            // Kalkulasi 7 hari terakhir
+            const d = new Date();
+            d.setDate(d.getDate() - 7);
+            const limitDateStr = d.toISOString().slice(0,10);
+
+            const filtered = attendanceLogs.filter(log => log.tanggal && log.tanggal >= limitDateStr);
+            
+            let recap = {};
+            filtered.forEach(log => {
+                if(!recap[log.nis]) recap[log.nis] = { nama: log.nama, kelas: log.kelas, total: 0 };
+                recap[log.nis].total += 1;
+            });
+
+            document.getElementById('summary-title').innerText = 'Ringkasan 7 Hari Terakhir';
+            document.getElementById('summary-content').innerHTML = `Total Absensi Masuk: <b>${filtered.length} catatan</b>`;
+
+            Object.values(recap).forEach(itemData => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <div style="flex:1;">
+                        <div style="font-weight:600; font-size:14px;">${itemData.nama}</div>
+                        <div style="font-size:12px; color:var(--text-muted);">${itemData.kelas}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-weight:700; font-size:14px; color: var(--primary);">${itemData.total} Kali</span>
+                        <div style="font-size:11px; color:var(--text-muted);">Minggu Ini</div>
+                    </div>
+                `;
+                logsContainer.appendChild(item);
+            });
+
+            if(Object.keys(recap).length === 0) {
+                logsContainer.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">Belum ada data absensi dalam 7 hari terakhir.</div>`;
+            }
+        }
+        else if(mode === 'bulanan') {
+            const filterBulan = document.getElementById('filter-bulan').value; // format: YYYY-MM
+            const filtered = attendanceLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterBulan));
+            
+            let recap = {};
+            filtered.forEach(log => {
+                if(!recap[log.nis]) recap[log.nis] = { nama: log.nama, kelas: log.kelas, total: 0 };
+                recap[log.nis].total += 1;
+            });
+
+            document.getElementById('summary-title').innerText = `Ringkasan Bulan: ${filterBulan}`;
+            document.getElementById('summary-content').innerHTML = `Total Absensi Masuk: <b>${filtered.length} catatan</b>`;
+
+            Object.values(recap).forEach(itemData => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <div style="flex:1;">
+                        <div style="font-weight:600; font-size:14px;">${itemData.nama}</div>
+                        <div style="font-size:12px; color:var(--text-muted);">${itemData.kelas}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-weight:700; font-size:14px; color: var(--primary);">${itemData.total} Kali</span>
+                        <div style="font-size:11px; color:var(--text-muted);">Bulan Ini</div>
+                    </div>
+                `;
+                logsContainer.appendChild(item);
+            });
+
+            if(Object.keys(recap).length === 0) {
+                logsContainer.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">Belum ada data absensi di bulan ini.</div>`;
+            }
+        }
     }
 
     function openQRModal(nis, nama, kelas) {
