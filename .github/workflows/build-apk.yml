@@ -1,31 +1,72 @@
-name: Build Android APK
+name: Build AbsenO APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ "main", "master" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
 
-      - name: Build Web App Artifacts
-        run: |
-          echo "Menyiapkan aset web AbsenO untuk dikemas..."
-          mkdir -p output-apk
-          # Menyalin file web utama sebagai arsip instalasi
-          cp index.html output-apk/index.html || true
+    - name: Setup Java JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
 
-      - name: Upload APK / Web Package Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: AbsenO-PWA-Package
-          path: output-apk/
+    - name: Install Cordova Global
+      run: npm install -g cordova
+
+    - name: Create and Build Android APK
+      run: |
+        cordova create myApp com.abseno.app AbsenO
+        
+        if [ -f index.html ]; then
+          cp index.html myApp/www/index.html
+        fi
+        
+        if [ -f logo-abseno.png ]; then
+          cp logo-abseno.png myApp/www/logo-abseno.png
+        fi
+        
+        cd myApp
+        
+        # Config.xml AbsenO
+        cat <<EOT > config.xml
+        <?xml version='1.0' encoding='utf-8'?>
+        <widget id="com.abseno.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+            <name>AbsenO</name>
+            <description>Sistem Presensi QR Code</description>
+            <author email="admin@abseno.com">AbsenO Team</author>
+            <content src="index.html" />
+            <allow-intent href="http://*/*" />
+            <allow-intent href="https://*/*" />
+            <preference name="BackgroundColor" value="#14100c" />
+            <preference name="ShowSplashScreen" value="false" />
+            <preference name="AutoHideSplashScreen" value="true" />
+            <platform name="android">
+                <icon src="www/logo-abseno.png" />
+            </platform>
+        </widget>
+        EOT
+
+        cordova platform add android
+        
+        # Injeksi Izin Android (Kamera untuk Scan QR & Internet)
+        sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n    <uses-permission android:name="android.permission.VIBRATE" />' platforms/android/app/src/main/AndroidManifest.xml
+        
+        cordova build android --debug
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: AbsenO-APK
+        path: myApp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
