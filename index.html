@@ -88,7 +88,7 @@
             overflow: hidden;
         }
 
-        /* Background Motif Batik Lokal (batik-bg.jpg) */
+        /* Background Motif Batik Lokal dengan Batas Bawah Melengkung */
         .batik-overlay {
             position: absolute;
             top: 0;
@@ -101,7 +101,10 @@
             background-size: cover;
             background-position: center;
             z-index: 0;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
             border-bottom: 2px solid var(--primary);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
 
         header {
@@ -119,7 +122,6 @@
             gap: 12px;
         }
 
-        /* Logo Baru Menggunakan logo-abseno.png */
         .logo-icon-img {
             width: 46px;
             height: 46px;
@@ -366,7 +368,6 @@
 
     <header>
         <div class="brand-box">
-            <!-- Menggunakan logo lokal logo-abseno.png -->
             <img src="logo-abseno.png" alt="Logo AbsenO" class="logo-icon-img" onerror="this.style.display='none'">
             <div>
                 <div class="brand-title">AbsenO</div>
@@ -470,7 +471,7 @@
     </div>
 </div>
 
-<!-- Modal Form Tambah Siswa -->
+<!-- Modal Form Tambah/Edit Siswa -->
 <div id="student-modal" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -588,9 +589,21 @@
     }
 
     function openAddStudentModal() {
+        document.getElementById('modal-student-title').innerText = 'Tambah Siswa Baru';
         document.getElementById('edit-index').value = '';
         document.getElementById('input-nis').value = '';
         document.getElementById('input-nama').value = '';
+        document.getElementById('input-kelas').value = 'X-A';
+        document.getElementById('student-modal').classList.add('active');
+    }
+
+    function editStudent(idx) {
+        const s = students[idx];
+        document.getElementById('modal-student-title').innerText = 'Edit Data Siswa';
+        document.getElementById('edit-index').value = idx;
+        document.getElementById('input-nis').value = s.nis;
+        document.getElementById('input-nama').value = s.nama;
+        document.getElementById('input-kelas').value = s.kelas;
         document.getElementById('student-modal').classList.add('active');
     }
 
@@ -610,15 +623,6 @@
 
         renderStudentList();
         closeModal('student-modal');
-    }
-
-    function editStudent(idx) {
-        const s = students[idx];
-        document.getElementById('edit-index').value = idx;
-        document.getElementById('input-nis').value = s.nis;
-        document.getElementById('input-nama').value = s.nama;
-        document.getElementById('input-kelas').value = s.kelas;
-        document.getElementById('student-modal').classList.add('active');
     }
 
     function deleteStudent(idx) {
