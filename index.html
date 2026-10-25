@@ -88,7 +88,7 @@
             overflow: hidden;
         }
 
-        /* Background Motif Batik Klasik Asli (Sesuai Referensi Gambar Anda) */
+        /* Background Motif Batik Jawa Klasik (Menggunakan SVG Pattern & Gradasi Premium) */
         .batik-overlay {
             position: absolute;
             top: 0;
@@ -96,10 +96,12 @@
             right: 0;
             height: 220px;
             background-color: #2b170b;
-            background-image: linear-gradient(to bottom, rgba(20, 16, 12, 0.4), rgba(20, 16, 12, 0.95)), 
-                              url([span_0](start_span)[span_1](start_span)'[span_0](end_span)[span_1](end_span) https://lh3.googleusercontent.com/d/15640024325848541640');
-            background-size: cover;
-            background-position: center;
+            background-image: 
+                linear-gradient(to bottom, rgba(20, 16, 12, 0.3), rgba(20, 16, 12, 0.95)),
+                radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.25) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(212, 175, 55, 0.2) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='%23d4af37' fill-opacity='0.18'%3E%3Cpath d='M40 0l40 40-40 40L0 40zM40 15L15 40l25 25 25-25z'/%3E%3Ccircle cx='40' cy='40' r='8'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: cover, auto, auto, 60px 60px;
             z-index: 0;
             border-bottom: 2px solid var(--primary);
         }
@@ -376,7 +378,7 @@
                 <div class="brand-subtitle">Sistem Presensi QR Code</div>
             </div>
         </div>
-        <!-- Ikon Topi Sarjana dikembalikan sesuai permintaan -->
+        <!-- Ikon Topi Sarjana -->
         <i class="fa-solid fa-graduation-cap" style="font-size: 20px; color: var(--primary);"></i>
     </header>
 
@@ -671,7 +673,7 @@
 
     function exportCSV() {
         let csv = 'NIS,Nama,Kelas,Waktu,Status\n';
-        attendanceLogs.forEach(l => {
+        attendanceLogs.append || attendanceLogs.forEach(l => {
             csv += `"${l.nis}","${l.nama}","${l.kelas}","${l.waktu}","${l.status}"\n`;
         });
         const blob = new Blob([csv], { type: 'text/csv' });
