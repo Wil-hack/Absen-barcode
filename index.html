@@ -150,6 +150,19 @@
             margin-top: 4px;
         }
 
+        /* Badge Status Online / Offline */
+        .status-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            background: rgba(0,0,0,0.4);
+            letter-spacing: 0.5px;
+        }
+        .status-online { color: #4ade80; border-color: rgba(74, 222, 128, 0.4); }
+        .status-offline { color: #f87171; border-color: rgba(248, 113, 113, 0.4); }
+
         main {
             position: relative;
             z-index: 1;
@@ -374,7 +387,8 @@
                 <div class="brand-subtitle">Sistem Presensi QR Code</div>
             </div>
         </div>
-        <i class="fa-solid fa-graduation-cap" style="font-size: 20px; color: var(--primary);"></i>
+        <!-- Indikator Status Online / Offline -->
+        <div id="connection-status" class="status-badge status-online">ONLINE</div>
     </header>
 
     <main>
@@ -420,6 +434,9 @@
         <div id="tab-laporan" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Laporan Presensi</div>
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <input type="date" id="filter-tanggal" class="form-control" onchange="renderLogs()">
+                </div>
                 <button class="btn-primary" onclick="exportCSV()"><i class="fa-solid fa-file-excel"></i> Download CSV</button>
             </div>
             <div id="attendance-logs"></div>
@@ -501,10 +518,25 @@
 
     window.onload = function() {
         renderStudentList();
+        document.getElementById('filter-tanggal').value = new Date().toISOString().slice(0,10);
         renderLogs();
         initScanner();
         loadSettings();
+        updateOnlineStatus();
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
     };
+
+    function updateOnlineStatus() {
+        const badge = document.getElementById('connection-status');
+        if (navigator.onLine) {
+            badge.innerText = 'ONLINE';
+            badge.className = 'status-badge status-online';
+        } else {
+            badge.innerText = 'OFFLINE';
+            badge.className = 'status-badge status-offline';
+        }
+    }
 
     function switchTab(tabId, el) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -549,10 +581,11 @@
             const student = students.find(s => s.nis === decodedText);
             const resultBox = document.getElementById('scan-result');
             const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            const todayDate = new Date().toISOString().slice(0,10);
 
             if (student) {
                 resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil Absen: ${student.nama} (${student.kelas}) - ${now}</span>`;
-                attendanceLogs.unshift({ nis: student.nis, nama: student.nama, kelas: student.kelas, waktu: now, status: 'Hadir' });
+                attendanceLogs.unshift({ nis: student.nis, nama: student.nama, kelas: student.kelas, tanggal: todayDate, waktu: now, status: 'Hadir' });
                 localStorage.setItem('abseno_logs', JSON.stringify(attendanceLogs));
                 renderLogs();
                 syncToGoogleSheets(student.nis, student.nama, student.kelas, 'Hadir');
@@ -564,15 +597,17 @@
 
     function renderLogs() {
         const logsContainer = document.getElementById('attendance-logs');
+        const filterTanggal = document.getElementById('filter-tanggal').value;
         if(!logsContainer) return;
         logsContainer.innerHTML = '';
-        attendanceLogs.forEach(log => {
+
+        attendanceLogs.filter(log => !filterTanggal || log.tanggal === filterTanggal).forEach(log => {
             const item = document.createElement('div');
             item.className = 'student-item';
             item.innerHTML = `
                 <div style="flex:1;">
                     <div style="font-weight:600; font-size:14px;">${log.nama}</div>
-                    <div style="font-size:12px; color:var(--text-muted);">${log.kelas} • ${log.waktu}</div>
+                    <div style="font-size:12px; color:var(--text-muted);">${log.kelas} • ${log.tanggal || 'Hari ini'} (${log.waktu})</div>
                 </div>
                 <span style="font-weight:700; font-size:13px; color: #4ade80;">${log.status}</span>
             `;
@@ -597,16 +632,6 @@
         document.getElementById('student-modal').classList.add('active');
     }
 
-    function editStudent(idx) {
-        const s = students[idx];
-        document.getElementById('modal-student-title').innerText = 'Edit Data Siswa';
-        document.getElementById('edit-index').value = idx;
-        document.getElementById('input-nis').value = s.nis;
-        document.getElementById('input-nama').value = s.nama;
-        document.getElementById('input-kelas').value = s.kelas;
-        document.getElementById('student-modal').classList.add('active');
-    }
-
     function saveStudent() {
         const nis = document.getElementById('input-nis').value;
         const nama = document.getElementById('input-nama').value;
@@ -623,6 +648,16 @@
 
         renderStudentList();
         closeModal('student-modal');
+    }
+
+    function editStudent(idx) {
+        const s = students[idx];
+        document.getElementById('modal-student-title').innerText = 'Edit Data Siswa';
+        document.getElementById('edit-index').value = idx;
+        document.getElementById('input-nis').value = s.nis;
+        document.getElementById('input-nama').value = s.nama;
+        document.getElementById('input-kelas').value = s.kelas;
+        document.getElementById('student-modal').classList.add('active');
     }
 
     function deleteStudent(idx) {
@@ -670,9 +705,9 @@
     }
 
     function exportCSV() {
-        let csv = 'NIS,Nama,Kelas,Waktu,Status\n';
+        let csv = 'NIS,Nama,Kelas,Tanggal,Waktu,Status\n';
         attendanceLogs.forEach(l => {
-            csv += `"${l.nis}","${l.nama}","${l.kelas}","${l.waktu}","${l.status}"\n`;
+            csv += `"${l.nis}","${l.nama}","${l.kelas}","${l.tanggal || '-'}","${l.waktu}","${l.status}"\n`;
         });
         const blob = new Blob([csv], { type: 'text/csv' });
         const a = document.createElement('a');
