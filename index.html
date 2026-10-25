@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AbsenO - Presensi QR Code</title>
-    <!-- Google Fonts: Philosopher (Etnik Elegant) & Plus Jakarta Sans -->
+    <!-- Google Fonts: Philosopher & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,700;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -88,17 +88,18 @@
             overflow: hidden;
         }
 
-        /* Background Pattern Batik Jawa SVG Embedded (100% Muncul) */
+        /* Background Motif Batik Klasik Asli (Sesuai Referensi Gambar Anda) */
         .batik-overlay {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             height: 220px;
-            background-color: var(--primary-light);
-            background-image: 
-                radial-gradient(var(--primary) 1px, transparent 0),
-                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.15'%3E%3Cpath d='M30 30c0-11.046-8.954-20-20-20S-10 18.954-10 30s8.954 20 20 20 20-8.954 20-20zm0 0c0 11.046 8.954 20 20 20s20-8.954 20-20-8.954-20-20-20-20 8.954-20 20zM10 10C4.477 10 0 5.523 0 0s4.477-10 10-10 10 4.477 10 10-4.477 10-10 10zm40 40c-5.523 0-10-4.477-10-10s4.477-10 10-10 10 4.477 10 10-4.477 10-10 10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            background-color: #2b170b;
+            background-image: linear-gradient(to bottom, rgba(20, 16, 12, 0.4), rgba(20, 16, 12, 0.95)), 
+                              url([span_0](start_span)[span_1](start_span)'[span_0](end_span)[span_1](end_span) https://lh3.googleusercontent.com/d/15640024325848541640');
+            background-size: cover;
+            background-position: center;
             z-index: 0;
             border-bottom: 2px solid var(--primary);
         }
@@ -121,7 +122,7 @@
         .logo-icon {
             width: 44px;
             height: 44px;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.6);
             border: 2px solid var(--primary);
             border-radius: 50%;
             display: flex;
@@ -130,7 +131,7 @@
             font-family: var(--font-heading);
             font-size: 24px;
             color: var(--primary);
-            box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
         }
 
         .brand-title {
@@ -375,7 +376,8 @@
                 <div class="brand-subtitle">Sistem Presensi QR Code</div>
             </div>
         </div>
-        <i class="fa-solid fa-gem" style="font-size: 18px; color: var(--primary);"></i>
+        <!-- Ikon Topi Sarjana dikembalikan sesuai permintaan -->
+        <i class="fa-solid fa-graduation-cap" style="font-size: 20px; color: var(--primary);"></i>
     </header>
 
     <main>
