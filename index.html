@@ -387,7 +387,6 @@
                 <div class="brand-subtitle">Sistem Presensi QR Code</div>
             </div>
         </div>
-        <!-- Indikator Status Online / Offline -->
         <div id="connection-status" class="status-badge status-online">ONLINE</div>
     </header>
 
@@ -422,11 +421,33 @@
             <button class="fab" onclick="openAddStudentModal()"><i class="fa-solid fa-plus"></i></button>
         </div>
 
-        <!-- TAB 3: JADWAL -->
+        <!-- TAB 3: JADWAL (Kini Bisa Diubah/Atur Jam Masuk & Pulang) -->
         <div id="tab-jadwal" class="tab-content">
             <div class="glass-card">
-                <div class="section-title">Jadwal Presensi</div>
-                <p style="text-align:center; margin-top:10px; color:var(--text-muted);">Senin - Sabtu (07:00 - 14:00 WIB)</p>
+                <div class="section-title">Atur Jam Presensi</div>
+                
+                <label style="font-size: 13px; margin-bottom: 6px; display: block;">Hari Operasional</label>
+                <input type="text" id="input-hari" class="form-control" placeholder="Contoh: Senin - Sabtu" style="margin-bottom: 12px;">
+
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 13px; margin-bottom: 6px; display: block;">Jam Masuk</label>
+                        <input type="time" id="input-jam-masuk" class="form-control">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 13px; margin-bottom: 6px; display: block;">Jam Pulang</label>
+                        <input type="time" id="input-jam-pulang" class="form-control">
+                    </div>
+                </div>
+
+                <button class="btn-primary" onclick="saveSchedule()">Simpan Jadwal</button>
+            </div>
+
+            <div class="glass-card" style="text-align: center;">
+                <div class="section-title">Jadwal Aktif Saat Ini</div>
+                <div id="display-schedule" style="font-size: 15px; font-weight: 600; color: var(--primary); margin-top: 8px;">
+                    Memuat jadwal...
+                </div>
             </div>
         </div>
 
@@ -522,6 +543,7 @@
         renderLogs();
         initScanner();
         loadSettings();
+        loadSchedule();
         updateOnlineStatus();
         window.addEventListener('online', updateOnlineStatus);
         window.addEventListener('offline', updateOnlineStatus);
@@ -691,6 +713,26 @@
 
         const savedUrl = localStorage.getItem('abseno_script_url') || '';
         document.getElementById('script-url').value = savedUrl;
+    }
+
+    function saveSchedule() {
+        const hari = document.getElementById('input-hari').value || 'Senin - Sabtu';
+        const jamMasuk = document.getElementById('input-jam-masuk').value || '07:00';
+        const jamPulang = document.getElementById('input-jam-pulang').value || '14:00';
+        
+        const scheduleData = { hari, jamMasuk, jamPulang };
+        localStorage.setItem('abseno_schedule', JSON.stringify(scheduleData));
+        loadSchedule();
+        alert('Jadwal Presensi Berhasil Disimpan!');
+    }
+
+    function loadSchedule() {
+        const savedSchedule = JSON.parse(localStorage.getItem('abseno_schedule')) || { hari: 'Senin - Sabtu', jamMasuk: '07:00', jamPulang: '14:00' };
+        document.getElementById('input-hari').value = savedSchedule.hari;
+        document.getElementById('input-jam-masuk').value = savedSchedule.jamMasuk;
+        document.getElementById('input-jam-pulang').value = savedSchedule.jamPulang;
+        
+        document.getElementById('display-schedule').innerText = `${savedSchedule.hari} (${savedSchedule.jamMasuk} - ${savedSchedule.jamPulang} WIB)`;
     }
 
     function syncToGoogleSheets(nis, nama, kelas, status) {
