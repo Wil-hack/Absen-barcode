@@ -29,18 +29,18 @@ jobs:
       run: |
         cordova create myApp com.abseno.app AbsenO
         
-        # Menghapus folder www bawaan kosong dari cordova
+        # Menghapus folder www bawaan kosong
         rm -rf myApp/www/*
         
-        # Menyalin SELURUH file dan folder proyek web (HTML, CSS, JS, Gambar/Batik) ke dalam folder www Cordova
+        # Menyalin seluruh file proyek web
         cp -r ./* myApp/www/ 2>/dev/null || true
         
-        # Membersihkan file konfigurasi github/workflow agar tidak ikut terbawa ke dalam aplikasi APK
+        # Membersihkan file sistem github/workflow
         rm -rf myApp/www/.github myApp/www/myApp myApp/www/platforms myApp/www/plugins myApp/www/node_modules
         
         cd myApp
         
-        # Config.xml AbsenO
+        # Config.xml dengan Splash Screen dimatikan
         cat <<EOT > config.xml
         <?xml version='1.0' encoding='utf-8'?>
         <widget id="com.abseno.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
@@ -53,12 +53,16 @@ jobs:
             <preference name="BackgroundColor" value="#14100c" />
             <preference name="ShowSplashScreen" value="false" />
             <preference name="AutoHideSplashScreen" value="true" />
+            <preference name="SplashScreenDelay" value="0" />
+            <platform name="android">
+                <icon src="www/logo-abseno.png" />
+            </platform>
         </widget>
         EOT
 
         cordova platform add android
         
-        # Injeksi Izin Android (Kamera untuk Scan QR & Internet)
+        # Injeksi Izin Android
         sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n    <uses-permission android:name="android.permission.VIBRATE" />' platforms/android/app/src/main/AndroidManifest.xml
         
         cordova build android --debug
