@@ -457,19 +457,20 @@
             </div>
         </div>
 
-        <!-- TAB 4: LAPORAN (Harian, Mingguan, Bulanan) -->
+        <!-- TAB 4: LAPORAN & PEMANTAUAN KETIDAKHADIRAN -->
         <div id="tab-laporan" class="tab-content">
             <div class="glass-card">
-                <div class="section-title">Laporan & Rekap Absen</div>
+                <div class="section-title">Laporan & Pemantauan Absen</div>
                 
                 <label style="font-size: 13px; margin-bottom: 4px; display: block;">Pilih Mode Laporan</label>
                 <select id="mode-laporan" class="form-control" onchange="toggleReportMode()" style="margin-bottom: 10px;">
-                    <option value="harian">1. Rekap Harian (Bisa Pilih Tanggal)</option>
-                    <option value="mingguan">2. Rekap Mingguan (7 Hari Terakhir)</option>
-                    <option value="bulanan">3. Rekap 1 Bulan Penuh</option>
+                    <option value="harian">1. Rekap Harian (Hadir)</option>
+                    <option value="tidak-hadir">2. Monitor Belum Hadir / Sakit / Izin</option>
+                    <option value="mingguan">3. Rekap Mingguan (7 Hari)</option>
+                    <option value="bulanan">4. Rekap 1 Bulan Penuh</option>
                 </select>
 
-                <!-- Filter Harian -->
+                <!-- Filter Harian / Monitor -->
                 <div id="box-filter-harian" style="display: flex; gap: 8px; margin-bottom: 10px;">
                     <input type="date" id="filter-tanggal" class="form-control" onchange="renderLogs()">
                     <button class="btn-primary btn-secondary" style="width: auto; margin-top:0;" onclick="setTodayFilter()">Hari Ini</button>
@@ -572,6 +573,7 @@
         { nis: '109691812', nama: 'Ahmad Rois Akbar', kelas: 'X-B' }
     ];
     let attendanceLogs = JSON.parse(localStorage.getItem('abseno_logs')) || [];
+    let specialStatuses = JSON.parse(localStorage.getItem('abseno_special_statuses')) || {}; // Format: "YYYY-MM-DD_NIS": "Sakit/Izin/Alpa"
 
     window.onload = function() {
         renderStudentList();
@@ -645,6 +647,13 @@
             const todayDate = new Date().toISOString().slice(0,10);
 
             if (student) {
+                // Cek apakah sudah absen hari ini
+                const alreadyAbsen = attendanceLogs.some(l => l.nis === student.nis && l.tanggal === todayDate);
+                if(alreadyAbsen) {
+                    resultBox.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ ${student.nama} sudah absen hari ini!</span>`;
+                    return;
+                }
+
                 resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil Absen: ${student.nama} (${student.kelas}) - ${now}</span>`;
                 attendanceLogs.unshift({ nis: student.nis, nama: student.nama, kelas: student.kelas, tanggal: todayDate, waktu: now, status: 'Hadir' });
                 localStorage.setItem('abseno_logs', JSON.stringify(attendanceLogs));
@@ -658,7 +667,7 @@
 
     function toggleReportMode() {
         const mode = document.getElementById('mode-laporan').value;
-        document.getElementById('box-filter-harian').style.display = (mode === 'harian') ? 'flex' : 'none';
+        document.getElementById('box-filter-harian').style.display = (mode === 'harian' || mode === 'tidak-hadir') ? 'flex' : 'none';
         document.getElementById('box-filter-mingguan').style.display = (mode === 'mingguan') ? 'block' : 'none';
         document.getElementById('box-filter-bulanan').style.display = (mode === 'bulanan') ? 'flex' : 'none';
         document.getElementById('summary-card').style.display = (mode === 'harian') ? 'none' : 'block';
@@ -673,26 +682,71 @@
     function renderLogs() {
         const logsContainer = document.getElementById('attendance-logs');
         const mode = document.getElementById('mode-laporan').value;
+        const filterTanggal = document.getElementById('filter-tanggal').value;
         if(!logsContainer) return;
         logsContainer.innerHTML = '';
 
         if(mode === 'harian') {
-            const filterTanggal = document.getElementById('filter-tanggal').value;
+            document.getElementById('summary-card').style.display = 'none';
             attendanceLogs.filter(log => !filterTanggal || log.tanggal === filterTanggal).forEach(log => {
                 const item = document.createElement('div');
                 item.className = 'student-item';
                 item.innerHTML = `
                     <div style="flex:1;">
                         <div style="font-weight:600; font-size:14px;">${log.nama}</div>
-                        <div style="font-size:12px; color:var(--text-muted);">${log.kelas} • ${log.tanggal || 'Hari ini'} (${log.waktu})</div>
+                        <div style="font-size:12px; color:var(--text-muted);">${log.kelas} • ${log.tanggal} (${log.waktu})</div>
                     </div>
                     <span style="font-weight:700; font-size:13px; color: #4ade80;">${log.status}</span>
                 `;
                 logsContainer.appendChild(item);
             });
-        } 
+            if(attendanceLogs.filter(log => !filterTanggal || log.tanggal === filterTanggal).length === 0) {
+                logsContainer.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">Belum ada data absensi di tanggal ini.</div>`;
+            }
+        }
+        else if(mode === 'tidak-hadir') {
+            document.getElementById('summary-card').style.display = 'block';
+            
+            // Cari siapa saja yang sudah hadir di tanggal terpilih
+            const hadirNisSet = new Set(attendanceLogs.filter(l => l.tanggal === filterTanggal).map(l => l.nis));
+            
+            // Siswa yang belum hadir
+            let notPresentList = students.filter(s => !hadirNisSet.has(s.nis));
+
+            document.getElementById('summary-title').innerText = `Monitor Ketidakhadiran (${filterTanggal})`;
+            document.getElementById('summary-content').innerHTML = `Total Belum Hadir / Belum Scan: <b>${notPresentList.length} siswa</b>`;
+
+            notPresentList.forEach(student => {
+                const keyStatus = `${filterTanggal}_${student.nis}`;
+                const currentStatus = specialStatuses[keyStatus] || 'Alpa / Belum Hadir';
+                
+                let badgeColor = '#f87171'; // merah (alpa)
+                if(currentStatus === 'Sakit') badgeColor = '#38bdf8'; // biru
+                if(currentStatus === 'Izin') badgeColor = '#fbbf24'; // kuning
+
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <div style="flex:1;">
+                        <div style="font-weight:600; font-size:14px;">${student.nama}</div>
+                        <div style="font-size:12px; color:var(--text-muted);">${student.nis} • ${student.kelas}</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <select class="form-control" style="padding:6px 8px; font-size:12px; width:auto; color:${badgeColor}; font-weight:700;" onchange="updateSpecialStatus('${student.nis}', '${filterTanggal}', this.value)">
+                            <option value="Alpa" ${currentStatus==='Alpa'?'selected':''}>Alpa</option>
+                            <option value="Sakit" ${currentStatus==='Sakit'?'selected':''}>Sakit</option>
+                            <option value="Izin" ${currentStatus==='Izin'?'selected':''}>Izin</option>
+                        </select>
+                    </div>
+                `;
+                logsContainer.appendChild(item);
+            });
+
+            if(notPresentList.length === 0) {
+                logsContainer.innerHTML = `<div style="text-align:center; color:#4ade80; padding:20px; font-weight:700;">Luar biasa! Semua siswa sudah hadir pada tanggal ini.</div>`;
+            }
+        }
         else if(mode === 'mingguan') {
-            // Kalkulasi 7 hari terakhir
             const d = new Date();
             d.setDate(d.getDate() - 7);
             const limitDateStr = d.toISOString().slice(0,10);
@@ -761,6 +815,12 @@
                 logsContainer.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">Belum ada data absensi di bulan ini.</div>`;
             }
         }
+    }
+
+    function updateSpecialStatus(nis, tanggal, status) {
+        const key = `${tanggal}_${nis}`;
+        specialStatuses[key] = status;
+        localStorage.setItem('abseno_special_statuses', JSON.stringify(specialStatuses));
     }
 
     function openQRModal(nis, nama, kelas) {
