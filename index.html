@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AbsenO - Enterprise Biometric Attendance</title>
-    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,700;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Libraries -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -381,7 +379,6 @@
     let useFrontCamera = true;
     let faceApiLoaded = false;
 
-    // Memuat Model Face-API dari folder local ./models
     async function loadFaceApiModels() {
         if (faceApiLoaded) return true;
         const statusText = document.getElementById('text-status-wajah');
@@ -593,7 +590,6 @@
         if (streamKamera) { streamKamera.getTracks().forEach(track => track.stop()); streamKamera = null; }
     }
 
-    // Pindai & Pengecekan Vektor Face-API AI
     async function scanAndMatchFaceBiometrics() {
         const video = document.getElementById('video-wajah');
         const statusText = document.getElementById('text-status-wajah');
@@ -776,7 +772,6 @@
         document.getElementById('face-register-modal').classList.remove('active');
     }
 
-    // Ekstraksi Vektor AI Wajah Asli menggunakan Face-API
     async function generateAndSaveFaceVector() {
         const video = document.getElementById('video-daftar-wajah');
         const statusCap = document.getElementById('status-capture-wajah');
