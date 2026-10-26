@@ -593,13 +593,13 @@
         const video = document.getElementById('video-wajah');
         const statusText = document.getElementById('text-status-wajah');
 
-        if (!video.srcObject) {
+        if (!video.srcObject || video.paused) {
             statusText.innerHTML = `<span style="color: #38bdf8;">Menyalakan ulang kamera...</span>`;
             await inisialisasiKameraWajah();
             return;
         }
 
-        statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai & Mencocokkan Kode Biometrik...</span>`;
+        statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai & Mencocokkan...</span>`;
 
         const canvas = document.createElement('canvas');
         canvas.width = 160; canvas.height = 160;
@@ -610,18 +610,25 @@
         const matchedStudent = findStudentByVector(liveVector);
 
         if (matchedStudent) {
-            statusText.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Cocok (${matchedStudent.nama})</span>`;
-            prosesAbsensi(matchedStudent.nis, 'AI Wajah');
-            
-            // Otomatis reset teks status setelah 3 detik agar siap memindai siswa berikutnya
-            setTimeout(() => {
-                if(document.getElementById('text-status-wajah')) {
-                    document.getElementById('text-status-wajah').innerHTML = `<span style="font-size: 13px; color: var(--text-muted);">Siap memindai siswa berikutnya. Silakan tekan Pindai Wajah.</span>`;
-                }
-            }, 3000);
+            const todayDate = new Date().toISOString().slice(0,10);
+            const alreadyAbsen = attendanceLogs.some(l => l.nis === matchedStudent.nis && l.tanggal === todayDate);
+
+            if (alreadyAbsen) {
+                statusText.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ ${matchedStudent.nama} sudah absen hari ini!</span>`;
+            } else {
+                statusText.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil: ${matchedStudent.nama}</span>`;
+                prosesAbsensi(matchedStudent.nis, 'AI Wajah');
+            }
         } else {
             statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Dikenali / Belum Terdaftar</span>`;
         }
+
+        // Reset teks status otomatis setelah 3 detik agar siap memindai siswa berikutnya tanpa membuat kamera hitam
+        setTimeout(() => {
+            if(document.getElementById('text-status-wajah')) {
+                document.getElementById('text-status-wajah').innerHTML = `<span style="font-size: 13px; color: var(--text-muted);">Arahkan wajah siswa berikutnya & tekan Pindai.</span>`;
+            }
+        }, 3000);
     }
 
     function calculateBiometricHash(canvas) {
@@ -679,7 +686,7 @@
         if (student) {
             const alreadyAbsen = attendanceLogs.some(l => l.nis === student.nis && l.tanggal === todayDate);
             if(alreadyAbsen && statusManual === 'Hadir') {
-                if(resultBox) resultBox.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ ${student.nama} sudah absen hari ini!</span>`;
+                if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ ${student.nama} sudah absen hari ini!</span>`;
             } else {
                 const logData = { nis: student.nis, nama: student.nama, kelas: student.kelas, tanggal: todayDate, waktu: now, status: statusManual, metode: metode };
                 
