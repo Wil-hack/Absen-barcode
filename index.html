@@ -640,7 +640,7 @@
             }
         } catch (err) {
             console.error(err);
-            statusText.innerHTML = `<span style="color: #f87171;">✕ Kesalahan Pindaian AI</span>`;
+            statusText.innerHTML = `<span style="color: #f87171;">✕ Error: ${err.message || err}</span>`;
         }
     }
 
@@ -789,7 +789,7 @@
             }
         } catch (err) {
             console.error(err);
-            statusCap.innerHTML = `<span style="color:#f87171;">✕ Gagal mendeteksi biometrik.</span>`;
+            statusCap.innerHTML = `<span style="color:#f87171;">✕ Error: ${err.message || err}</span>`;
         }
     }
 
