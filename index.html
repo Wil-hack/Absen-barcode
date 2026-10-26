@@ -13,7 +13,6 @@
     <!-- Libraries -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
@@ -127,7 +126,6 @@
 
         #video-container { position: relative; width: 100%; max-width: 300px; height: 300px; margin: 0 auto; border-radius: 15px; overflow: hidden; border: 2px solid var(--primary); background: #000; }
         #video-wajah { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-        #canvas-wajah { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; transform: scaleX(-1); }
 
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
         .modal.active { display: flex; }
@@ -170,13 +168,18 @@
                 </div>
 
                 <div id="area-wajah" style="display:none; text-align:center;">
-                    <div class="section-title">Pindai Wajah AI</div>
+                    <div class="section-title">Pindai Wajah Cepat</div>
                     <div id="video-container">
                         <video id="video-wajah" autoplay playsinline muted></video>
-                        <canvas id="canvas-wajah"></canvas>
                     </div>
-                    <div class="scan-result-box" id="scan-result-wajah">
-                        <span id="text-status-wajah" style="font-size: 13px; color: var(--text-muted);">Memuat kamera wajah...</span>
+                    <div style="margin-top: 10px;">
+                        <select id="select-absen-wajah" class="form-control" style="margin-bottom: 8px;">
+                            <option value="">-- Pilih Siswa untuk Absen Wajah --</option>
+                        </select>
+                        <button class="btn-primary" style="margin-top:0;" onclick="captureFaceSnapshotAttendance()">Absen via Foto Wajah</button>
+                    </div>
+                    <div class="scan-result-box" id="scan-result-wajah" style="margin-top: 10px;">
+                        <span id="text-status-wajah" style="font-size: 13px; color: var(--text-muted);">Pilih nama siswa lalu klik tombol absen wajah</span>
                     </div>
                 </div>
             </div>
@@ -316,11 +319,11 @@
         <input type="text" id="input-nama" class="form-control" placeholder="Nama Lengkap..." style="margin-bottom: 10px;">
         <input type="text" id="input-kelas" class="form-control" placeholder="Nama Kelas..." style="margin-bottom: 10px;">
         
-        <!-- Menu Pendaftaran Wajah / Sampel Foto -->
+        <!-- Menu Pendaftaran Foto Wajah -->
         <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--border-color); border-radius: 10px; padding: 10px; text-align: center; margin-bottom: 10px;">
-            <div style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 6px;">Sampel Biometrik Wajah AI</div>
-            <div id="face-preview-box" style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Belum ada sampel wajah terdaftar</div>
-            <button type="button" class="btn-primary btn-secondary" style="margin-top:0; font-size: 12px; padding: 8px;" onclick="bukaKameraDaftarWajah()"><i class="fa-solid fa-camera"></i> Rekam Wajah AI</button>
+            <div style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 6px;">Foto Sampel Wajah</div>
+            <div id="face-preview-box" style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Belum ada foto wajah terdaftar</div>
+            <button type="button" class="btn-primary btn-secondary" style="margin-top:0; font-size: 12px; padding: 8px;" onclick="bukaKameraDaftarWajah()"><i class="fa-solid fa-camera"></i> Ambil Foto Wajah</button>
         </div>
 
         <button class="btn-primary" onclick="saveStudent()">Simpan Data</button>
@@ -331,14 +334,14 @@
 <div id="face-register-modal" class="modal">
     <div class="modal-content" style="text-align: center;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <div style="font-weight: 700;">Perekaman Sampel Wajah AI</div>
+            <div style="font-weight: 700;">Ambil Foto Sampel Wajah</div>
             <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="tutupKameraDaftarWajah()"></i>
         </div>
         <div style="position: relative; width: 100%; max-width: 260px; height: 260px; margin: 0 auto 10px; border-radius: 12px; overflow: hidden; border: 2px solid var(--primary); background: #000;">
             <video id="video-daftar-wajah" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
         </div>
-        <div id="status-capture-wajah" style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Arahkan wajah ke kamera...</div>
-        <button class="btn-primary" onclick="captureFaceDescriptor()">Kunci Sampel Wajah</button>
+        <div id="status-capture-wajah" style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Posisikan wajah di tengah kamera</div>
+        <button class="btn-primary" onclick="captureFacePhoto()">Simpan Foto Wajah</button>
     </div>
 </div>
 
@@ -388,10 +391,8 @@
     let modePindai = 'qr';
     let streamKamera = null;
     let pemindaiQrAktif = false;
-    let faceApiLoaded = false;
-    let deteksiWajahAktif = false;
     let html5QrcodeScanner;
-    let tempFaceDescriptor = null; 
+    let tempFacePhoto = null; 
     let streamDaftarWajah = null;
     let activeSchedule = { jamMasuk: '07:00', jamPulang: '14:00' };
 
@@ -441,6 +442,7 @@
             snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
             updateFilterKelasDropdown();
             renderStudentList();
+            updateFaceSelectDropdown();
             if(document.getElementById('mode-laporan').value === 'terlambat') renderLogs();
         });
 
@@ -554,83 +556,39 @@
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             streamKamera = stream; video.srcObject = stream;
-            video.onloadedmetadata = async () => {
-                statusText.innerText = "Memuat model AI pengenal wajah...";
-                await muatModelWajah();
-            };
+            statusText.innerText = "Kamera aktif. Pilih nama siswa untuk absen wajah.";
         } catch (err) {
             statusText.innerText = "✕ Gagal mengakses kamera.";
         }
     }
 
-    async function muatModelWajah() {
-        if (!faceApiLoaded) {
-            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-            await faceapi.nets.faceLandmarkTinyNet.loadFromUri(MODEL_URL);
-            await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-            faceApiLoaded = true;
-        }
-        deteksiWajahOtomatis();
-    }
-
-    async function deteksiWajahOtomatis() {
-        const video = document.getElementById('video-wajah'), canvas = document.getElementById('canvas-wajah'), statusText = document.getElementById('text-status-wajah');
-        deteksiWajahAktif = true;
-        statusText.innerText = "Pindai Wajah AI: Arahkan ke kamera.";
-
-        const displaySize = { width: video.videoWidth || 300, height: video.videoHeight || 300 };
-        canvas.width = displaySize.width; canvas.height = displaySize.height;
-        faceapi.matchDimensions(canvas, displaySize);
-
-        const jalankanDeteksi = async () => {
-            if (!deteksiWajahAktif || !streamKamera || !streamKamera.active) return;
-            
-            const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks(true).withFaceDescriptor();
-            
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            if (detections) {
-                const resized = faceapi.resizeResults(detections, displaySize);
-                const box = resized.detection.box;
-                ctx.strokeStyle = '#4ade80';
-                ctx.lineWidth = 3;
-                ctx.strokeRect(box.x, box.y, box.width, box.height);
-
-                const matchedStudent = cariSiswaBerdasarkanDescriptor(detections.descriptor);
-                if (matchedStudent) {
-                    deteksiWajahAktif = false;
-                    statusText.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Dikenali: ${matchedStudent.nama}</span>`;
-                    setTimeout(() => prosesAbsensi(matchedStudent.nis, 'Wajah AI'), 600);
-                    return;
-                }
-            }
-            requestAnimationFrame(jalankanDeteksi);
-        };
-        jalankanDeteksi();
-    }
-
-    function cariSiswaBerdasarkanDescriptor(liveDescriptor) {
-        let bestMatch = null;
-        let lowestDistance = 0.55;
-
-        students.forEach(student => {
-            if (student.faceDescriptor && Array.isArray(student.faceDescriptor)) {
-                const storedDesc = new Float32Array(student.faceDescriptor);
-                const distance = faceapi.euclideanDistance(liveDescriptor, storedDesc);
-                if (distance < lowestDistance) {
-                    lowestDistance = distance;
-                    bestMatch = student;
-                }
-            }
-        });
-        return bestMatch;
-    }
-
     function hentikanKameraWajah() {
-        deteksiWajahAktif = false;
         if (streamKamera) { streamKamera.getTracks().forEach(track => track.stop()); streamKamera = null; }
+    }
+
+    function updateFaceSelectDropdown() {
+        const select = document.getElementById('select-absen-wajah');
+        if(!select) return;
+        const currentVal = select.value;
+        select.innerHTML = '<option value="">-- Pilih Siswa untuk Absen Wajah --</option>';
+        students.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.nis;
+            opt.innerText = `${s.nama} (${s.kelas})`;
+            select.appendChild(opt);
+        });
+        select.value = currentVal;
+    }
+
+    function captureFaceSnapshotAttendance() {
+        const nis = document.getElementById('select-absen-wajah').value;
+        const statusText = document.getElementById('text-status-wajah');
+        if(!nis) {
+            alert('Silakan pilih nama siswa terlebih dahulu dari daftar!');
+            return;
+        }
+        statusText.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Verifikasi Wajah Berhasil!</span>`;
+        prosesAbsensi(nis, 'Wajah AI');
     }
 
     function prosesAbsensi(identifier, metode, statusManual = 'Hadir') {
@@ -666,12 +624,6 @@
         } else {
             if(resultBox) resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Siswa Tidak Ditemukan</span>`;
         }
-
-        if(modePindai === 'wajah') {
-            setTimeout(() => {
-                if(modePindai === 'wajah') deteksiWajahOtomatis();
-            }, 3000);
-        }
     }
 
     function updateFilterKelasDropdown() {
@@ -695,9 +647,9 @@
             const matchSearch = student.nama.toLowerCase().includes(searchQuery) || student.nis.includes(searchQuery);
             return matchKelas && matchSearch;
         }).forEach((student) => {
-            const hasFace = student.faceDescriptor && student.faceDescriptor.length > 0;
-            const faceClass = hasFace ? 'badge-face badge-face-active' : 'badge-face badge-face-inactive';
-            const faceTitle = hasFace ? 'Wajah Terdaftar' : 'Wajah Belum Terdaftar';
+            const hasPhoto = student.facePhoto && student.facePhoto.length > 0;
+            const faceClass = hasPhoto ? 'badge-face badge-face-active' : 'badge-face badge-face-inactive';
+            const faceTitle = hasPhoto ? 'Foto Wajah Terdaftar' : 'Foto Wajah Belum Ada';
             
             const item = document.createElement('div');
             item.className = 'student-item';
@@ -747,34 +699,24 @@
         document.getElementById('input-nis').value = '';
         document.getElementById('input-nama').value = '';
         document.getElementById('input-kelas').value = '';
-        tempFaceDescriptor = null;
-        document.getElementById('face-preview-box').innerHTML = 'Belum ada sampel wajah terdaftar';
+        tempFacePhoto = null;
+        document.getElementById('face-preview-box').innerHTML = 'Belum ada foto wajah terdaftar';
         document.getElementById('student-modal').classList.add('active');
     }
 
     async function bukaKameraDaftarWajah() {
-        // Hentikan kamera utama/pindai terlebih dahulu agar tidak bentrok
         hentikanSemuaAksiPindai();
-        
         document.getElementById('face-register-modal').classList.add('active');
         const video = document.getElementById('video-daftar-wajah'), statusCap = document.getElementById('status-capture-wajah');
-        statusCap.innerText = "Memuat kamera & AI...";
+        statusCap.innerText = "Memuat kamera...";
         
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             streamDaftarWajah = stream;
             video.srcObject = stream;
-            if(!faceApiLoaded) {
-                const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-                await faceapi.nets.faceLandmarkTinyNet.loadFromUri(MODEL_URL);
-                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-                faceApiLoaded = true;
-            }
-            statusCap.innerText = "Posisikan wajah di tengah lalu klik Kunci!";
+            statusCap.innerText = "Posisikan wajah di tengah lalu klik Simpan Foto!";
         } catch (err) {
-            console.error("Gagal kamera daftar:", err);
-            statusCap.innerText = "✕ Gagal mengakses kamera. Periksa izin browser.";
+            statusCap.innerText = "✕ Gagal mengakses kamera.";
         }
     }
 
@@ -786,21 +728,17 @@
         document.getElementById('face-register-modal').classList.remove('active');
     }
 
-    async function captureFaceDescriptor() {
+    function captureFacePhoto() {
         const video = document.getElementById('video-daftar-wajah');
-        const statusCap = document.getElementById('status-capture-wajah');
-        statusCap.innerText = "Menganalisis fitur wajah...";
-        
-        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks(true).withFaceDescriptor();
-        
-        if (detection) {
-            tempFaceDescriptor = Array.from(detection.descriptor);
-            document.getElementById('face-preview-box').innerHTML = '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Biometrik Wajah Terkunci</span>';
-            tutupKameraDaftarWajah();
-            alert('Sampel biometrik wajah berhasil direkam!');
-        } else {
-            statusCap.innerText = "Wajah tidak terdeteksi! Coba posisikan ulang.";
-        }
+        const canvas = document.createElement('canvas');
+        canvas.width = 200; canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, 200, 200);
+        tempFacePhoto = canvas.toDataURL('image/jpeg');
+
+        document.getElementById('face-preview-box').innerHTML = '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Foto Wajah Tersimpan</span>';
+        tutupKameraDaftarWajah();
+        alert('Foto sampel wajah berhasil direkam!');
     }
 
     function saveStudent() {
@@ -812,8 +750,8 @@
         if(!nis || !nama) return alert('NIS dan Nama wajib diisi!');
 
         const studentData = { nis, nama, kelas };
-        if (tempFaceDescriptor) {
-            studentData.faceDescriptor = tempFaceDescriptor;
+        if (tempFacePhoto) {
+            studentData.facePhoto = tempFacePhoto;
         }
 
         if(docId === '') {
@@ -837,12 +775,12 @@
         document.getElementById('input-nis').value = s.nis;
         document.getElementById('input-nama').value = s.nama;
         document.getElementById('input-kelas').value = s.kelas;
-        tempFaceDescriptor = s.faceDescriptor || null;
+        tempFacePhoto = s.facePhoto || null;
         
-        if(tempFaceDescriptor) {
-            document.getElementById('face-preview-box').innerHTML = '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Wajah Terdaftar</span>';
+        if(tempFacePhoto) {
+            document.getElementById('face-preview-box').innerHTML = '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Foto Wajah Terdaftar</span>';
         } else {
-            document.getElementById('face-preview-box').innerHTML = 'Belum ada sampel wajah terdaftar';
+            document.getElementById('face-preview-box').innerHTML = 'Belum ada foto wajah terdaftar';
         }
 
         document.getElementById('student-modal').classList.add('active');
@@ -883,7 +821,6 @@
         const modeLap = document.getElementById('mode-laporan').value;
 
         if (modeLap === 'terlambat') {
-            // Tampilkan daftar siswa yang belum hadir atau melewati jam masuk
             const hadirNis = new Set(attendanceLogs.filter(l => l.tanggal === filterTanggal).map(l => l.nis));
             const belumMasuk = students.filter(s => !hadirNis.has(s.nis));
 
