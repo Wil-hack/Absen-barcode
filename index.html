@@ -102,12 +102,15 @@
         .student-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border-color); margin-bottom: 8px; }
         .student-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; margin-right: 12px; border: 1px solid var(--primary); }
 
-        .action-btns { display: flex; gap: 6px; }
+        .action-btns { display: flex; gap: 6px; align-items: center; }
         .btn-icon { width: 30px; height: 30px; border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; }
         .btn-edit { background: rgba(2, 132, 199, 0.2); color: #38bdf8; }
         .btn-qr { background: rgba(217, 119, 6, 0.2); color: #fbbf24; }
-        .btn-face { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
         .btn-delete { background: rgba(220, 38, 38, 0.2); color: #f87171; }
+        
+        .badge-face { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); letter-spacing: 0.5px; }
+        .badge-face-active { background: rgba(74, 222, 128, 0.15); color: #4ade80; border-color: rgba(74, 222, 128, 0.4); }
+        .badge-face-inactive { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); text-decoration: line-through; }
 
         .fab { position: fixed; bottom: 90px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #000000; border: none; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 6px 16px rgba(0,0,0,0.5); cursor: pointer; z-index: 10; }
 
@@ -363,7 +366,7 @@
     let faceApiLoaded = false;
     let deteksiWajahAktif = false;
     let html5QrcodeScanner;
-    let tempFaceData = null; // Menyimpan status wajah sementara
+    let tempFaceData = null;
     let streamDaftarWajah = null;
 
     window.onload = function() {
@@ -562,7 +565,6 @@
                 statusText.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Wajah Terdeteksi! Memproses...</span>`;
                 setTimeout(() => {
                     if (students.length > 0) {
-                        // Prioritaskan siswa yang memiliki data wajah terdaftar
                         const terdaftarWajah = students.filter(s => s.hasFace);
                         const targetSiswa = terdaftarWajah.length > 0 ? terdaftarWajah[Math.floor(Math.random() * terdaftarWajah.length)] : students[0];
                         prosesAbsensi(targetSiswa.nis, 'Wajah');
@@ -643,19 +645,19 @@
             const matchSearch = student.nama.toLowerCase().includes(searchQuery) || student.nis.includes(searchQuery);
             return matchKelas && matchSearch;
         }).forEach((student, idx) => {
-            const faceStatusColor = student.hasFace ? '#4ade80' : 'var(--text-muted)';
-            const faceIconTitle = student.hasFace ? 'Wajah Terdaftar' : 'Belum Ada Wajah';
+            const faceClass = student.hasFace ? 'badge-face badge-face-active' : 'badge-face badge-face-inactive';
+            const faceTitle = student.hasFace ? 'Wajah Terdaftar' : 'Wajah Belum Terdaftar';
             
             const item = document.createElement('div');
             item.className = 'student-item';
             item.innerHTML = `
-                <div class="student-avatar" style="border-color: ${faceStatusColor};">${student.nama.charAt(0)}</div>
+                <div class="student-avatar">${student.nama.charAt(0)}</div>
                 <div style="flex:1;">
                     <div style="font-weight:600; font-size:15px;">${student.nama}</div>
                     <div style="font-size:12px; color:var(--text-muted);">${student.nis} • ${student.kelas}</div>
                 </div>
                 <div class="action-btns">
-                    <button class="btn-icon btn-face" title="${faceIconTitle}" style="color: ${faceStatusColor};"><i class="fa-solid fa-face-smile"></i></button>
+                    <span class="${faceClass}" title="${faceTitle}">FACE</span>
                     <button class="btn-icon btn-qr" onclick="openQRModal('${student.nis}', '${student.nama}', '${student.kelas}')" title="Cetak QR"><i class="fa-solid fa-qrcode"></i></button>
                     <button class="btn-icon btn-edit" onclick="editStudent('${student.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
                     <button class="btn-icon btn-delete" onclick="deleteStudent('${student.id}')" title="Hapus"><i class="fa-solid fa-trash"></i></button>
