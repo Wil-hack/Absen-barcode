@@ -130,14 +130,14 @@
         .printable-card { background: #ffffff; color: #000000; border: 2px solid #8c4a27; border-radius: 12px; padding: 20px; text-align: center; margin: 10px 0; }
         #qrcode img { margin: 12px auto; }
 
-        /* Fullscreen QRIS Modal */
+        /* Fullscreen QRIS Modal - Diperbesar Penuh */
         #fullscreen-qris-modal {
-            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.95); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; padding: 20px; text-align: center;
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.96); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; padding: 10px; text-align: center;
         }
         #fullscreen-qris-modal.active { display: flex; }
     </style>
 </head>
-<body data-theme="heritage">
+<body data-theme="heritage" onclick="initAudioContext()">
 
 <div id="app-container">
     <div class="batik-overlay"></div>
@@ -282,7 +282,7 @@
                 </div>
             </div>
 
-            <!-- KARTU DONASI / DUKUNG PENGEMBANG (DIPOSISIKAN DI BAWAH OPSI RESET) -->
+            <!-- KARTU DONASI DI BAWAH OPSI RESET -->
             <div class="glass-card" style="text-align: center; padding: 20px 14px;">
                 <div class="section-title" style="color: var(--primary); font-size: 16px; margin-bottom: 6px;">Dukung Pengembang</div>
                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4;">
@@ -310,16 +310,16 @@
     </nav>
 </div>
 
-<!-- FULLSCREEN QRIS OVERLAY -->
+<!-- FULLSCREEN QRIS OVERLAY - UKURAN JAUH LEBIH BESAR -->
 <div id="fullscreen-qris-modal" onclick="closeFullscreenQRIS()">
-    <div style="position: absolute; top: 20px; right: 20px; color: #fff; font-size: 24px; cursor: pointer;">
+    <div style="position: absolute; top: 15px; right: 20px; color: #fff; font-size: 28px; cursor: pointer; z-index: 10000;">
         <i class="fa-solid fa-xmark"></i>
     </div>
-    <div style="font-family: var(--font-heading); color: var(--primary); font-size: 20px; margin-bottom: 15px;">QRIS Dukungan Pengembang</div>
-    <div style="background: #ffffff; padding: 20px; border-radius: 16px; max-width: 90%; max-height: 75vh; display: flex; align-items: center; justify-content: center;">
-        <img src="qris.jpg" alt="QRIS Fullscreen" style="width: 100%; max-width: 320px; height: auto; object-fit: contain; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/300?text=QRIS+Barcode'">
+    <div style="font-family: var(--font-heading); color: var(--primary); font-size: 18px; margin-bottom: 10px;">QRIS Dukungan Pengembang</div>
+    <div style="background: #ffffff; padding: 12px; border-radius: 16px; width: 95%; max-width: 420px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+        <img src="qris.jpg" alt="QRIS Fullscreen" style="width: 100%; height: auto; max-height: 78vh; object-fit: contain; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/350?text=QRIS+Barcode'">
     </div>
-    <div style="color: #fff; font-size: 13px; margin-top: 15px; font-weight: 600;">Ketuk di mana saja untuk menutup</div>
+    <div style="color: #fff; font-size: 12px; margin-top: 12px; font-weight: 600; opacity: 0.8;">Ketuk di mana saja untuk menutup</div>
 </div>
 
 <!-- Modals -->
@@ -408,6 +408,16 @@
     let activeSchedule = { jamMasuk: '07:00', jamPulang: '14:00' };
     let useFrontCamera = true;
     let faceApiLoaded = false;
+    let audioCtx = null;
+
+    // AUDIO CONTEXT UNLOCKER
+    function initAudioContext() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } else if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
 
     // FULLSCREEN QRIS FUNCTIONS
     function openFullscreenQRIS() {
@@ -419,41 +429,44 @@
 
     // AUDIO & VIBRATION FEEDBACK
     function playSuccessSound() {
+        initAudioContext();
         if ("vibrate" in navigator) navigator.vibrate(100);
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator(), gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
         osc.type = "sine";
-        osc.frequency.setValueAtTime(880, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1760, ctx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-        osc.start(); osc.stop(ctx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.15);
     }
 
     function playWarningSound() {
+        initAudioContext();
         if ("vibrate" in navigator) navigator.vibrate([100, 50, 100]);
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator(), gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
         osc.type = "triangle";
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
-        osc.frequency.setValueAtTime(440, ctx.currentTime + 0.12);
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
-        osc.start(); osc.stop(ctx.currentTime + 0.25);
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.25);
     }
 
     function playErrorSound() {
+        initAudioContext();
         if ("vibrate" in navigator) navigator.vibrate(300);
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator(), gain = ctx.createGain();
-        osc.connect(gain); gain.connect(ctx.destination);
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
         osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(220, ctx.currentTime);
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-        osc.start(); osc.stop(ctx.currentTime + 0.2);
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
     }
 
     function speakText(text) {
@@ -1039,6 +1052,7 @@
         document.getElementById('input-hari').value = 'Senin - Sabtu';
     }
 
+    // PERBAIKAN DOWNLOAD CSV SUPAYA WORK DI HP
     function exportCSV() {
         if (!attendanceLogs || attendanceLogs.length === 0) {
             alert('Tidak ada data laporan absen untuk di-download!');
@@ -1050,19 +1064,21 @@
             csv += `"${l.nis || ''}","${l.nama || ''}","${l.kelas || ''}","${l.tanggal || '-'}","${l.waktu || ''}","${l.status || ''}","${l.metode || 'QR Code'}"\n`;
         });
 
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Laporan_AbsenO_${new Date().toISOString().slice(0,10)}.csv`;
-        
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        
-        setTimeout(() => {
-            URL.revokeObjectURL(url);
-        }, 1000);
+        try {
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Laporan_AbsenO_${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch (e) {
+            // Metode alternatif via window.open jika terhalang browser HP
+            const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csv);
+            window.open(encodedUri);
+        }
     }
 </script>
 </body>
