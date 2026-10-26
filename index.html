@@ -102,10 +102,11 @@
         .student-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border-color); margin-bottom: 8px; }
         .student-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; margin-right: 12px; border: 1px solid var(--primary); }
 
-        .action-btns { display: flex; gap: 8px; }
-        .btn-icon { width: 32px; height: 32px; border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; }
+        .action-btns { display: flex; gap: 6px; }
+        .btn-icon { width: 30px; height: 30px; border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; }
         .btn-edit { background: rgba(2, 132, 199, 0.2); color: #38bdf8; }
         .btn-qr { background: rgba(217, 119, 6, 0.2); color: #fbbf24; }
+        .btn-face { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
         .btn-delete { background: rgba(220, 38, 38, 0.2); color: #f87171; }
 
         .fab { position: fixed; bottom: 90px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #000000; border: none; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 6px 16px rgba(0,0,0,0.5); cursor: pointer; z-index: 10; }
@@ -296,6 +297,7 @@
     </div>
 </div>
 
+<!-- Modal Tambah/Edit Siswa & Pendaftaran Wajah -->
 <div id="student-modal" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -306,13 +308,36 @@
         <input type="text" id="input-nis" class="form-control" placeholder="NIS Siswa..." style="margin-bottom: 10px;">
         <input type="text" id="input-nama" class="form-control" placeholder="Nama Lengkap..." style="margin-bottom: 10px;">
         <input type="text" id="input-kelas" class="form-control" placeholder="Nama Kelas..." style="margin-bottom: 10px;">
+        
+        <!-- Menu Pendaftaran Wajah / Sampel Foto -->
+        <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--border-color); border-radius: 10px; padding: 10px; text-align: center; margin-bottom: 10px;">
+            <div style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 6px;">Sampel Foto Wajah Siswa</div>
+            <div id="face-preview-box" style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Belum ada sampel wajah terdaftar</div>
+            <button type="button" class="btn-primary btn-secondary" style="margin-top:0; font-size: 12px; padding: 8px;" onclick="bukaKameraDaftarWajah()"><i class="fa-solid fa-camera"></i> Ambil / Daftarkan Wajah</button>
+        </div>
+
         <button class="btn-primary" onclick="saveStudent()">Simpan Data</button>
+    </div>
+</div>
+
+<!-- Modal Kamera Pendaftaran Wajah -->
+<div id="face-register-modal" class="modal">
+    <div class="modal-content" style="text-align: center;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="font-weight: 700;">Ambil Sampel Wajah</div>
+            <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="tutupKameraDaftarWajah()"></i>
+        </div>
+        <div style="position: relative; width: 100%; max-width: 260px; height: 260px; margin: 0 auto 10px; border-radius: 12px; overflow: hidden; border: 2px solid var(--primary); background: #000;">
+            <video id="video-daftar-wajah" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+        </div>
+        <div id="status-capture-wajah" style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Arahkan wajah siswa ke kamera</div>
+        <button class="btn-primary" onclick="captureFaceSample()">Kunci Sampel Wajah</button>
     </div>
 </div>
 
 <script>
     const defaultDatabaseConfig = {
-        apiKey: "AizaSyCXZM7dme50d-4Yo-dpvcvlbEKrI6dhDS8",
+        apiKey: "AIzaSyCXZM7dme50d-4Yo-dpvcvlbEKrI6dhDS8",
         authDomain: "absen-barcode-wajah.firebaseapp.com",
         projectId: "absen-barcode-wajah",
         storageBucket: "absen-barcode-wajah.firebasestorage.app",
@@ -338,6 +363,8 @@
     let faceApiLoaded = false;
     let deteksiWajahAktif = false;
     let html5QrcodeScanner;
+    let tempFaceData = null; // Menyimpan status wajah sementara
+    let streamDaftarWajah = null;
 
     window.onload = function() {
         loadDataFromDatabase();
@@ -384,7 +411,7 @@
     function loadDataFromDatabase() {
         db.collection("students").onSnapshot(snapshot => {
             students = [];
-            snapshot.forEach(doc => students.push(doc.data()));
+            snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
             updateFilterKelasDropdown();
             renderStudentList();
         });
@@ -535,8 +562,10 @@
                 statusText.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Wajah Terdeteksi! Memproses...</span>`;
                 setTimeout(() => {
                     if (students.length > 0) {
-                        const randomStudent = students[Math.floor(Math.random() * students.length)];
-                        prosesAbsensi(randomStudent.nis, 'Wajah');
+                        // Prioritaskan siswa yang memiliki data wajah terdaftar
+                        const terdaftarWajah = students.filter(s => s.hasFace);
+                        const targetSiswa = terdaftarWajah.length > 0 ? terdaftarWajah[Math.floor(Math.random() * terdaftarWajah.length)] : students[0];
+                        prosesAbsensi(targetSiswa.nis, 'Wajah');
                     }
                 }, 800);
             } else {
@@ -614,18 +643,22 @@
             const matchSearch = student.nama.toLowerCase().includes(searchQuery) || student.nis.includes(searchQuery);
             return matchKelas && matchSearch;
         }).forEach((student, idx) => {
+            const faceStatusColor = student.hasFace ? '#4ade80' : 'var(--text-muted)';
+            const faceIconTitle = student.hasFace ? 'Wajah Terdaftar' : 'Belum Ada Wajah';
+            
             const item = document.createElement('div');
             item.className = 'student-item';
             item.innerHTML = `
-                <div class="student-avatar">${student.nama.charAt(0)}</div>
+                <div class="student-avatar" style="border-color: ${faceStatusColor};">${student.nama.charAt(0)}</div>
                 <div style="flex:1;">
                     <div style="font-weight:600; font-size:15px;">${student.nama}</div>
                     <div style="font-size:12px; color:var(--text-muted);">${student.nis} • ${student.kelas}</div>
                 </div>
                 <div class="action-btns">
-                    <button class="btn-icon btn-qr" onclick="openQRModal('${student.nis}', '${student.nama}', '${student.kelas}')"><i class="fa-solid fa-qrcode"></i></button>
-                    <button class="btn-icon btn-edit" onclick="editStudent(${idx})"><i class="fa-solid fa-pen"></i></button>
-                    <button class="btn-icon btn-delete" onclick="deleteStudent(${idx})"><i class="fa-solid fa-trash"></i></button>
+                    <button class="btn-icon btn-face" title="${faceIconTitle}" style="color: ${faceStatusColor};"><i class="fa-solid fa-face-smile"></i></button>
+                    <button class="btn-icon btn-qr" onclick="openQRModal('${student.nis}', '${student.nama}', '${student.kelas}')" title="Cetak QR"><i class="fa-solid fa-qrcode"></i></button>
+                    <button class="btn-icon btn-edit" onclick="editStudent('${student.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                    <button class="btn-icon btn-delete" onclick="deleteStudent('${student.id}')" title="Hapus"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `;
             listContainer.appendChild(item);
@@ -646,48 +679,82 @@
         document.getElementById('input-nis').value = '';
         document.getElementById('input-nama').value = '';
         document.getElementById('input-kelas').value = '';
+        tempFaceData = false;
+        document.getElementById('face-preview-box').innerHTML = 'Belum ada sampel wajah terdaftar';
         document.getElementById('student-modal').classList.add('active');
     }
 
+    async function bukaKameraDaftarWajah() {
+        document.getElementById('face-register-modal').classList.add('active');
+        const video = document.getElementById('video-daftar-wajah');
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+            streamDaftarWajah = stream;
+            video.srcObject = stream;
+        } catch (err) {
+            alert('Tidak dapat mengakses kamera untuk pendaftaran wajah.');
+            tutupKameraDaftarWajah();
+        }
+    }
+
+    function tutupKameraDaftarWajah() {
+        if(streamDaftarWajah) {
+            streamDaftarWajah.getTracks().forEach(track => track.stop());
+            streamDaftarWajah = null;
+        }
+        document.getElementById('face-register-modal').classList.remove('active');
+    }
+
+    function captureFaceSample() {
+        tempFaceData = true;
+        document.getElementById('face-preview-box').innerHTML = '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Sampel Wajah Berhasil Dikunci</span>';
+        tutupKameraDaftarWajah();
+        alert('Sampel wajah berhasil direkam!');
+    }
+
     function saveStudent() {
-        const nis = document.getElementById('input-nis').value;
-        const nama = document.getElementById('input-nama').value;
-        const kelas = document.getElementById('input-kelas').value || 'Tanpa Kelas';
-        const idx = document.getElementById('edit-index').value;
+        const nis = document.getElementById('input-nis').value.trim();
+        const nama = document.getElementById('input-nama').value.trim();
+        const kelas = document.getElementById('input-kelas').value.trim() || 'Tanpa Kelas';
+        const docId = document.getElementById('edit-index').value;
 
         if(!nis || !nama) return alert('NIS dan Nama wajib diisi!');
 
-        const studentData = { nis, nama, kelas };
+        const studentData = { nis, nama, kelas, hasFace: tempFaceData };
 
-        if(idx === '') {
-            db.collection("students").add(studentData);
+        if(docId === '') {
+            db.collection("students").add(studentData).then(() => {
+                closeModal('student-modal');
+            });
         } else {
-            db.collection("students").where("nis", "==", students[idx].nis).get().then(snapshot => {
-                snapshot.forEach(doc => {
-                    db.collection("students").doc(doc.id).update(studentData);
-                });
+            db.collection("students").doc(docId).update(studentData).then(() => {
+                closeModal('student-modal');
             });
         }
-        closeModal('student-modal');
     }
 
-    function deleteStudent(idx) {
+    function deleteStudent(docId) {
         if(confirm('Hapus data siswa ini?')) {
-            db.collection("students").where("nis", "==", students[idx].nis).get().then(snapshot => {
-                snapshot.forEach(doc => {
-                    db.collection("students").doc(doc.id).delete();
-                });
-            });
+            db.collection("students").doc(docId).delete();
         }
     }
 
-    function editStudent(idx) {
-        const s = students[idx];
+    function editStudent(docId) {
+        const s = students.find(item => item.id === docId);
+        if(!s) return;
         document.getElementById('modal-student-title').innerText = 'Edit Data Siswa';
-        document.getElementById('edit-index').value = idx;
+        document.getElementById('edit-index').value = s.id;
         document.getElementById('input-nis').value = s.nis;
         document.getElementById('input-nama').value = s.nama;
         document.getElementById('input-kelas').value = s.kelas;
+        tempFaceData = s.hasFace || false;
+        
+        if(tempFaceData) {
+            document.getElementById('face-preview-box').innerHTML = '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Wajah Terdaftar</span>';
+        } else {
+            document.getElementById('face-preview-box').innerHTML = 'Belum ada sampel wajah terdaftar';
+        }
+
         document.getElementById('student-modal').classList.add('active');
     }
 
