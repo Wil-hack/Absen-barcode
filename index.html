@@ -623,7 +623,6 @@
             statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Dikenali / Belum Terdaftar</span>`;
         }
 
-        // Reset teks status otomatis setelah 3 detik agar siap memindai siswa berikutnya tanpa membuat kamera hitam
         setTimeout(() => {
             if(document.getElementById('text-status-wajah')) {
                 document.getElementById('text-status-wajah').innerHTML = `<span style="font-size: 13px; color: var(--text-muted);">Arahkan wajah siswa berikutnya & tekan Pindai.</span>`;
@@ -737,7 +736,8 @@
             const hasVector = student.faceVector && student.faceVector.length > 0;
             const faceClass = hasVector ? 'badge-face badge-face-active' : 'badge-face badge-face-inactive';
             const faceTitle = hasVector ? 'Biometrik Wajah Terdaftar' : 'Biometrik Wajah Belum Ada';
-            
+            const faceLabel = hasVector ? 'FACE' : '<span style="text-decoration: line-through;">FACE</span>';
+
             const item = document.createElement('div');
             item.className = 'student-item';
             item.innerHTML = `
@@ -747,7 +747,7 @@
                     <div style="font-size:12px; color:var(--text-muted);">${student.nis} • ${student.kelas}</div>
                 </div>
                 <div class="action-btns">
-                    <span class="${faceClass}" title="${faceTitle}">AI VECTOR</span>
+                    <span class="${faceClass}" title="${faceTitle}">${faceLabel}</span>
                     <button class="btn-icon btn-status" onclick="openStatusModal('${student.nis}', '${student.nama}')" title="Ubah Status"><i class="fa-solid fa-clipboard-user"></i></button>
                     <button class="btn-icon btn-qr" onclick="openQRModal('${student.nis}', '${student.nama}', '${student.kelas}')" title="Cetak QR"><i class="fa-solid fa-qrcode"></i></button>
                     <button class="btn-icon btn-edit" onclick="editStudent('${student.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
