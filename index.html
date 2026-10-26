@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AbsenO - Presensi QR & Wajah Real-Time</title>
+    <title>AbsenO - Presensi QR & Wajah</title>
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -118,7 +118,6 @@
         .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: #000000; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 10px; }
         .btn-secondary { background: rgba(212, 175, 55, 0.15); color: var(--primary); border: 1px solid var(--primary); }
 
-        /* Container Kamera Wajah & Canvas Overlay */
         #video-container { position: relative; width: 100%; max-width: 300px; height: 300px; margin: 0 auto; border-radius: 15px; overflow: hidden; border: 2px solid var(--primary); background: #000; }
         #video-wajah { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
         #canvas-wajah { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; transform: scaleX(-1); }
@@ -155,7 +154,6 @@
                     <button id="btn-mode-wajah" class="btn-secondary" style="margin-top:0; width:48%;" onclick="gantiModePindai('wajah')">Mode Wajah</button>
                 </div>
 
-                <!-- AREA QR CODE -->
                 <div id="area-qr" style="text-align: center;">
                     <div class="section-title">Pindai QR Code Siswa</div>
                     <div id="reader"></div>
@@ -164,7 +162,6 @@
                     </div>
                 </div>
 
-                <!-- AREA WAJAH DENGAN OVERLAY CANVAS -->
                 <div id="area-wajah" style="display:none; text-align:center;">
                     <div class="section-title">Pindai Wajah Siswa</div>
                     <div id="video-container">
@@ -255,7 +252,7 @@
                     <option value="ocean">Ocean Blue (Modern)</option>
                     <option value="light">Light Heritage (Terang)</option>
                 </select>
-                <button class="btn-primary" style="margin-top: 15px;" onclick="alert('Sinkronisasi Firebase & Mode Offline Aktif!')">Status: Firestore Cloud Sync Active</button>
+                <button class="btn-primary" style="margin-top: 15px;" onclick="alert('Sinkronisasi Firebase & Cloud Firestore Aktif!')">Status: Tersambung ke Firebase Cloud</button>
             </div>
         </div>
     </main>
@@ -302,7 +299,6 @@
 </div>
 
 <script>
-    // Config Firebase
     const firebaseConfig = {
         apiKey: "AizaSyCXZM7dme50d-4Yo-dpvcvlbEKrI6dhDS8",
         authDomain: "absen-barcode-wajah.firebaseapp.com",
@@ -337,7 +333,6 @@
         window.addEventListener('offline', updateOnlineStatus);
     };
 
-    // 1. DATA FIREBASE & OFFLINE CACHE SYNC
     function loadDataFromFirebase() {
         db.collection("students").onSnapshot(snapshot => {
             students = [];
@@ -368,15 +363,12 @@
         const offlineLogs = JSON.parse(localStorage.getItem('abseno_offline_cache')) || [];
         if (offlineLogs.length > 0 && navigator.onLine) {
             offlineLogs.forEach(log => {
-                db.collection("attendance").add(log).then(() => {
-                    console.log("Offline log synced to Firebase:", log);
-                });
+                db.collection("attendance").add(log);
             });
             localStorage.removeItem('abseno_offline_cache');
         }
     }
 
-    // 2. EFEK SUARA BEEP & UCAPAN NAMA SISWA
     function playBeepSound() {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = ctx.createOscillator();
@@ -384,7 +376,7 @@
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.type = "sine";
-        osc.frequency.value = 880; // Nada A5 tinggi
+        osc.frequency.value = 880;
         gain.gain.setValueAtTime(0.1, ctx.currentTime);
         osc.start();
         osc.stop(ctx.currentTime + 0.15);
@@ -399,7 +391,6 @@
         }
     }
 
-    // 3. LOGIKA PINDAI & DETEKSI WAJAH REAL-TIME WITH BOUNDING BOX
     function switchTab(tabId, el) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
@@ -480,7 +471,6 @@
             if (!deteksiWajahAktif || !streamKamera || !streamKamera.active) return;
             const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions());
             
-            // Draw Bounding Box di atas Canvas
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const resizedDetections = faceapi.resizeResults(detections, displaySize);
@@ -555,7 +545,6 @@
         }
     }
 
-    // 4. MANAGEMENT DATA SISWA & LAPORAN
     function updateFilterKelasDropdown() {
         const filterSelect = document.getElementById('filter-kelas');
         const currentSelected = filterSelect.value;
