@@ -397,7 +397,7 @@
     let tempFaceVector = null; 
     let streamDaftarWajah = null;
     let activeSchedule = { jamMasuk: '07:00', jamPulang: '14:00' };
-    let useFrontCamera = true; // True untuk kamera depan, False untuk kamera belakang
+    let useFrontCamera = true;
 
     window.onload = function() {
         loadDataFromDatabase();
@@ -574,7 +574,7 @@
                 video.style.transform = "scaleX(1)";
             }
 
-            statusText.innerText = `Kamera ${useFrontCamera ? 'Depan' : 'Belakang'} Aktif. Silakan Pindai.`;
+            statusText.innerHTML = `<span style="font-size: 13px; color: var(--text-muted);">Kamera ${useFrontCamera ? 'Depan' : 'Belakang'} Aktif. Silakan Pindai.</span>`;
         } catch (err) {
             statusText.innerText = "✕ Gagal mengakses kamera.";
         }
@@ -592,6 +592,13 @@
     async function scanAndMatchFaceBiometrics() {
         const video = document.getElementById('video-wajah');
         const statusText = document.getElementById('text-status-wajah');
+
+        if (!video.srcObject) {
+            statusText.innerHTML = `<span style="color: #38bdf8;">Menyalakan ulang kamera...</span>`;
+            await inisialisasiKameraWajah();
+            return;
+        }
+
         statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai & Mencocokkan Kode Biometrik...</span>`;
 
         const canvas = document.createElement('canvas');
@@ -605,6 +612,13 @@
         if (matchedStudent) {
             statusText.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Cocok (${matchedStudent.nama})</span>`;
             prosesAbsensi(matchedStudent.nis, 'AI Wajah');
+            
+            // Otomatis reset teks status setelah 3 detik agar siap memindai siswa berikutnya
+            setTimeout(() => {
+                if(document.getElementById('text-status-wajah')) {
+                    document.getElementById('text-status-wajah').innerHTML = `<span style="font-size: 13px; color: var(--text-muted);">Siap memindai siswa berikutnya. Silakan tekan Pindai Wajah.</span>`;
+                }
+            }, 3000);
         } else {
             statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Dikenali / Belum Terdaftar</span>`;
         }
@@ -676,7 +690,7 @@
 
                 if (navigator.onLine) {
                     db.collection("attendance").add(logData).then(() => {
-                        if(resultBox) resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil (${statusManual}): ${student.nama}</span>`;
+                        if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil (${statusManual}): ${student.nama}</span>`;
                     });
                 } else {
                     const offlineLogs = JSON.parse(localStorage.getItem('abseno_offline_cache')) || [];
@@ -684,11 +698,11 @@
                     localStorage.setItem('abseno_offline_cache', JSON.stringify(offlineLogs));
                     attendanceLogs.unshift(logData);
                     renderLogs();
-                    if(resultBox) resultBox.innerHTML = `<span style="color: #38bdf8; font-weight:700;">✓ Disimpan Offline: ${student.nama}</span>`;
+                    if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #38bdf8; font-weight:700;">✓ Disimpan Offline: ${student.nama}</span>`;
                 }
             }
         } else {
-            if(resultBox) resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Siswa Tidak Ditemukan</span>`;
+            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Siswa Tidak Ditemukan</span>`;
         }
     }
 
