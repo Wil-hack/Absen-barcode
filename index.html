@@ -221,7 +221,7 @@
             </div>
         </div>
 
-        <!-- TAB 4: LAPORAN -->
+        <!-- TAB 4: LAPORAN & SISWA TERLAMBAT -->
         <div id="tab-laporan" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Laporan & Statistik Absen</div>
@@ -234,8 +234,9 @@
                 <label style="font-size: 13px; margin-bottom: 4px; display: block;">Pilih Mode Laporan</label>
                 <select id="mode-laporan" class="form-control" onchange="toggleReportMode()" style="margin-bottom: 10px;">
                     <option value="harian">1. Rekap Harian</option>
-                    <option value="mingguan">2. Rekap Mingguan</option>
-                    <option value="bulanan">3. Rekap Bulanan</option>
+                    <option value="terlambat">2. Belum Masuk / Terlambat</option>
+                    <option value="mingguan">3. Rekap Mingguan</option>
+                    <option value="bulanan">4. Rekap Bulanan</option>
                 </select>
                 <div id="box-filter-harian" style="display: flex; gap: 8px; margin-bottom: 10px;">
                     <input type="date" id="filter-tanggal" class="form-control" onchange="renderLogs()">
@@ -349,8 +350,6 @@
             <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeModal('status-modal')"></i>
         </div>
         <input type="hidden" id="status-target-nis">
-        <input type="hidden" id="status-target-nama">
-        <input type="hidden" id="status-target-kelas">
         
         <label style="font-size: 12px; margin-bottom: 6px; display: block;">Pilih Status Kehadiran</label>
         <select id="select-status-absen" class="form-control" style="margin-bottom: 12px;">
@@ -394,6 +393,7 @@
     let html5QrcodeScanner;
     let tempFaceDescriptor = null; 
     let streamDaftarWajah = null;
+    let activeSchedule = { jamMasuk: '07:00', jamPulang: '14:00' };
 
     window.onload = function() {
         loadDataFromDatabase();
@@ -441,6 +441,7 @@
             snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
             updateFilterKelasDropdown();
             renderStudentList();
+            if(document.getElementById('mode-laporan').value === 'terlambat') renderLogs();
         });
 
         const todayDate = new Date().toISOString().slice(0,10);
@@ -597,7 +598,6 @@
                 ctx.lineWidth = 3;
                 ctx.strokeRect(box.x, box.y, box.width, box.height);
 
-                // Pencocokan Deskriptor Wajah dengan database siswa
                 const matchedStudent = cariSiswaBerdasarkanDescriptor(detections.descriptor);
                 if (matchedStudent) {
                     deteksiWajahAktif = false;
@@ -613,7 +613,7 @@
 
     function cariSiswaBerdasarkanDescriptor(liveDescriptor) {
         let bestMatch = null;
-        let lowestDistance = 0.55; // Threshold kemiripan
+        let lowestDistance = 0.55;
 
         students.forEach(student => {
             if (student.faceDescriptor && Array.isArray(student.faceDescriptor)) {
@@ -709,7 +709,7 @@
                 </div>
                 <div class="action-btns">
                     <span class="${faceClass}" title="${faceTitle}">FACE</span>
-                    <button class="btn-icon btn-status" onclick="openStatusModal('${student.nis}', '${student.nama}', '${student.kelas}')" title="Ubah Status (Sakit/Izin/Alpa)"><i class="fa-solid fa-clipboard-user"></i></button>
+                    <button class="btn-icon btn-status" onclick="openStatusModal('${student.nis}', '${student.nama}')" title="Ubah Status"><i class="fa-solid fa-clipboard-user"></i></button>
                     <button class="btn-icon btn-qr" onclick="openQRModal('${student.nis}', '${student.nama}', '${student.kelas}')" title="Cetak QR"><i class="fa-solid fa-qrcode"></i></button>
                     <button class="btn-icon btn-edit" onclick="editStudent('${student.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
                     <button class="btn-icon btn-delete" onclick="deleteStudent('${student.id}')" title="Hapus"><i class="fa-solid fa-trash"></i></button>
@@ -727,10 +727,8 @@
         document.getElementById('qr-modal').classList.add('active');
     }
 
-    function openStatusModal(nis, nama, kelas) {
+    function openStatusModal(nis, nama) {
         document.getElementById('status-target-nis').value = nis;
-        document.getElementById('status-target-nama').value = nama;
-        document.getElementById('status-target-kelas').value = kelas;
         document.getElementById('status-modal-title').innerText = `Status Absen: ${nama}`;
         document.getElementById('status-modal').classList.add('active');
     }
@@ -755,9 +753,13 @@
     }
 
     async function bukaKameraDaftarWajah() {
+        // Hentikan kamera utama/pindai terlebih dahulu agar tidak bentrok
+        hentikanSemuaAksiPindai();
+        
         document.getElementById('face-register-modal').classList.add('active');
         const video = document.getElementById('video-daftar-wajah'), statusCap = document.getElementById('status-capture-wajah');
         statusCap.innerText = "Memuat kamera & AI...";
+        
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
             streamDaftarWajah = stream;
@@ -771,7 +773,8 @@
             }
             statusCap.innerText = "Posisikan wajah di tengah lalu klik Kunci!";
         } catch (err) {
-            statusCap.innerText = "Gagal mengakses kamera.";
+            console.error("Gagal kamera daftar:", err);
+            statusCap.innerText = "✕ Gagal mengakses kamera. Periksa izin browser.";
         }
     }
 
@@ -863,7 +866,7 @@
 
     function toggleReportMode() {
         const mode = document.getElementById('mode-laporan').value;
-        document.getElementById('box-filter-harian').style.display = (mode === 'harian') ? 'flex' : 'none';
+        document.getElementById('box-filter-harian').style.display = (mode === 'harian' || mode === 'terlambat') ? 'flex' : 'none';
         document.getElementById('box-filter-bulanan').style.display = (mode === 'bulanan') ? 'flex' : 'none';
         renderLogs();
     }
@@ -874,11 +877,44 @@
     }
 
     function renderLogs() {
-        const logsContainer = document.getElementById('attendance-logs'), filterTanggal = document.getElementById('filter-tanggal').value;
+        const logsContainer = document.getElementById('attendance-logs'), filterTanggal = document.getElementById('filter-tanggal').value || new Date().toISOString().slice(0,10);
         if(!logsContainer) return; logsContainer.innerHTML = '';
         
-        const filteredLogs = (document.getElementById('mode-laporan').value === 'harian') 
-            ? attendanceLogs.filter(log => !filterTanggal || log.tanggal === filterTanggal)
+        const modeLap = document.getElementById('mode-laporan').value;
+
+        if (modeLap === 'terlambat') {
+            // Tampilkan daftar siswa yang belum hadir atau melewati jam masuk
+            const hadirNis = new Set(attendanceLogs.filter(l => l.tanggal === filterTanggal).map(l => l.nis));
+            const belumMasuk = students.filter(s => !hadirNis.has(s.nis));
+
+            const headerInfo = document.createElement('div');
+            headerInfo.innerHTML = `<div style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 8px; text-align:center;">Daftar Siswa Belum Masuk (${filterTanggal}) - Jam Masuk: ${activeSchedule.jamMasuk}</div>`;
+            logsContainer.appendChild(headerInfo);
+
+            if(belumMasuk.length === 0) {
+                logsContainer.innerHTML += `<div class="student-item" style="justify-content:center; color: #4ade80; font-weight:600;">Semua siswa sudah melakukan presensi!</div>`;
+                return;
+            }
+
+            belumMasuk.forEach(student => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <div style="flex:1;">
+                        <div style="font-weight:600; font-size:14px;">${student.nama}</div>
+                        <div style="font-size:12px; color:var(--text-muted);">${student.kelas} • Belum Absen</div>
+                    </div>
+                    <div class="action-btns">
+                        <button class="btn-icon btn-status" style="width:auto; padding: 4px 10px; font-size:11px;" onclick="openStatusModal('${student.nis}', '${student.nama}')">Beri Status (Sakit/Izin/Alpa)</button>
+                    </div>
+                `;
+                logsContainer.appendChild(item);
+            });
+            return;
+        }
+
+        const filteredLogs = (modeLap === 'harian') 
+            ? attendanceLogs.filter(log => log.tanggal === filterTanggal)
             : attendanceLogs;
 
         filteredLogs.forEach(log => {
@@ -921,12 +957,25 @@
         const hari = document.getElementById('input-hari').value || 'Senin - Sabtu';
         const masuk = document.getElementById('input-jam-masuk').value || '07:00';
         const pulang = document.getElementById('input-jam-pulang').value || '14:00';
+        
+        activeSchedule = { jamMasuk: masuk, jamPulang: pulang };
+        localStorage.setItem('abseno_schedule', JSON.stringify(activeSchedule));
+
         document.getElementById('display-schedule').innerText = `${hari} | ${masuk} - ${pulang}`;
         alert('Jadwal berhasil disimpan!');
     }
 
     function loadSchedule() {
-        document.getElementById('display-schedule').innerText = `Senin - Sabtu | 07:00 - 14:00`;
+        const savedSch = JSON.parse(localStorage.getItem('abseno_schedule'));
+        if(savedSch) {
+            activeSchedule = savedSch;
+            document.getElementById('input-jam-masuk').value = savedSch.jamMasuk;
+            document.getElementById('input-jam-pulang').value = savedSch.jamPulang;
+            document.getElementById('display-schedule').innerText = `Senin - Sabtu | ${savedSch.jamMasuk} - ${savedSch.jamPulang}`;
+        } else {
+            document.getElementById('display-schedule').innerText = `Senin - Sabtu | 07:00 - 14:00`;
+        }
+        document.getElementById('input-hari').value = 'Senin - Sabtu';
     }
 
     function exportCSV() {
