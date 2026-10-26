@@ -382,15 +382,15 @@
     async function loadFaceApiModels() {
         if (faceApiLoaded) return true;
         const statusText = document.getElementById('text-status-wajah') || document.getElementById('status-capture-wajah');
-        if (statusText) statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat AI Tiny Face...</span>`;
+        if (statusText) statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat AI SSD MobileNet...</span>`;
         
         try {
             const MODEL_URL = './models';
-            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
             await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
             await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
             faceApiLoaded = true;
-            if (statusText) statusText.innerHTML = `<span style="color: #4ade80;">Model AI Siap!</span>`;
+            if (statusText) statusText.innerHTML = `<span style="color: #4ade80;">Model AI SSD MobileNet Siap!</span>`;
             return true;
         } catch (err) {
             console.error("Gagal memuat Face-API Models:", err);
@@ -600,11 +600,13 @@
             return;
         }
 
-        await loadFaceApiModels();
-        statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah...</span>`;
+        const modelLoaded = await loadFaceApiModels();
+        if (!modelLoaded) return;
+
+        statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah (SSD MobileNet)...</span>`;
 
         try {
-            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
+            const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
             const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
 
             if (!detection) {
@@ -745,7 +747,7 @@
         hentikanSemuaAksiPindai();
         document.getElementById('face-register-modal').classList.add('active');
         const video = document.getElementById('video-daftar-wajah'), statusCap = document.getElementById('status-capture-wajah');
-        statusCap.innerText = "Memuat kamera & Tiny Face AI...";
+        statusCap.innerText = "Memuat kamera & SSD MobileNet AI...";
         
         await loadFaceApiModels();
 
@@ -774,7 +776,7 @@
         statusCap.innerHTML = `<span style="color:#38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Mengekstraksi biometrik wajah...</span>`;
 
         try {
-            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
+            const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
             const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
 
             if (!detection) {
