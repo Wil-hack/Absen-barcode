@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AbsenO - Presensi QR & Wajah</title>
+    <title>AbsenO - Presensi QR & Wajah Real-Time</title>
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -242,17 +242,29 @@
             <div id="attendance-logs"></div>
         </div>
 
-        <!-- TAB 5: AKUN -->
+        <!-- TAB 5: AKUN & MULTI-TENANT CONFIG -->
         <div id="tab-akun" class="tab-content">
             <div class="glass-card">
-                <div class="section-title">Pengaturan & Tema</div>
+                <div class="section-title">Pengaturan & Database Sekolah</div>
                 <label style="font-size: 13px; margin-bottom: 6px; display: block;">Tema Visual</label>
                 <select id="theme-select" class="form-control" onchange="changeTheme(this.value)" style="margin-bottom: 14px;">
                     <option value="heritage">Jawa Heritage (Cokelat Emas)</option>
                     <option value="ocean">Ocean Blue (Modern)</option>
                     <option value="light">Light Heritage (Terang)</option>
                 </select>
-                <button class="btn-primary" style="margin-top: 15px;" onclick="alert('Sinkronisasi Firebase & Cloud Firestore Aktif!')">Status: Tersambung ke Firebase Cloud</button>
+
+                <div style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 14px;">
+                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 10px; text-align: center;">Konfigurasi Firebase Sekolah</div>
+                    
+                    <label style="font-size: 12px; margin-bottom: 4px; display: block;">Firebase API Key</label>
+                    <input type="text" id="fb-apikey" class="form-control" placeholder="AIzaSy..." style="margin-bottom: 8px;">
+
+                    <label style="font-size: 12px; margin-bottom: 4px; display: block;">Firebase Project ID</label>
+                    <input type="text" id="fb-projectid" class="form-control" placeholder="sekolah-absen-123" style="margin-bottom: 8px;">
+
+                    <button class="btn-primary" onclick="saveSchoolFirebaseConfig()">Simpan & Hubungkan Database</button>
+                    <button class="btn-primary btn-secondary" style="margin-top: 8px;" onclick="resetFirebaseConfig()">Gunakan Key Default</button>
+                </div>
             </div>
         </div>
     </main>
@@ -299,7 +311,8 @@
 </div>
 
 <script>
-    const firebaseConfig = {
+    // Config Default Cadangan
+    const defaultFirebaseConfig = {
         apiKey: "AizaSyCXZM7dme50d-4Yo-dpvcvlbEKrI6dhDS8",
         authDomain: "absen-barcode-wajah.firebaseapp.com",
         projectId: "absen-barcode-wajah",
@@ -308,7 +321,15 @@
         appId: "1:1018925253403:web:ff9faa88fa567cadaac9be"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    // Ambil Config Per Sekolah dari LocalStorage jika ada
+    let savedConfig = JSON.parse(localStorage.getItem('abseno_school_firebase')) || defaultFirebaseConfig;
+
+    try {
+        firebase.initializeApp(savedConfig);
+    } catch (e) {
+        console.warn("Mereset ke config default karena ada kesalahan:", e);
+        firebase.initializeApp(defaultFirebaseConfig);
+    }
     const db = firebase.firestore();
 
     let students = [];
@@ -332,6 +353,35 @@
         window.addEventListener('online', () => { updateOnlineStatus(); syncOfflineCache(); });
         window.addEventListener('offline', updateOnlineStatus);
     };
+
+    function saveSchoolFirebaseConfig() {
+        const apiKey = document.getElementById('fb-apikey').value.trim();
+        const projectId = document.getElementById('fb-projectid').value.trim();
+
+        if(!apiKey || !projectId) {
+            return alert('API Key dan Project ID wajib diisi!');
+        }
+
+        const newConfig = {
+            apiKey: apiKey,
+            authDomain: `${projectId}.firebaseapp.com`,
+            projectId: projectId,
+            storageBucket: `${projectId}.appspot.com`,
+            messagingSenderId: "default",
+            appId: "default"
+        };
+
+        localStorage.setItem('abseno_school_firebase', JSON.stringify(newConfig));
+        alert('Konfigurasi database sekolah berhasil disimpan! Aplikasi akan dimuat ulang.');
+        location.reload();
+    }
+
+    function resetFirebaseConfig() {
+        if(confirm('Kembalikan ke konfigurasi default?')) {
+            localStorage.removeItem('abseno_school_firebase');
+            location.reload();
+        }
+    }
 
     function loadDataFromFirebase() {
         db.collection("students").onSnapshot(snapshot => {
@@ -696,6 +746,13 @@
         const savedTheme = localStorage.getItem('abseno_theme') || 'heritage';
         document.body.setAttribute('data-theme', savedTheme);
         document.getElementById('theme-select').value = savedTheme;
+
+        // Isikan nilai input jika ada config sekolah yang tersimpan
+        const currentConfig = JSON.parse(localStorage.getItem('abseno_school_firebase'));
+        if (currentConfig) {
+            document.getElementById('fb-apikey').value = currentConfig.apiKey || '';
+            document.getElementById('fb-projectid').value = currentConfig.projectId || '';
+        }
     }
 
     function saveSchedule() {
