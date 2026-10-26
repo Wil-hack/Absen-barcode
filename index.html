@@ -104,10 +104,9 @@
         .student-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; margin-right: 12px; border: 1px solid var(--primary); }
 
         .action-btns { display: flex; gap: 6px; align-items: center; }
-        .btn-icon { width: 30px; height: 30px; border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; }
+        .btn-icon { width: 32px; height: 32px; border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; }
         .btn-edit { background: rgba(2, 132, 199, 0.2); color: #38bdf8; }
         .btn-qr { background: rgba(217, 119, 6, 0.2); color: #fbbf24; }
-        .btn-status { background: rgba(140, 74, 39, 0.3); color: var(--primary); }
         .btn-delete { background: rgba(220, 38, 38, 0.2); color: #f87171; }
         
         .badge-face { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); letter-spacing: 0.5px; }
@@ -344,27 +343,6 @@
         </div>
         <div id="status-capture-wajah" style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Posisikan wajah tepat di tengah kamera...</div>
         <button class="btn-primary" onclick="generateAndSaveFaceVector()">Kunci & Generate Kode Biometrik</button>
-    </div>
-</div>
-
-<!-- Modal Input Status Ketidakhadiran Manual -->
-<div id="status-modal" class="modal">
-    <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <div style="font-weight: 700;" id="status-modal-title">Ubah Status Absen Siswa</div>
-            <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeModal('status-modal')"></i>
-        </div>
-        <input type="hidden" id="status-target-nis">
-        
-        <label style="font-size: 12px; margin-bottom: 6px; display: block;">Pilih Status Kehadiran</label>
-        <select id="select-status-absen" class="form-control" style="margin-bottom: 12px;">
-            <option value="Hadir">Hadir</option>
-            <option value="Sakit">Sakit</option>
-            <option value="Izin">Izin</option>
-            <option value="Alpa">Alpa / Bolos</option>
-        </select>
-
-        <button class="btn-primary" onclick="simpanStatusManual()">Simpan Status</button>
     </div>
 </div>
 
@@ -748,7 +726,6 @@
                 </div>
                 <div class="action-btns">
                     <span class="${faceClass}" title="${faceTitle}">${faceLabel}</span>
-                    <button class="btn-icon btn-status" onclick="openStatusModal('${student.nis}', '${student.nama}')" title="Ubah Status"><i class="fa-solid fa-clipboard-user"></i></button>
                     <button class="btn-icon btn-qr" onclick="openQRModal('${student.nis}', '${student.nama}', '${student.kelas}')" title="Cetak QR"><i class="fa-solid fa-qrcode"></i></button>
                     <button class="btn-icon btn-edit" onclick="editStudent('${student.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
                     <button class="btn-icon btn-delete" onclick="deleteStudent('${student.id}')" title="Hapus"><i class="fa-solid fa-trash"></i></button>
@@ -764,20 +741,6 @@
         document.getElementById('qrcode').innerHTML = '';
         new QRCode(document.getElementById("qrcode"), { text: nis, width: 140, height: 140 });
         document.getElementById('qr-modal').classList.add('active');
-    }
-
-    function openStatusModal(nis, nama) {
-        document.getElementById('status-target-nis').value = nis;
-        document.getElementById('status-modal-title').innerText = `Status Absen: ${nama}`;
-        document.getElementById('status-modal').classList.add('active');
-    }
-
-    function simpanStatusManual() {
-        const nis = document.getElementById('status-target-nis').value;
-        const statusVal = document.getElementById('select-status-absen').value;
-        prosesAbsensi(nis, 'Manual Admin', statusVal);
-        closeModal('status-modal');
-        alert(`Status kehadiran ${statusVal} berhasil disimpan!`);
     }
 
     function openAddStudentModal() {
@@ -935,9 +898,6 @@
                     <div style="flex:1;">
                         <div style="font-weight:600; font-size:14px;">${student.nama}</div>
                         <div style="font-size:12px; color:var(--text-muted);">${student.kelas} • Belum Absen</div>
-                    </div>
-                    <div class="action-btns">
-                        <button class="btn-icon btn-status" style="width:auto; padding: 4px 10px; font-size:11px;" onclick="openStatusModal('${student.nis}', '${student.nama}')">Beri Status (Sakit/Izin/Alpa)</button>
                     </div>
                 `;
                 logsContainer.appendChild(item);
