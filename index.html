@@ -172,9 +172,14 @@
                     <div id="video-container">
                         <video id="video-wajah" autoplay playsinline muted></video>
                     </div>
-                    <button class="btn-primary" style="margin-top:12px;" onclick="scanAndMatchFaceBiometrics()">
-                        <i class="fa-solid fa-expand"></i> Pindai Biometrik Wajah Otomatis
-                    </button>
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <button class="btn-primary btn-secondary" style="margin-top:0; width: 48%;" onclick="toggleCameraFacing()">
+                            <i class="fa-solid fa-camera-rotate"></i> Putar Kamera
+                        </button>
+                        <button class="btn-primary" style="margin-top:0; width: 48%;" onclick="scanAndMatchFaceBiometrics()">
+                            <i class="fa-solid fa-expand"></i> Pindai Wajah
+                        </button>
+                    </div>
                     <div class="scan-result-box" id="scan-result-wajah" style="margin-top: 10px;">
                         <span id="text-status-wajah" style="font-size: 13px; color: var(--text-muted);">Arahkan wajah ke kamera dan tekan Pindai.</span>
                     </div>
@@ -392,6 +397,7 @@
     let tempFaceVector = null; 
     let streamDaftarWajah = null;
     let activeSchedule = { jamMasuk: '07:00', jamPulang: '14:00' };
+    let useFrontCamera = true; // True untuk kamera depan, False untuk kamera belakang
 
     window.onload = function() {
         loadDataFromDatabase();
@@ -549,20 +555,40 @@
     async function inisialisasiKameraWajah() {
         const video = document.getElementById('video-wajah'), statusText = document.getElementById('text-status-wajah');
         statusText.innerText = "Memeriksa perangkat kamera...";
+        
+        if (streamKamera) {
+            streamKamera.getTracks().forEach(track => track.stop());
+        }
+
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-            streamKamera = stream; video.srcObject = stream;
-            statusText.innerText = "Arahkan wajah ke kamera dan klik tombol Pindai.";
+            const constraints = {
+                video: { facingMode: useFrontCamera ? "user" : "environment" }
+            };
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            streamKamera = stream; 
+            video.srcObject = stream;
+            
+            if (useFrontCamera) {
+                video.style.transform = "scaleX(-1)";
+            } else {
+                video.style.transform = "scaleX(1)";
+            }
+
+            statusText.innerText = `Kamera ${useFrontCamera ? 'Depan' : 'Belakang'} Aktif. Silakan Pindai.`;
         } catch (err) {
             statusText.innerText = "✕ Gagal mengakses kamera.";
         }
+    }
+
+    function toggleCameraFacing() {
+        useFrontCamera = !useFrontCamera;
+        inisialisasiKameraWajah();
     }
 
     function hentikanKameraWajah() {
         if (streamKamera) { streamKamera.getTracks().forEach(track => track.stop()); streamKamera = null; }
     }
 
-    // Mengambil snapshot dan menghitung hash biometrik unik untuk kecocokan otomatis
     async function scanAndMatchFaceBiometrics() {
         const video = document.getElementById('video-wajah');
         const statusText = document.getElementById('text-status-wajah');
@@ -590,7 +616,6 @@
         const pixels = imgData.data;
         let vector = [];
         
-        // Membagi gambar ke 16 grid elemen untuk membentuk kode angka unik (Face Embedding Equivalent)
         const gridSize = 4;
         const stepX = Math.floor(canvas.width / gridSize);
         const stepY = Math.floor(canvas.height / gridSize);
@@ -614,7 +639,7 @@
 
     function findStudentByVector(liveVector) {
         let bestMatch = null;
-        let lowestDifference = 35; // Threshold batas toleransi kemiripan angka biometrik
+        let lowestDifference = 35;
 
         students.forEach(student => {
             if (student.faceVector && Array.isArray(student.faceVector)) {
@@ -779,7 +804,6 @@
         tempFaceVector = calculateBiometricHash(canvas);
 
         document.getElementById('face-preview-box').innerHTML = '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Kode Biometrik Wajah Terkunci</span>';
-        tutupKameraDaftarWajah();
         alert('Vektor biometrik unik berhasil diekstraksi dan disimpan!');
     }
 
@@ -797,9 +821,17 @@
         }
 
         if(docId === '') {
-            db.collection("students").add(studentData).then(() => closeModal('student-modal'));
+            db.collection("students").add(studentData).then(() => {
+                closeModal('student-modal');
+                tutupKameraDaftarWajah();
+                tempFaceVector = null;
+            });
         } else {
-            db.collection("students").doc(docId).update(studentData).then(() => closeModal('student-modal'));
+            db.collection("students").doc(docId).update(studentData).then(() => {
+                closeModal('student-modal');
+                tutupKameraDaftarWajah();
+                tempFaceVector = null;
+            });
         }
     }
 
