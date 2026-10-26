@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AbsenO - Presensi QR & Wajah Real-Time</title>
+    <title>AbsenO - Presensi QR & Wajah Enterprise</title>
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -139,7 +139,7 @@
             <img src="logo-abseno.png" alt="Logo AbsenO" class="logo-icon-img" onerror="this.style.display='none'">
             <div>
                 <div class="brand-title">AbsenO</div>
-                <div class="brand-subtitle">Sistem Presensi QR & Wajah</div>
+                <div class="brand-subtitle">Enterprise Attendance System</div>
             </div>
         </div>
         <div id="connection-status" class="status-badge status-online">ONLINE</div>
@@ -242,10 +242,10 @@
             <div id="attendance-logs"></div>
         </div>
 
-        <!-- TAB 5: AKUN & MULTI-TENANT CONFIG -->
+        <!-- TAB 5: AKUN & CONFIG -->
         <div id="tab-akun" class="tab-content">
             <div class="glass-card">
-                <div class="section-title">Pengaturan & Database Sekolah</div>
+                <div class="section-title">Pengaturan & Enterprise Database</div>
                 <label style="font-size: 13px; margin-bottom: 6px; display: block;">Tema Visual</label>
                 <select id="theme-select" class="form-control" onchange="changeTheme(this.value)" style="margin-bottom: 14px;">
                     <option value="heritage">Jawa Heritage (Cokelat Emas)</option>
@@ -254,16 +254,16 @@
                 </select>
 
                 <div style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 14px;">
-                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 10px; text-align: center;">Konfigurasi Firebase Sekolah</div>
+                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 10px; text-align: center;">Konfigurasi Database Sekolah</div>
                     
-                    <label style="font-size: 12px; margin-bottom: 4px; display: block;">Firebase API Key</label>
-                    <input type="text" id="fb-apikey" class="form-control" placeholder="AIzaSy..." style="margin-bottom: 8px;">
+                    <label style="font-size: 12px; margin-bottom: 4px; display: block;">Database API Key</label>
+                    <input type="text" id="fb-apikey" class="form-control" placeholder="Masukkan API Key..." style="margin-bottom: 8px;">
 
-                    <label style="font-size: 12px; margin-bottom: 4px; display: block;">Firebase Project ID</label>
-                    <input type="text" id="fb-projectid" class="form-control" placeholder="sekolah-absen-123" style="margin-bottom: 8px;">
+                    <label style="font-size: 12px; margin-bottom: 4px; display: block;">Database Project ID</label>
+                    <input type="text" id="fb-projectid" class="form-control" placeholder="Masukkan Project ID..." style="margin-bottom: 8px;">
 
-                    <button class="btn-primary" onclick="saveSchoolFirebaseConfig()">Simpan & Hubungkan Database</button>
-                    <button class="btn-primary btn-secondary" style="margin-top: 8px;" onclick="resetFirebaseConfig()">Gunakan Key Default</button>
+                    <button class="btn-primary" onclick="saveSchoolDatabaseConfig()">Simpan & Hubungkan Database</button>
+                    <button class="btn-primary btn-secondary" style="margin-top: 8px;" onclick="resetDatabaseConfig()">Reset ke Default Database</button>
                 </div>
             </div>
         </div>
@@ -311,8 +311,7 @@
 </div>
 
 <script>
-    // Config Default Cadangan
-    const defaultFirebaseConfig = {
+    const defaultDatabaseConfig = {
         apiKey: "AizaSyCXZM7dme50d-4Yo-dpvcvlbEKrI6dhDS8",
         authDomain: "absen-barcode-wajah.firebaseapp.com",
         projectId: "absen-barcode-wajah",
@@ -321,14 +320,13 @@
         appId: "1:1018925253403:web:ff9faa88fa567cadaac9be"
     };
 
-    // Ambil Config Per Sekolah dari LocalStorage jika ada
-    let savedConfig = JSON.parse(localStorage.getItem('abseno_school_firebase')) || defaultFirebaseConfig;
+    let savedConfig = JSON.parse(localStorage.getItem('abseno_school_database')) || defaultDatabaseConfig;
 
     try {
         firebase.initializeApp(savedConfig);
     } catch (e) {
         console.warn("Mereset ke config default karena ada kesalahan:", e);
-        firebase.initializeApp(defaultFirebaseConfig);
+        firebase.initializeApp(defaultDatabaseConfig);
     }
     const db = firebase.firestore();
 
@@ -342,7 +340,7 @@
     let html5QrcodeScanner;
 
     window.onload = function() {
-        loadDataFromFirebase();
+        loadDataFromDatabase();
         const today = new Date().toISOString().slice(0,10);
         document.getElementById('filter-tanggal').value = today;
         document.getElementById('filter-bulan').value = today.slice(0,7);
@@ -354,12 +352,12 @@
         window.addEventListener('offline', updateOnlineStatus);
     };
 
-    function saveSchoolFirebaseConfig() {
+    function saveSchoolDatabaseConfig() {
         const apiKey = document.getElementById('fb-apikey').value.trim();
         const projectId = document.getElementById('fb-projectid').value.trim();
 
         if(!apiKey || !projectId) {
-            return alert('API Key dan Project ID wajib diisi!');
+            return alert('Database API Key dan Project ID wajib diisi!');
         }
 
         const newConfig = {
@@ -371,19 +369,19 @@
             appId: "default"
         };
 
-        localStorage.setItem('abseno_school_firebase', JSON.stringify(newConfig));
-        alert('Konfigurasi database sekolah berhasil disimpan! Aplikasi akan dimuat ulang.');
+        localStorage.setItem('abseno_school_database', JSON.stringify(newConfig));
+        alert('Konfigurasi database berhasil disimpan! Aplikasi akan dimuat ulang.');
         location.reload();
     }
 
-    function resetFirebaseConfig() {
-        if(confirm('Kembalikan ke konfigurasi default?')) {
-            localStorage.removeItem('abseno_school_firebase');
+    function resetDatabaseConfig() {
+        if(confirm('Kembalikan ke konfigurasi default database?')) {
+            localStorage.removeItem('abseno_school_database');
             location.reload();
         }
     }
 
-    function loadDataFromFirebase() {
+    function loadDataFromDatabase() {
         db.collection("students").onSnapshot(snapshot => {
             students = [];
             snapshot.forEach(doc => students.push(doc.data()));
@@ -747,8 +745,7 @@
         document.body.setAttribute('data-theme', savedTheme);
         document.getElementById('theme-select').value = savedTheme;
 
-        // Isikan nilai input jika ada config sekolah yang tersimpan
-        const currentConfig = JSON.parse(localStorage.getItem('abseno_school_firebase'));
+        const currentConfig = JSON.parse(localStorage.getItem('abseno_school_database'));
         if (currentConfig) {
             document.getElementById('fb-apikey').value = currentConfig.apiKey || '';
             document.getElementById('fb-projectid').value = currentConfig.projectId || '';
