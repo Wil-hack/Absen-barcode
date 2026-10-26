@@ -381,16 +381,16 @@
 
     async function loadFaceApiModels() {
         if (faceApiLoaded) return true;
-        const statusText = document.getElementById('text-status-wajah');
-        if (statusText) statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat Model AI Wajah...</span>`;
+        const statusText = document.getElementById('text-status-wajah') || document.getElementById('status-capture-wajah');
+        if (statusText) statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat AI Tiny Face...</span>`;
         
         try {
             const MODEL_URL = './models';
-            await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
             await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
             await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
             faceApiLoaded = true;
-            if (statusText) statusText.innerHTML = `<span style="color: #4ade80;">Model AI Berhasil Dimuat!</span>`;
+            if (statusText) statusText.innerHTML = `<span style="color: #4ade80;">Model AI Siap!</span>`;
             return true;
         } catch (err) {
             console.error("Gagal memuat Face-API Models:", err);
@@ -601,22 +601,23 @@
         }
 
         await loadFaceApiModels();
-        statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Biometrik Wajah...</span>`;
+        statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah...</span>`;
 
         try {
-            const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
+            const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
 
             if (!detection) {
-                statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Terdeteksi / Kurang Jelas</span>`;
+                statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Terdeteksi</span>`;
             } else {
                 const labeledDescriptors = students
                     .filter(s => s.faceVector && Array.isArray(s.faceVector))
                     .map(s => new faceapi.LabeledFaceDescriptors(s.nis, [new Float32Array(s.faceVector)]));
 
                 if (labeledDescriptors.length === 0) {
-                    statusText.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ Belum ada biometrik terdaftar di database!</span>`;
+                    statusText.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ Belum ada biometrik terdaftar!</span>`;
                 } else {
-                    const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.55);
+                    const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
                     const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
 
                     if (bestMatch.label !== 'unknown') {
@@ -637,14 +638,8 @@
             }
         } catch (err) {
             console.error(err);
-            statusText.innerHTML = `<span style="color: #f87171;">✕ Terjadi Kesalahan Pindaian AI</span>`;
+            statusText.innerHTML = `<span style="color: #f87171;">✕ Kesalahan Pindaian AI</span>`;
         }
-
-        setTimeout(() => {
-            if(document.getElementById('text-status-wajah')) {
-                document.getElementById('text-status-wajah').innerHTML = `<span style="font-size: 13px; color: var(--text-muted);">Arahkan wajah siswa berikutnya & tekan Pindai.</span>`;
-            }
-        }, 3000);
     }
 
     function prosesAbsensi(identifier, metode, statusManual = 'Hadir') {
@@ -750,7 +745,7 @@
         hentikanSemuaAksiPindai();
         document.getElementById('face-register-modal').classList.add('active');
         const video = document.getElementById('video-daftar-wajah'), statusCap = document.getElementById('status-capture-wajah');
-        statusCap.innerText = "Memuat kamera & Face-API...";
+        statusCap.innerText = "Memuat kamera & Tiny Face AI...";
         
         await loadFaceApiModels();
 
@@ -779,14 +774,15 @@
         statusCap.innerHTML = `<span style="color:#38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Mengekstraksi biometrik wajah...</span>`;
 
         try {
-            const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
+            const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
 
             if (!detection) {
                 statusCap.innerHTML = `<span style="color:#f87171;">✕ Wajah tidak terdeteksi! Pastikan wajah terlihat jelas.</span>`;
             } else {
                 tempFaceVector = Array.from(detection.descriptor);
-                document.getElementById('face-preview-box').innerHTML = '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Kode Biometrik Wajah Terkunci (Face-API)</span>';
-                alert('Vektor biometrik 128-dimensi Face-API berhasil diekstraksi!');
+                document.getElementById('face-preview-box').innerHTML = '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Biometrik Wajah Terkunci!</span>';
+                alert('Vektor biometrik berhasil diekstraksi!');
                 tutupKameraDaftarWajah();
             }
         } catch (err) {
