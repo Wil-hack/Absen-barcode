@@ -13,8 +13,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
-    <!-- Face-API.js CDN Online Resmi -->
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 
     <style>
@@ -116,7 +114,7 @@
         .fab { position: fixed; bottom: 90px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #000000; border: none; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 6px 16px rgba(0,0,0,0.5); cursor: pointer; z-index: 10; }
 
         nav.bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; height: 68px; background: var(--nav-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 11px; width: 16.6%; cursor: pointer; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 11px; width: 20%; cursor: pointer; }
         .nav-item.active { color: var(--primary); font-weight: 700; }
         .nav-item i { font-size: 17px; margin-bottom: 3px; }
 
@@ -131,6 +129,12 @@
         .modal-content { background: var(--bg-card); border-radius: 18px; width: 100%; max-width: 380px; padding: 20px; border: 1px solid var(--border-color); }
         .printable-card { background: #ffffff; color: #000000; border: 2px solid #8c4a27; border-radius: 12px; padding: 20px; text-align: center; margin: 10px 0; }
         #qrcode img { margin: 12px auto; }
+
+        /* Fullscreen QRIS Modal */
+        #fullscreen-qris-modal {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.95); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; padding: 20px; text-align: center;
+        }
+        #fullscreen-qris-modal.active { display: flex; }
     </style>
 </head>
 <body data-theme="heritage">
@@ -224,7 +228,7 @@
             </div>
         </div>
 
-        <!-- TAB 4: LAPORAN & SISWA TERLAMBAT -->
+        <!-- TAB 4: LAPORAN -->
         <div id="tab-laporan" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Laporan & Statistik Absen</div>
@@ -253,7 +257,7 @@
             <div id="attendance-logs"></div>
         </div>
 
-        <!-- TAB 5: AKUN & CONFIG -->
+        <!-- TAB 5: AKUN, CONFIG & DONASI -->
         <div id="tab-akun" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Pengaturan & Enterprise Database</div>
@@ -277,23 +281,21 @@
                     <button class="btn-primary btn-secondary" style="margin-top: 8px;" onclick="resetDatabaseConfig()">Reset ke Default Database</button>
                 </div>
             </div>
-        </div>
 
-        <!-- TAB 6: DONASI -->
-        <div id="tab-donasi" class="tab-content">
-            <div class="glass-card" style="text-align: center; padding: 24px 16px;">
-                <div class="section-title" style="color: var(--primary); margin-bottom: 8px;">Dukung Pengembang</div>
-                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">
-                    Terima kasih telah menggunakan aplikasi <b>AbsenO</b>! Jika aplikasi ini membantu operasional sekolah, kamu bisa memberikan dukungan pengembangan sukarela melalui QRIS di bawah ini. ☕
+            <!-- KARTU DONASI / DUKUNG PENGEMBANG (DIPOSISIKAN DI BAWAH OPSI RESET) -->
+            <div class="glass-card" style="text-align: center; padding: 20px 14px;">
+                <div class="section-title" style="color: var(--primary); font-size: 16px; margin-bottom: 6px;">Dukung Pengembang</div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4;">
+                    Terima kasih telah menggunakan aplikasi <b>AbsenO</b>! Berikan dukungan pengembangan sukarela melalui QRIS di bawah ini. ☕
                 </p>
                 
-                <div style="background: #ffffff; padding: 16px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border: 2px solid var(--primary); margin-bottom: 16px;">
-                    <img src="qris.jpg" alt="QRIS Donasi" style="width: 180px; height: 180px; object-fit: contain; display: block; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/180?text=QRIS+Barcode'">
-                    <div style="font-size: 11px; font-weight: 700; color: #333; margin-top: 8px; letter-spacing: 1px;">QRIS / ALL PAYMENT</div>
+                <div style="background: #ffffff; padding: 12px; border-radius: 14px; display: inline-block; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border: 2px solid var(--primary); margin-bottom: 8px; cursor: pointer;" onclick="openFullscreenQRIS()" title="Ketuk untuk memperbesar gambar">
+                    <img src="qris.jpg" alt="QRIS Donasi" style="width: 150px; height: 150px; object-fit: contain; display: block; border-radius: 6px;" onerror="this.src='https://via.placeholder.com/150?text=QRIS+Barcode'">
+                    <div style="font-size: 10px; font-weight: 700; color: #333; margin-top: 6px; letter-spacing: 0.5px;"><i class="fa-solid fa-expand"></i> KETUK PERBESAR</div>
                 </div>
 
-                <div style="font-size: 12px; color: var(--accent); font-weight: 600;">
-                    Scan via GoPay, OVO, Dana, ShopeePay, BCA, atau Mobile Banking
+                <div style="font-size: 11px; color: var(--accent); font-weight: 600;">
+                    Scan via GoPay, OVO, Dana, ShopeePay, BCA, dll.
                 </div>
             </div>
         </div>
@@ -305,8 +307,19 @@
         <div class="nav-item" onclick="switchTab('jadwal', this)"><i class="fa-solid fa-calendar-days"></i><span>Jadwal</span></div>
         <div class="nav-item" onclick="switchTab('laporan', this)"><i class="fa-solid fa-chart-line"></i><span>Laporan</span></div>
         <div class="nav-item" onclick="switchTab('akun', this)"><i class="fa-solid fa-gear"></i><span>Akun</span></div>
-        <div class="nav-item" onclick="switchTab('donasi', this)"><i class="fa-solid fa-mug-hot"></i><span>Donasi</span></div>
     </nav>
+</div>
+
+<!-- FULLSCREEN QRIS OVERLAY -->
+<div id="fullscreen-qris-modal" onclick="closeFullscreenQRIS()">
+    <div style="position: absolute; top: 20px; right: 20px; color: #fff; font-size: 24px; cursor: pointer;">
+        <i class="fa-solid fa-xmark"></i>
+    </div>
+    <div style="font-family: var(--font-heading); color: var(--primary); font-size: 20px; margin-bottom: 15px;">QRIS Dukungan Pengembang</div>
+    <div style="background: #ffffff; padding: 20px; border-radius: 16px; max-width: 90%; max-height: 75vh; display: flex; align-items: center; justify-content: center;">
+        <img src="qris.jpg" alt="QRIS Fullscreen" style="width: 100%; max-width: 320px; height: auto; object-fit: contain; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/300?text=QRIS+Barcode'">
+    </div>
+    <div style="color: #fff; font-size: 13px; margin-top: 15px; font-weight: 600;">Ketuk di mana saja untuk menutup</div>
 </div>
 
 <!-- Modals -->
@@ -339,7 +352,6 @@
         <input type="text" id="input-nama" class="form-control" placeholder="Nama Lengkap..." style="margin-bottom: 10px;">
         <input type="text" id="input-kelas" class="form-control" placeholder="Nama Kelas..." style="margin-bottom: 10px;">
         
-        <!-- Menu Rekam Kode Biometrik Wajah AI -->
         <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--border-color); border-radius: 10px; padding: 10px; text-align: center; margin-bottom: 10px;">
             <div style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 6px;">Ekstraksi Kode Biometrik Wajah</div>
             <div id="face-preview-box" style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Belum ada biometrik terdaftar</div>
@@ -396,6 +408,14 @@
     let activeSchedule = { jamMasuk: '07:00', jamPulang: '14:00' };
     let useFrontCamera = true;
     let faceApiLoaded = false;
+
+    // FULLSCREEN QRIS FUNCTIONS
+    function openFullscreenQRIS() {
+        document.getElementById('fullscreen-qris-modal').classList.add('active');
+    }
+    function closeFullscreenQRIS() {
+        document.getElementById('fullscreen-qris-modal').classList.remove('active');
+    }
 
     // AUDIO & VIBRATION FEEDBACK
     function playSuccessSound() {
