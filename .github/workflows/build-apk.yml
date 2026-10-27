@@ -1,82 +1,130 @@
+
 name: Build AbsenO APK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-    - name: Setup Java JDK 17
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'zulu'
-        java-version: '17'
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "zulu"
+          java-version: "17"
 
-    - name: Install Cordova Global
-      run: npm install -g cordova
+      - name: Install Cordova
+        run: npm install -g cordova
 
-    - name: Create and Build Android APK
-      run: |
-        cordova create myApp com.abseno.app AbsenO
-        
-        # Menghapus folder www bawaan kosong
-        rm -rf myApp/www/*
-        
-        # Menyalin seluruh file proyek web
-        cp -r ./* myApp/www/ 2>/dev/null || true
-        
-        # Membersihkan file sistem github/workflow dari folder www
-        rm -rf myApp/www/.github myApp/www/myApp myApp/www/platforms myApp/www/plugins myApp/www/node_modules
-        
-        cd myApp
-        
-        # Hapus plugin splashscreen
-        cordova plugin rm cordova-plugin-splashscreen --save || true
+      - name: Check Project Files
+        run: |
+          test -f index.html || {
+            echo "ERROR: index.html tidak ditemukan"
+            exit 1
+          }
 
-        # Config.xml bersih tanpa splash screen
-        cat <<EOT > config.xml
-        <?xml version='1.0' encoding='utf-8'?>
-        <widget id="com.abseno.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-            <name>AbsenO</name>
-            <description>Sistem Presensi AbsenO</description>
-            <author email="admin@abseno.com">AbsenO Team</author>
-            <content src="index.html" />
-            <allow-intent href="http://*/*" />
-            <allow-intent href="https://*/*" />
-            <preference name="BackgroundColor" value="#14100c" />
-            <platform name="android">
-                <icon src="www/logo-abseno.png" />
-            </platform>
-        </widget>
-        EOT
+          test -f logo-abseno.png || {
+            echo "ERROR: logo-abseno.png tidak ditemukan di folder utama"
+            exit 1
+          }
 
-        cordova platform add android
-        
-        # Buat file gambar hitam kosong berukuran kecil menggunakan ImageMagick untuk menimpa semua gambar splash bawaan
-        sudo apt-get update && sudo apt-get install -y imagemagick
-        convert -size 100x100 xc:#14100c dummy_splash.png
-        
-        # Timpa semua file gambar yang mengandung kata splash atau screen di folder android resources
-        find platforms/android/app/src/main/res -name "*splash*" -type f -exec cp dummy_splash.png {} \; || true
-        find platforms/android/app/src/main/res -name "*screen*" -type f -exec cp dummy_splash.png {} \; || true
-        
-        # Injeksi Izin Android
-        sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n    <uses-permission android:name="android.permission.VIBRATE" />' platforms/android/app/src/main/AndroidManifest.xml
-        
-        cordova build android --debug
+      - name: Create Cordova Project
+        run: |
+          cordova create myApp com.abseno.app AbsenO
 
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: AbsenO-APK
-        path: myApp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          rm -rf myApp/www/*
+          rsync -a \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='myApp/' \
+            --exclude='node_modules/' \
+            --exclude='platforms/' \
+            --exclude='plugins/' \
+            ./ myApp/www/
+
+          mkdir -p myApp/res
+          cp logo-abseno.png myApp/res/abseno-icon.png
+
+      - name: Prepare Transparent Splash Icon
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+
+          convert -size 512x512 xc:none \
+            myApp/res/transparent-splash.png
+
+      - name: Configure Android App
+        working-directory: myApp
+        run: |
+          cat > config.xml <<'EOF'
+          <?xml version='1.0' encoding='utf-8'?>
+          <widget id="com.abseno.app"
+                  version="1.0.0"
+                  xmlns="http://www.w3.org/ns/widgets"
+                  xmlns:cdv="http://cordova.apache.org/ns/1.0">
+
+              <name>AbsenO</name>
+              <description>Sistem Presensi AbsenO</description>
+              <author email="admin@abseno.com">AbsenO Team</author>
+
+              <content src="index.html" />
+
+              <access origin="*" />
+              <allow-intent href="http://*/*" />
+              <allow-intent href="https://*/*" />
+
+              <preference name="BackgroundColor" value="#14100c" />
+
+              <platform name="android">
+                  <icon src="res/abseno-icon.png" />
+
+                  <preference
+                      name="AndroidWindowSplashScreenBackground"
+                      value="#14100c" />
+
+                  <preference
+                      name="AndroidWindowSplashScreenAnimatedIcon"
+                      value="res/transparent-splash.png" />
+              </platform>
+          </widget>
+          EOF
+
+          cordova platform add android
+
+      - name: Configure Android Permissions
+        working-directory: myApp
+        run: |
+          MANIFEST="platforms/android/app/src/main/AndroidManifest.xml"
+
+          sed -i '/<\/manifest>/i \
+              <uses-permission android:name="android.permission.CAMERA" />\
+              <uses-permission android:name="android.permission.INTERNET" />\
+              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\
+              <uses-permission android:name="android.permission.VIBRATE" />' \
+              "$MANIFEST"
+
+      - name: Build Android APK
+        working-directory: myApp
+        run: cordova build android --debug
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AbsenO-APK
+          path: myApp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
