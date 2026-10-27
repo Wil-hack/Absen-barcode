@@ -40,10 +40,10 @@ jobs:
         
         cd myApp
         
-        # Hapus plugin splashscreen bawaan agar tidak memunculkan logo apa pun
+        # Hapus plugin splashscreen agar fitur splash dimatikan total
         cordova plugin rm cordova-plugin-splashscreen --save || true
 
-        # Config.xml bersih tanpa splash screen
+        # Config.xml tanpa splash screen sama sekali
         cat <<EOT > config.xml
         <?xml version='1.0' encoding='utf-8'?>
         <widget id="com.abseno.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
@@ -61,6 +61,10 @@ jobs:
         EOT
 
         cordova platform add android
+        
+        # Hapus paksa file gambar splash bawaan android jika ada
+        find platforms/android/app/src/main/res -name "*splash*" -type f -delete || true
+        find platforms/android/app/src/main/res -name "*screen*" -type f -delete || true
         
         # Injeksi Izin Android
         sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n    <uses-permission android:name="android.permission.VIBRATE" />' platforms/android/app/src/main/AndroidManifest.xml
