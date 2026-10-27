@@ -486,7 +486,6 @@
     }
 
     function speakText(text) {
-        // TTS WebView Android: muat suara yang tersedia lalu ucapkan nama.
         const phrase = String(text || '').trim();
         if (!phrase) return;
         if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
@@ -506,7 +505,6 @@
                 if (voice) utterance.voice = voice;
                 try { synth.speak(utterance); } catch (e) { console.warn('Gagal memutar suara:', e); }
             };
-            // Android kadang baru mengembalikan daftar suara setelah voiceschanged.
             const voices = synth.getVoices ? synth.getVoices() : [];
             if (voices.length) {
                 speakNow();
@@ -750,7 +748,6 @@
         const video = document.getElementById('video-wajah');
         const statusText = document.getElementById('text-status-wajah');
         try {
-            // Pastikan kamera benar-benar siap; jangan berhenti hanya karena video sempat paused.
             if (!video.srcObject || !streamKamera || !streamKamera.getVideoTracks().some(t => t.readyState === 'live')) {
                 await inisialisasiKameraWajah();
             }
@@ -1265,68 +1262,19 @@
         ].map(row => row.map(csvCell).join(',')).join('\r\n');
 
         const filename = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
-        const mime = 'text/csv;charset=utf-8;';
-
-        const saveWithCordova = () => new Promise((resolve, reject) => {
-            if (!window.cordova || !window.resolveLocalFileSystemURL || !window.cordova.file) {
-                reject(new Error('Plugin file Cordova tidak tersedia'));
-                return;
-            }
-            const baseDir = window.cordova.file.cacheDirectory || window.cordova.file.dataDirectory;
-            if (!baseDir) { reject(new Error('Direktori penyimpanan tidak tersedia')); return; }
-            window.resolveLocalFileSystemURL(baseDir, dir => {
-                dir.getFile(filename, { create: true, exclusive: false }, fileEntry => {
-                    fileEntry.createWriter(writer => {
-                        writer.onwriteend = () => {
-                            const fileUri = fileEntry.nativeURL || fileEntry.toURL();
-                            const sharePlugin = window.plugins && window.plugins.socialsharing;
-                            if (sharePlugin && typeof sharePlugin.shareWithOptions === 'function') {
-                                sharePlugin.shareWithOptions({
-                                    message: 'Laporan absensi AbsenO',
-                                    subject: 'Laporan AbsenO',
-                                    files: [fileUri]
-                                }, () => resolve(true), err => reject(err || new Error('Berbagi file dibatalkan atau gagal')));
-                            } else if (sharePlugin && typeof sharePlugin.share === 'function') {
-                                sharePlugin.share('Laporan absensi AbsenO', 'Laporan AbsenO', fileUri, null, () => resolve(true), reject);
-                            } else {
-                                alert('CSV berhasil dibuat di penyimpanan aplikasi.');
-                                resolve(true);
-                            }
-                        };
-                        writer.onerror = err => reject(err);
-                        writer.write(new Blob([csv], { type: mime }));
-                    }, reject);
-                }, reject);
-            }, reject);
-        });
 
         try {
-            if (window.cordova && window.resolveLocalFileSystemURL && window.cordova.file) {
-                await saveWithCordova();
-                return;
-            }
-
-            const blob = new Blob([csv], { type: mime });
-            if (typeof navigator.share === 'function' && typeof File !== 'undefined') {
-                const file = new File([blob], filename, { type: mime });
-                if (typeof navigator.canShare !== 'function' || navigator.canShare({ files: [file] })) {
-                    await navigator.share({ files: [file], title: 'Laporan AbsenO', text: 'Laporan absensi CSV' });
-                    return;
-                }
-            }
-
-            const url = URL.createObjectURL(blob);
+            const encodedUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
+            a.setAttribute('href', encodedUri);
+            a.setAttribute('download', filename);
             a.style.display = 'none';
             document.body.appendChild(a);
             a.click();
-            a.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 15000);
+            document.body.removeChild(a);
         } catch (e) {
             console.error('Ekspor CSV gagal:', e);
-            alert('CSV gagal dibagikan/diunduh. Pastikan workflow GitHub Actions memasang cordova-plugin-file dan cordova-plugin-x-socialsharing, lalu buat APK baru.');
+            alert('Gagal mendownload file CSV.');
         }
     }
 </script>
