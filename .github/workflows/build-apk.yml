@@ -40,10 +40,10 @@ jobs:
         
         cd myApp
         
-        # Hapus plugin splashscreen agar fitur splash dimatikan total
+        # Hapus plugin splashscreen agar tidak aktif
         cordova plugin rm cordova-plugin-splashscreen --save || true
 
-        # Config.xml tanpa splash screen sama sekali
+        # Config.xml bersih tanpa splash screen
         cat <<EOT > config.xml
         <?xml version='1.0' encoding='utf-8'?>
         <widget id="com.abseno.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
@@ -62,9 +62,15 @@ jobs:
 
         cordova platform add android
         
-        # Hapus paksa file gambar splash bawaan android jika ada
+        # Hapus paksa semua aset gambar yang mengandung kata splash atau screen
         find platforms/android/app/src/main/res -name "*splash*" -type f -delete || true
         find platforms/android/app/src/main/res -name "*screen*" -type f -delete || true
+        
+        # Paksa nonaktifkan Android 12+ SplashScreen API di styles.xml agar tidak memunculkan ikon default
+        STYLES_FILE="platforms/android/app/src/main/res/values/styles.xml"
+        if [ -f "$STYLES_FILE" ]; then
+            sed -i '/<resources>/a \    <style name="Theme.App.Starting" parent="Theme.AppCompat.NoActionBar">\n        <item name="android:windowBackground">@android:color/black</item>\n        <item name="android:windowSplashScreenAnimatedIcon">@null</item>\n    </style>' "$STYLES_FILE"
+        fi
         
         # Injeksi Izin Android
         sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n    <uses-permission android:name="android.permission.VIBRATE" />' platforms/android/app/src/main/AndroidManifest.xml
