@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AbsenO - Enterprise Biometric Attendance</title>
+    <title>AbsenO - Enterprise Attendance System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,700;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -130,7 +130,6 @@
         .printable-card { background: #ffffff; color: #000000; border: 2px solid #8c4a27; border-radius: 12px; padding: 20px; text-align: center; margin: 10px 0; }
         #qrcode img { margin: 12px auto; }
 
-        /* Fullscreen QRIS Modal - Diperbesar Penuh */
         #fullscreen-qris-modal {
             display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.96); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; padding: 10px; text-align: center;
         }
@@ -146,10 +145,13 @@
         <div class="brand-box">
             <div>
                 <div class="brand-title">AbsenO</div>
-                <div class="brand-subtitle">Enterprise Attendance System</div>
+                <div class="brand-subtitle" id="header-subtitle">Enterprise Attendance System</div>
             </div>
         </div>
-        <div id="connection-status" class="status-badge status-online">ONLINE</div>
+        <div style="display: flex; gap: 6px; align-items: center;">
+            <div id="mode-badge" class="status-badge" style="color: var(--primary); border-color: var(--primary);">SEKOLAH</div>
+            <div id="connection-status" class="status-badge status-online">ONLINE</div>
+        </div>
     </header>
 
     <main>
@@ -162,10 +164,10 @@
                 </div>
 
                 <div id="area-qr" style="text-align: center;">
-                    <div class="section-title">Pindai QR Code Siswa</div>
+                    <div class="section-title" id="title-pindai-qr">Pindai QR Code Siswa</div>
                     <div id="reader"></div>
                     <div class="scan-result-box" id="scan-result">
-                        <span style="font-size: 13px; color: var(--text-muted);">Arahkan kamera ke QR Code Kartu Siswa</span>
+                        <span style="font-size: 13px; color: var(--text-muted);">Arahkan kamera ke QR Code Kartu Anggota</span>
                     </div>
                 </div>
 
@@ -189,25 +191,25 @@
             </div>
         </div>
 
-        <!-- TAB 2: SISWA -->
+        <!-- TAB 2: SISWA / KARYAWAN -->
         <div id="tab-siswa" class="tab-content">
             <div class="glass-card">
-                <div class="section-title">Data Siswa</div>
+                <div class="section-title" id="title-label-data">Data Siswa</div>
                 <div style="display:flex; gap:8px; margin-bottom:10px;">
                     <select id="filter-kelas" class="form-control" onchange="renderStudentList()">
-                        <option value="">Semua Kelas</option>
+                        <option value="">Semua Kelas / Departemen</option>
                     </select>
                 </div>
-                <input type="text" id="search-siswa" class="form-control" placeholder="Cari Nama atau NIS..." oninput="renderStudentList()">
+                <input type="text" id="search-siswa" class="form-control" placeholder="Cari Nama atau NIS/NIK..." oninput="renderStudentList()">
             </div>
             <div id="student-list"></div>
             <button class="fab" onclick="openAddStudentModal()"><i class="fa-solid fa-plus"></i></button>
         </div>
 
-        <!-- TAB 3: JADWAL -->
+        <!-- TAB 3: JADWAL & KETERLAMBATAN -->
         <div id="tab-jadwal" class="tab-content">
             <div class="glass-card">
-                <div class="section-title">Atur Jam Presensi</div>
+                <div class="section-title">Atur Jam Presensi & Toleransi</div>
                 <label style="font-size: 13px; margin-bottom: 6px; display: block;">Hari Operasional</label>
                 <input type="text" id="input-hari" class="form-control" placeholder="Contoh: Senin - Sabtu" style="margin-bottom: 12px;">
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
@@ -223,7 +225,7 @@
                 <button class="btn-primary" onclick="saveSchedule()">Simpan Jadwal</button>
             </div>
             <div class="glass-card" style="text-align: center;">
-                <div class="section-title">Jadwal Aktif Saat Ini</div>
+                <div class="section-title">Jadwal & Deteksi Terlambat Aktif</div>
                 <div id="display-schedule" style="font-size: 15px; font-weight: 600; color: var(--primary); margin-top: 8px;">Memuat jadwal...</div>
             </div>
         </div>
@@ -260,16 +262,24 @@
         <!-- TAB 5: AKUN, CONFIG & DONASI -->
         <div id="tab-akun" class="tab-content">
             <div class="glass-card">
-                <div class="section-title">Pengaturan & Enterprise Database</div>
-                <label style="font-size: 13px; margin-bottom: 6px; display: block;">Tema Visual</label>
-                <select id="theme-select" class="form-control" onchange="changeTheme(this.value)" style="margin-bottom: 14px;">
-                    <option value="heritage">Jawa Heritage (Cokelat Emas)</option>
-                    <option value="ocean">Ocean Blue (Modern)</option>
-                    <option value="light">Light Heritage (Terang)</option>
+                <div class="section-title">Mode Sistem Operasional</div>
+                <label style="font-size: 13px; margin-bottom: 6px; display: block;">Pilih Mode Instansi</label>
+                <select id="select-system-mode" class="form-control" onchange="changeSystemMode(this.value)" style="margin-bottom: 14px;">
+                    <option value="sekolah">Mode Sekolah (Siswa / Kelas)</option>
+                    <option value="pabrik">Mode Pabrik (Karyawan / Departemen)</option>
                 </select>
 
                 <div style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 14px;">
-                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 10px; text-align: center;">Konfigurasi Database Sekolah</div>
+                    <label style="font-size: 13px; margin-bottom: 6px; display: block;">Tema Visual</label>
+                    <select id="theme-select" class="form-control" onchange="changeTheme(this.value)" style="margin-bottom: 14px;">
+                        <option value="heritage">Jawa Heritage (Cokelat Emas)</option>
+                        <option value="ocean">Ocean Blue (Modern)</option>
+                        <option value="light">Light Heritage (Terang)</option>
+                    </select>
+                </div>
+
+                <div style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 14px;">
+                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 10px; text-align: center;">Konfigurasi Database Cloud</div>
                     
                     <label style="font-size: 12px; margin-bottom: 4px; display: block;">Database API Key</label>
                     <input type="text" id="fb-apikey" class="form-control" placeholder="Masukkan API Key..." style="margin-bottom: 8px;">
@@ -282,7 +292,7 @@
                 </div>
             </div>
 
-            <!-- KARTU DONASI DI BAWAH OPSI RESET -->
+            <!-- KARTU QRIS DONASI DI BAWAH -->
             <div class="glass-card" style="text-align: center; padding: 20px 14px;">
                 <div class="section-title" style="color: var(--primary); font-size: 16px; margin-bottom: 6px;">Dukung Pengembang</div>
                 <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4;">
@@ -303,14 +313,14 @@
 
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="switchTab('pindai', this)"><i class="fa-solid fa-qrcode"></i><span>Pindai</span></div>
-        <div class="nav-item" onclick="switchTab('siswa', this)"><i class="fa-solid fa-users"></i><span>Siswa</span></div>
+        <div class="nav-item" onclick="switchTab('siswa', this)"><i class="fa-solid fa-users"></i><span id="nav-label-anggota">Siswa</span></div>
         <div class="nav-item" onclick="switchTab('jadwal', this)"><i class="fa-solid fa-calendar-days"></i><span>Jadwal</span></div>
         <div class="nav-item" onclick="switchTab('laporan', this)"><i class="fa-solid fa-chart-line"></i><span>Laporan</span></div>
         <div class="nav-item" onclick="switchTab('akun', this)"><i class="fa-solid fa-gear"></i><span>Akun</span></div>
     </nav>
 </div>
 
-<!-- FULLSCREEN QRIS OVERLAY - UKURAN JAUH LEBIH BESAR -->
+<!-- FULLSCREEN QRIS OVERLAY -->
 <div id="fullscreen-qris-modal" onclick="closeFullscreenQRIS()">
     <div style="position: absolute; top: 15px; right: 20px; color: #fff; font-size: 28px; cursor: pointer; z-index: 10000;">
         <i class="fa-solid fa-xmark"></i>
@@ -326,21 +336,21 @@
 <div id="qr-modal" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-weight: 700;">Kartu Presensi Siswa</div>
+            <div style="font-weight: 700;" id="modal-card-title">Kartu Presensi Siswa</div>
             <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeModal('qr-modal')"></i>
         </div>
         <div class="printable-card">
             <div style="font-family: var(--font-heading); font-size: 20px; color: #8c4a27; font-weight:700;">AbsenO</div>
-            <div style="font-size: 10px; color: #666; text-transform: uppercase;">Kartu Presensi</div>
+            <div style="font-size: 10px; color: #666; text-transform: uppercase;" id="modal-card-subtitle">Kartu Presensi</div>
             <div id="qrcode"></div>
-            <div style="font-weight: 700; font-size: 16px; margin-top: 6px;" id="card-student-name">Nama Siswa</div>
+            <div style="font-weight: 700; font-size: 16px; margin-top: 6px;" id="card-student-name">Nama Anggota</div>
             <div style="font-size: 12px; color: #666;" id="card-student-meta">NIS • Kelas</div>
         </div>
         <button class="btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Cetak Kartu</button>
     </div>
 </div>
 
-<!-- Modal Tambah/Edit Siswa & Pendaftaran Wajah -->
+<!-- Modal Tambah/Edit Anggota & Pendaftaran Wajah -->
 <div id="student-modal" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -348,9 +358,9 @@
             <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeModal('student-modal')"></i>
         </div>
         <input type="hidden" id="edit-index">
-        <input type="text" id="input-nis" class="form-control" placeholder="NIS Siswa..." style="margin-bottom: 10px;">
+        <input type="text" id="input-nis" class="form-control" placeholder="NIS / NIK Karyawan..." style="margin-bottom: 10px;">
         <input type="text" id="input-nama" class="form-control" placeholder="Nama Lengkap..." style="margin-bottom: 10px;">
-        <input type="text" id="input-kelas" class="form-control" placeholder="Nama Kelas..." style="margin-bottom: 10px;">
+        <input type="text" id="input-kelas" class="form-control" placeholder="Kelas / Departemen..." style="margin-bottom: 10px;">
         
         <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--border-color); border-radius: 10px; padding: 10px; text-align: center; margin-bottom: 10px;">
             <div style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 6px;">Ekstraksi Kode Biometrik Wajah</div>
@@ -409,8 +419,8 @@
     let useFrontCamera = true;
     let faceApiLoaded = false;
     let audioCtx = null;
+    let currentSystemMode = localStorage.getItem('abseno_system_mode') || 'sekolah'; // 'sekolah' or 'pabrik'
 
-    // AUDIO CONTEXT UNLOCKER
     function initAudioContext() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -419,7 +429,6 @@
         }
     }
 
-    // FULLSCREEN QRIS FUNCTIONS
     function openFullscreenQRIS() {
         document.getElementById('fullscreen-qris-modal').classList.add('active');
     }
@@ -427,7 +436,6 @@
         document.getElementById('fullscreen-qris-modal').classList.remove('active');
     }
 
-    // AUDIO & VIBRATION FEEDBACK
     function playSuccessSound() {
         initAudioContext();
         if ("vibrate" in navigator) navigator.vibrate(100);
@@ -493,12 +501,13 @@
             return true;
         } catch (err) {
             console.error("Gagal memuat Model AI:", err);
-            if (statusText) statusText.innerHTML = `<span style="color: #f87171;">✕ Gagal memuat AI Online: ${err.message || err}</span>`;
+            if (statusText) statusText.innerHTML = `<span style="color: #f87171;">✕ Gagal memuat AI Online</span>`;
             return false;
         }
     }
 
     window.onload = function() {
+        applySystemModeUI();
         loadDataFromDatabase();
         const today = new Date().toISOString().slice(0,10);
         document.getElementById('filter-tanggal').value = today;
@@ -511,10 +520,50 @@
         window.addEventListener('offline', updateOnlineStatus);
     };
 
+    function changeSystemMode(mode) {
+        currentSystemMode = mode;
+        localStorage.setItem('abseno_system_mode', mode);
+        applySystemModeUI();
+        renderStudentList();
+    }
+
+    function applySystemModeUI() {
+        const modeBadge = document.getElementById('mode-badge');
+        const selectMode = document.getElementById('select-system-mode');
+        const navLabelAnggota = document.getElementById('nav-label-anggota');
+        const titleLabelData = document.getElementById('title-label-data');
+        const titlePindaiQr = document.getElementById('title-pindai-qr');
+        const modalCardTitle = document.getElementById('modal-card-title');
+        const modalStudentTitle = document.getElementById('modal-student-title');
+        const inputNis = document.getElementById('input-nis');
+        const inputKelas = document.getElementById('input-kelas');
+
+        selectMode.value = currentSystemMode;
+
+        if (currentSystemMode === 'pabrik') {
+            modeBadge.innerText = 'PABRIK';
+            navLabelAnggota.innerText = 'Karyawan';
+            titleLabelData.innerText = 'Data Karyawan';
+            titlePindaiQr.innerText = 'Pindai QR Code Karyawan';
+            modalCardTitle.innerText = 'Kartu Presensi Karyawan';
+            modalStudentTitle.innerText = 'Tambah Karyawan Baru';
+            inputNis.placeholder = 'NIK Karyawan...';
+            inputKelas.placeholder = 'Departemen / Divisi...';
+        } else {
+            modeBadge.innerText = 'SEKOLAH';
+            navLabelAnggota.innerText = 'Siswa';
+            titleLabelData.innerText = 'Data Siswa';
+            titlePindaiQr.innerText = 'Pindai QR Code Siswa';
+            modalCardTitle.innerText = 'Kartu Presensi Siswa';
+            modalStudentTitle.innerText = 'Tambah Siswa Baru';
+            inputNis.placeholder = 'NIS Siswa...';
+            inputKelas.placeholder = 'Nama Kelas...';
+        }
+    }
+
     function saveSchoolDatabaseConfig() {
         const apiKey = document.getElementById('fb-apikey').value.trim();
         const projectId = document.getElementById('fb-projectid').value.trim();
-
         if(!apiKey || !projectId) return alert('API Key dan Project ID wajib diisi!');
 
         const newConfig = {
@@ -571,7 +620,6 @@
         if (offlineLogs.length > 0 && navigator.onLine) {
             const badge = document.getElementById('connection-status');
             badge.innerText = 'SYNCING...'; badge.className = 'status-badge status-sync';
-            
             let count = offlineLogs.length;
             offlineLogs.forEach(log => {
                 db.collection("attendance").add(log).then(() => {
@@ -633,10 +681,7 @@
     async function inisialisasiKameraWajah() {
         const video = document.getElementById('video-wajah'), statusText = document.getElementById('text-status-wajah');
         statusText.innerText = "Memeriksa perangkat kamera...";
-        
-        if (streamKamera) {
-            streamKamera.getTracks().forEach(track => track.stop());
-        }
+        if (streamKamera) streamKamera.getTracks().forEach(track => track.stop());
 
         try {
             const constraints = { video: { facingMode: useFrontCamera ? "user" : "environment" } };
@@ -644,8 +689,7 @@
             streamKamera = stream; 
             video.srcObject = stream;
             video.style.transform = useFrontCamera ? "scaleX(-1)" : "scaleX(1)";
-
-            statusText.innerHTML = `<span style="font-size: 13px; color: var(--text-muted);">Kamera ${useFrontCamera ? 'Depan' : 'Belakang'} Aktif. Silakan Pindai.</span>`;
+            statusText.innerHTML = `<span style="font-size: 13px; color: var(--text-muted);">Kamera Aktif. Silakan Pindai.</span>`;
         } catch (err) {
             statusText.innerText = "✕ Gagal mengakses kamera.";
         }
@@ -665,14 +709,12 @@
         const statusText = document.getElementById('text-status-wajah');
 
         if (!video.srcObject || video.paused) {
-            statusText.innerHTML = `<span style="color: #38bdf8;">Menyalakan ulang kamera...</span>`;
             await inisialisasiKameraWajah();
             return;
         }
 
         const modelLoaded = await loadFaceApiModels();
         if (!modelLoaded) return;
-
         statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah...</span>`;
 
         try {
@@ -696,16 +738,7 @@
 
                     if (bestMatch.label !== 'unknown') {
                         const matchedStudent = students.find(s => s.nis === bestMatch.label);
-                        const todayDate = new Date().toISOString().slice(0,10);
-                        const alreadyAbsen = attendanceLogs.some(l => l.nis === matchedStudent.nis && l.tanggal === todayDate);
-
-                        if (alreadyAbsen) {
-                            playWarningSound();
-                            statusText.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ ${matchedStudent.nama} sudah absen hari ini!</span>`;
-                        } else {
-                            statusText.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil: ${matchedStudent.nama}</span>`;
-                            prosesAbsensi(matchedStudent.nis, 'AI Wajah');
-                        }
+                        prosesAbsensi(matchedStudent.nis, 'AI Wajah');
                     } else {
                         playErrorSound();
                         statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Dikenali</span>`;
@@ -713,46 +746,111 @@
                 }
             }
         } catch (err) {
-            console.error(err);
             playErrorSound();
-            statusText.innerHTML = `<span style="color: #f87171;">✕ Error: ${err.message || err}</span>`;
+            statusText.innerHTML = `<span style="color: #f87171;">✕ Error sistem</span>`;
         }
     }
 
-    function prosesAbsensi(identifier, metode, statusManual = 'Hadir') {
+    // LOGIKA UTAMA PRESENSI & DETEKSI TERLAMBAT OTOMATIS
+    function prosesAbsensi(identifier, metode, statusManual = null) {
         const student = students.find(s => s.nis === identifier.toString());
         const resultBox = (modePindai === 'qr') ? document.getElementById('scan-result') : document.getElementById('scan-result-wajah');
-        const now = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }), todayDate = new Date().toISOString().slice(0,10);
+        const nowObj = new Date();
+        const nowTimeStr = nowObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const todayDate = nowObj.toISOString().slice(0,10);
 
-        if (student) {
-            const alreadyAbsen = attendanceLogs.some(l => l.nis === student.nis && l.tanggal === todayDate);
-            if(alreadyAbsen && statusManual === 'Hadir') {
-                playWarningSound();
-                if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ ${student.nama} sudah absen hari ini!</span>`;
-            } else {
-                const logData = { nis: student.nis, nama: student.nama, kelas: student.kelas, tanggal: todayDate, waktu: now, status: statusManual, metode: metode };
-                
-                if(statusManual === 'Hadir') {
-                    playSuccessSound();
-                    speakText(`${student.nama} Hadir`);
-                }
+        if (!student) {
+            playErrorSound();
+            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Anggota Tidak Ditemukan</span>`;
+            return;
+        }
 
-                if (navigator.onLine) {
-                    db.collection("attendance").add(logData).then(() => {
-                        if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil (${statusManual}): ${student.nama}</span>`;
+        const existingLog = attendanceLogs.find(l => l.nis === student.nis && l.tanggal === todayDate);
+
+        // Jika sudah absen hadir dan admin mengklik tombol "Izin Pulang" / "Pulang" cepat
+        if (existingLog && (statusManual === 'Izin Pulang' || statusManual === 'Pulang')) {
+            existingLog.waktuPulang = nowTimeStr;
+            existingLog.keteranganPulang = `Pulang jam ${nowTimeStr}`;
+            
+            playSuccessSound();
+            speakText(`${student.nama} izin pulang`);
+
+            // Update ke Firebase / LocalStorage
+            simpanLogKeDatabase(existingLog, resultBox, student.nama, `Pulang Jam ${nowTimeStr}`);
+            return;
+        }
+
+        if (existingLog && !statusManual) {
+            playWarningSound();
+            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ ${student.nama} sudah absen hari ini!</span>`;
+            return;
+        }
+
+        // Tentukan Status (Hadir / Terlambat otomatis berdasarkan jam masuk)
+        let statusFinal = statusManual || 'Hadir';
+        let catatan = '';
+
+        if (!statusManual && activeSchedule.jamMasuk) {
+            const [jamM, menitM] = activeSchedule.jamMasuk.split(':').map(Number);
+            const batasMenitTotal = (jamM * 60) + menitM;
+            const sekarangMenitTotal = (nowObj.getHours() * 60) + nowObj.getMinutes();
+
+            if (sekarangMenitTotal > batasMenitTotal) {
+                const selisih = sekarangMenitTotal - batasMenitTotal;
+                statusFinal = 'Terlambat';
+                catatan = `Telat ${selisih} mnt`;
+            }
+        }
+
+        if(statusManual && statusManual !== 'Hadir') {
+            catatan = statusManual;
+        }
+
+        const logData = {
+            nis: student.nis,
+            nama: student.nama,
+            kelas: student.kelas,
+            tanggal: todayDate,
+            waktu: nowTimeStr,
+            waktuPulang: '-',
+            status: statusFinal,
+            keteranganPulang: catatan,
+            metode: metode
+        };
+
+        if(statusFinal === 'Hadir' || statusFinal === 'Terlambat') {
+            playSuccessSound();
+            speakText(`${student.nama} ${statusFinal === 'Terlambat' ? 'terlambat' : 'hadir'}`);
+        } else {
+            playSuccessSound();
+        }
+
+        simpanLogKeDatabase(logData, resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}`);
+    }
+
+    function simpanLogKeDatabase(logData, resultBox, namaSiswa, infoPesan) {
+        if (navigator.onLine) {
+            // Cek apakah data sudah ada di firestore untuk di-update atau ditambah baru
+            db.collection("attendance").where("nis", "==", logData.nis).where("tanggal", "==", logData.tanggal).get().then(snapshot => {
+                if (!snapshot.empty && logData.waktuPulang !== '-') {
+                    const docId = snapshot.docs[0].id;
+                    db.collection("attendance").doc(docId).update({
+                        waktuPulang: logData.waktuPulang,
+                        keteranganPulang: logData.keteranganPulang
+                    }).then(() => {
+                        if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ ${namaSiswa} Tercatat Pulang (${logData.waktuPulang})</span>`;
+                        renderLogs();
                     });
                 } else {
-                    const offlineLogs = JSON.parse(localStorage.getItem('abseno_offline_cache')) || [];
-                    offlineLogs.push(logData);
-                    localStorage.setItem('abseno_offline_cache', JSON.stringify(offlineLogs));
-                    attendanceLogs.unshift(logData);
-                    renderLogs();
-                    if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #38bdf8; font-weight:700;">✓ Disimpan Offline: ${student.nama}</span>`;
+                    db.collection("attendance").add(logData).then(() => {
+                        if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil: ${namaSiswa} - ${infoPesan}</span>`;
+                    });
                 }
-            }
+            });
         } else {
-            playErrorSound();
-            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Siswa Tidak Ditemukan</span>`;
+            attendanceLogs.unshift(logData);
+            renderLogs();
+            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #38bdf8; font-weight:700;">✓ Disimpan Offline: ${namaSiswa}</span>`;
         }
     }
 
@@ -761,13 +859,14 @@
         const currentSelected = filterSelect.value;
         const uniqueClasses = [...new Set(students.map(s => s.kelas).filter(Boolean))].sort();
         
-        filterSelect.innerHTML = '<option value="">Semua Kelas</option>';
+        filterSelect.innerHTML = '<option value="">Semua Kelas / Departemen</option>';
         uniqueClasses.forEach(cls => {
             const opt = document.createElement('option'); opt.value = cls; opt.innerText = cls; filterSelect.appendChild(opt);
         });
         filterSelect.value = currentSelected;
     }
 
+    // RENDER LIST SISWA DENGAN PINTASAN AKSI MANUAL CEPAT
     function renderStudentList() {
         const listContainer = document.getElementById('student-list'), filterKelas = document.getElementById('filter-kelas').value, searchQuery = document.getElementById('search-siswa').value.toLowerCase();
         listContainer.innerHTML = '';
@@ -779,19 +878,24 @@
         }).forEach((student) => {
             const hasVector = student.faceVector && student.faceVector.length > 0;
             const faceClass = hasVector ? 'badge-face badge-face-active' : 'badge-face badge-face-inactive';
-            const faceTitle = hasVector ? 'Biometrik Wajah Terdaftar' : 'Biometrik Wajah Belum Ada';
-            const faceLabel = hasVector ? 'FACE' : '<span style="text-decoration: line-through;">FACE</span>';
+            const faceTitle = hasVector ? 'Biometrik Terdaftar' : 'Belum Ada Biometrik';
 
             const item = document.createElement('div');
             item.className = 'student-item';
             item.innerHTML = `
                 <div class="student-avatar">${student.nama.charAt(0)}</div>
-                <div style="flex:1;">
-                    <div style="font-weight:600; font-size:15px;">${student.nama}</div>
-                    <div style="font-size:12px; color:var(--text-muted);">${student.nis} • ${student.kelas}</div>
+                <div style="flex:1; min-width: 0; padding-right: 4px;">
+                    <div style="font-weight:600; font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${student.nama}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${student.nis} • ${student.kelas}</div>
+                    <!-- PINTASAN MANUAL CEPAT DI SETIAP NAMA -->
+                    <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
+                        <button onclick="prosesAbsensi('${student.nis}', 'Manual', 'Hadir')" style="font-size:9px; padding:2px 6px; background:rgba(74,222,128,0.2); color:#4ade80; border:1px solid rgba(74,222,128,0.4); border-radius:4px; cursor:pointer;">Hadir</button>
+                        <button onclick="prosesAbsensi('${student.nis}', 'Manual', 'Sakit')" style="font-size:9px; padding:2px 6px; background:rgba(251,191,36,0.2); color:#fbbf24; border:1px solid rgba(251,191,36,0.4); border-radius:4px; cursor:pointer;">Sakit</button>
+                        <button onclick="prosesAbsensi('${student.nis}', 'Manual', 'Izin')" style="font-size:9px; padding:2px 6px; background:rgba(56,189,248,0.2); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); border-radius:4px; cursor:pointer;">Izin</button>
+                        <button onclick="prosesAbsensi('${student.nis}', 'Manual', 'Izin Pulang')" style="font-size:9px; padding:2px 6px; background:rgba(168,85,247,0.2); color:#d8b4fe; border:1px solid rgba(168,85,247,0.4); border-radius:4px; cursor:pointer;">Pulang Cepat</button>
+                    </div>
                 </div>
-                <div class="action-btns">
-                    <span class="${faceClass}" title="${faceTitle}">${faceLabel}</span>
+                <div class="action-btns" style="flex-direction: column; gap: 4px;">
                     <button class="btn-icon btn-qr" onclick="openQRModal('${student.nis}', '${student.nama}', '${student.kelas}')" title="Cetak QR"><i class="fa-solid fa-qrcode"></i></button>
                     <button class="btn-icon btn-edit" onclick="editStudent('${student.id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
                     <button class="btn-icon btn-delete" onclick="deleteStudent('${student.id}')" title="Hapus"><i class="fa-solid fa-trash"></i></button>
@@ -810,7 +914,7 @@
     }
 
     function openAddStudentModal() {
-        document.getElementById('modal-student-title').innerText = 'Tambah Siswa Baru';
+        document.getElementById('modal-student-title').innerText = currentSystemMode === 'pabrik' ? 'Tambah Karyawan Baru' : 'Tambah Siswa Baru';
         document.getElementById('edit-index').value = '';
         document.getElementById('input-nis').value = '';
         document.getElementById('input-nama').value = '';
@@ -825,7 +929,6 @@
         document.getElementById('face-register-modal').classList.add('active');
         const video = document.getElementById('video-daftar-wajah'), statusCap = document.getElementById('status-capture-wajah');
         statusCap.innerText = "Memuat kamera & Model AI...";
-        
         await loadFaceApiModels();
 
         try {
@@ -849,7 +952,6 @@
     async function generateAndSaveFaceVector() {
         const video = document.getElementById('video-daftar-wajah');
         const statusCap = document.getElementById('status-capture-wajah');
-
         statusCap.innerHTML = `<span style="color:#38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Mengekstraksi biometrik wajah...</span>`;
 
         try {
@@ -858,71 +960,58 @@
 
             if (!detection) {
                 playErrorSound();
-                statusCap.innerHTML = `<span style="color:#f87171;">✕ Wajah tidak terdeteksi! Pastikan wajah terlihat jelas.</span>`;
+                statusCap.innerHTML = `<span style="color:#f87171;">✕ Wajah tidak terdeteksi!</span>`;
             } else {
                 playSuccessSound();
                 tempFaceVector = Array.from(detection.descriptor);
-                document.getElementById('face-preview-box').innerHTML = '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Biometrik Wajah Terkunci!</span>';
-                alert('Vektor biometrik berhasil diekstraksi!');
+                document.getElementById('face-preview-box').innerHTML = '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Biometrik Terkunci!</span>';
                 tutupKameraDaftarWajah();
             }
         } catch (err) {
-            console.error(err);
             playErrorSound();
-            statusCap.innerHTML = `<span style="color:#f87171;">✕ Error: ${err.message || err}</span>`;
+            statusCap.innerHTML = `<span style="color:#f87171;">✕ Gagal ekstraksi wajah</span>`;
         }
     }
 
     function saveStudent() {
         const nis = document.getElementById('input-nis').value.trim();
         const nama = document.getElementById('input-nama').value.trim();
-        const kelas = document.getElementById('input-kelas').value.trim() || 'Tanpa Kelas';
+        const kelas = document.getElementById('input-kelas').value.trim() || 'Umum';
         const docId = document.getElementById('edit-index').value;
 
-        if(!nis || !nama) return alert('NIS dan Nama wajib diisi!');
+        if(!nis || !nama) return alert('ID/NIK dan Nama wajib diisi!');
 
-        const studentData = { nis, nama, kelas };
-        if (tempFaceVector) {
-            studentData.faceVector = tempFaceVector;
-        }
+        const studentData = { nis, nama, kelas, mode: currentSystemMode };
+        if (tempFaceVector) studentData.faceVector = tempFaceVector;
 
         if(docId === '') {
             db.collection("students").add(studentData).then(() => {
                 closeModal('student-modal');
-                tutupKameraDaftarWajah();
                 tempFaceVector = null;
             });
         } else {
             db.collection("students").doc(docId).update(studentData).then(() => {
                 closeModal('student-modal');
-                tutupKameraDaftarWajah();
                 tempFaceVector = null;
             });
         }
     }
 
     function deleteStudent(docId) {
-        if(confirm('Hapus data siswa ini?')) {
-            db.collection("students").doc(docId).delete();
-        }
+        if(confirm('Hapus data ini?')) db.collection("students").doc(docId).delete();
     }
 
     function editStudent(docId) {
         const s = students.find(item => item.id === docId);
         if(!s) return;
-        document.getElementById('modal-student-title').innerText = 'Edit Data Siswa';
+        document.getElementById('modal-student-title').innerText = 'Edit Data Anggota';
         document.getElementById('edit-index').value = s.id;
         document.getElementById('input-nis').value = s.nis;
         document.getElementById('input-nama').value = s.nama;
         document.getElementById('input-kelas').value = s.kelas;
         tempFaceVector = s.faceVector || null;
         
-        if(tempFaceVector) {
-            document.getElementById('face-preview-box').innerHTML = '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Biometrik Terdaftar</span>';
-        } else {
-            document.getElementById('face-preview-box').innerHTML = 'Belum ada biometrik terdaftar';
-        }
-
+        document.getElementById('face-preview-box').innerHTML = tempFaceVector ? '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Biometrik Terdaftar</span>' : 'Belum ada biometrik terdaftar';
         document.getElementById('student-modal').classList.add('active');
     }
 
@@ -931,9 +1020,9 @@
     function updateStats() {
         let hadir = 0, sakit = 0, izin = 0, alpa = 0;
         attendanceLogs.forEach(l => {
-            if(l.status === 'Hadir') hadir++;
+            if(l.status === 'Hadir' || l.status === 'Terlambat') hadir++;
             else if(l.status === 'Sakit') sakit++;
-            else if(l.status === 'Izin') izin++;
+            else if(l.status === 'Izin' || l.status === 'Izin Pulang') izin++;
             else if(l.status === 'Alpa') alpa++;
         });
         document.getElementById('stat-hadir').innerText = hadir;
@@ -957,7 +1046,6 @@
     function renderLogs() {
         const logsContainer = document.getElementById('attendance-logs'), filterTanggal = document.getElementById('filter-tanggal').value || new Date().toISOString().slice(0,10);
         if(!logsContainer) return; logsContainer.innerHTML = '';
-        
         const modeLap = document.getElementById('mode-laporan').value;
 
         if (modeLap === 'terlambat') {
@@ -965,11 +1053,11 @@
             const belumMasuk = students.filter(s => !hadirNis.has(s.nis));
 
             const headerInfo = document.createElement('div');
-            headerInfo.innerHTML = `<div style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 8px; text-align:center;">Daftar Siswa Belum Masuk (${filterTanggal}) - Jam Masuk: ${activeSchedule.jamMasuk}</div>`;
+            headerInfo.innerHTML = `<div style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 8px; text-align:center;">Belum Melakukan Presensi (${filterTanggal})</div>`;
             logsContainer.appendChild(headerInfo);
 
             if(belumMasuk.length === 0) {
-                logsContainer.innerHTML += `<div class="student-item" style="justify-content:center; color: #4ade80; font-weight:600;">Semua siswa sudah melakukan presensi!</div>`;
+                logsContainer.innerHTML += `<div class="student-item" style="justify-content:center; color: #4ade80; font-weight:600;">Semua anggota sudah presensi!</div>`;
                 return;
             }
 
@@ -987,14 +1075,13 @@
             return;
         }
 
-        const filteredLogs = (modeLap === 'harian') 
-            ? attendanceLogs.filter(log => log.tanggal === filterTanggal)
-            : attendanceLogs;
+        const filteredLogs = (modeLap === 'harian') ? attendanceLogs.filter(log => log.tanggal === filterTanggal) : attendanceLogs;
 
         filteredLogs.forEach(log => {
             let colorStatus = '#4ade80';
             if(log.status === 'Sakit') colorStatus = '#fbbf24';
-            else if(log.status === 'Izin') colorStatus = '#38bdf8';
+            else if(log.status === 'Izin' || log.status === 'Izin Pulang') colorStatus = '#38bdf8';
+            else if(log.status === 'Terlambat') colorStatus = '#f59e0b';
             else if(log.status === 'Alpa') colorStatus = '#f87171';
 
             const item = document.createElement('div');
@@ -1002,9 +1089,12 @@
             item.innerHTML = `
                 <div style="flex:1;">
                     <div style="font-weight:600; font-size:14px;">${log.nama}</div>
-                    <div style="font-size:12px; color:var(--text-muted);">${log.kelas} • ${log.tanggal} (${log.waktu})</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${log.kelas} • Masuk: ${log.waktu} ${log.waktuPulang !== '-' ? '• Pulang: '+log.waktuPulang : ''}</div>
                 </div>
-                <span style="font-weight:700; font-size:13px; color: ${colorStatus};">${log.status} (${log.metode || 'QR'})</span>
+                <div style="text-align: right;">
+                    <span style="font-weight:700; font-size:12px; color: ${colorStatus}; display: block;">${log.status}</span>
+                    <span style="font-size:10px; color: var(--text-muted);">${log.keteranganPulang || log.metode || ''}</span>
+                </div>
             `;
             logsContainer.appendChild(item);
         });
@@ -1034,9 +1124,8 @@
         
         activeSchedule = { jamMasuk: masuk, jamPulang: pulang };
         localStorage.setItem('abseno_schedule', JSON.stringify(activeSchedule));
-
-        document.getElementById('display-schedule').innerText = `${hari} | ${masuk} - ${pulang}`;
-        alert('Jadwal berhasil disimpan!');
+        document.getElementById('display-schedule').innerText = `${hari} | Masuk: ${masuk} (Batas Terlambat Otomatis)`;
+        alert('Jadwal dan toleransi keterlambatan berhasil disimpan!');
     }
 
     function loadSchedule() {
@@ -1045,23 +1134,23 @@
             activeSchedule = savedSch;
             document.getElementById('input-jam-masuk').value = savedSch.jamMasuk;
             document.getElementById('input-jam-pulang').value = savedSch.jamPulang;
-            document.getElementById('display-schedule').innerText = `Senin - Sabtu | ${savedSch.jamMasuk} - ${savedSch.jamPulang}`;
+            document.getElementById('display-schedule').innerText = `Senin - Sabtu | Masuk: ${savedSch.jamMasuk}`;
         } else {
-            document.getElementById('display-schedule').innerText = `Senin - Sabtu | 07:00 - 14:00`;
+            document.getElementById('display-schedule').innerText = `Senin - Sabtu | Masuk: 07:00`;
         }
         document.getElementById('input-hari').value = 'Senin - Sabtu';
     }
 
-    // PERBAIKAN DOWNLOAD CSV SUPAYA WORK DI HP
+    // EKSPOR CSV BERSIH DENGAN TIMESTAMP KEPULANGAN / IZIN
     function exportCSV() {
         if (!attendanceLogs || attendanceLogs.length === 0) {
             alert('Tidak ada data laporan absen untuk di-download!');
             return;
         }
 
-        let csv = 'NIS,Nama,Kelas,Tanggal,Waktu,Status,Metode\n';
+        let csv = 'NIS/NIK,Nama,Kelas/Departemen,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan/Metode\n';
         attendanceLogs.forEach(l => {
-            csv += `"${l.nis || ''}","${l.nama || ''}","${l.kelas || ''}","${l.tanggal || '-'}","${l.waktu || ''}","${l.status || ''}","${l.metode || 'QR Code'}"\n`;
+            csv += `"${l.nis || ''}","${l.nama || ''}","${l.kelas || ''}","${l.tanggal || '-'}","${l.waktu || ''}","${l.waktuPulang || '-'}","${l.status || ''}","${l.keteranganPulang || l.metode || ''}"\n`;
         });
 
         try {
@@ -1069,13 +1158,12 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Laporan_AbsenO_${new Date().toISOString().slice(0,10)}.csv`;
+            a.download = `Laporan_AbsenO_${currentSystemMode}_${new Date().toISOString().slice(0,10)}.csv`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         } catch (e) {
-            // Metode alternatif via window.open jika terhalang browser HP
             const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csv);
             window.open(encodedUri);
         }
