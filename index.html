@@ -99,7 +99,7 @@
         .form-control option { background: var(--bg-card); color: var(--text-main); }
 
         .student-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border-color); margin-bottom: 8px; }
-        .student-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; margin-right: 12px; border: 1px solid var(--primary); }
+        .student-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; margin-right: 12px; border: 1px solid var(--primary); flex-shrink: 0; }
 
         .action-btns { display: flex; gap: 6px; align-items: center; }
         .btn-icon { width: 32px; height: 32px; border-radius: 8px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; }
@@ -107,7 +107,7 @@
         .btn-qr { background: rgba(217, 119, 6, 0.2); color: #fbbf24; }
         .btn-delete { background: rgba(220, 38, 38, 0.2); color: #f87171; }
         
-        .badge-face { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); letter-spacing: 0.5px; }
+        .badge-face { font-size: 9px; font-weight: 700; padding: 3px 6px; border-radius: 4px; border: 1px solid var(--border-color); letter-spacing: 0.5px; text-align: center; display: inline-block; }
         .badge-face-active { background: rgba(74, 222, 128, 0.15); color: #4ade80; border-color: rgba(74, 222, 128, 0.4); }
         .badge-face-inactive { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); text-decoration: line-through; }
 
@@ -426,7 +426,7 @@
     let useFrontCamera = true;
     let faceApiLoaded = false;
     let audioCtx = null;
-    let currentSystemMode = localStorage.getItem('abseno_system_mode') || 'sekolah'; // 'sekolah' or 'pabrik'
+    let currentSystemMode = localStorage.getItem('abseno_system_mode') || 'sekolah';
 
     function initAudioContext() {
         if (!audioCtx) {
@@ -493,18 +493,19 @@
         }
     }
 
+    // MENGGUNAKAN TINY FACE DETECTOR UNTUK LOADING YANG JAUH LEBIH RINGAN DAN CEPAT
     async function loadFaceApiModels() {
         if (faceApiLoaded) return true;
         const statusText = document.getElementById('text-status-wajah') || document.getElementById('status-capture-wajah');
-        if (statusText) statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat Model AI Online...</span>`;
+        if (statusText) statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat Model Tiny AI...</span>`;
         
         try {
             const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-            await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
             await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
             await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
             faceApiLoaded = true;
-            if (statusText) statusText.innerHTML = `<span style="color: #4ade80;">Model AI Siap!</span>`;
+            if (statusText) statusText.innerHTML = `<span style="color: #4ade80;">Model AI Ringan Siap!</span>`;
             return true;
         } catch (err) {
             if (statusText) statusText.innerHTML = `<span style="color: #f87171;">✕ Gagal memuat AI Online</span>`;
@@ -595,7 +596,6 @@
     }
 
     function loadDataFromDatabase() {
-        // Ambil data anggota terisolasi berdasarkan mode (sekolah / pabrik)
         db.collection("students").where("mode", "==", currentSystemMode).onSnapshot(snapshot => {
             students = [];
             snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
@@ -604,19 +604,10 @@
             if(document.getElementById('mode-laporan').value === 'terlambat') renderLogs();
         });
 
-        const todayDate = new Date().toISOString().slice(0,10);
-        db.collection("attendance").where("mode", "==", currentSystemMode).where("tanggal", "==", todayDate).onSnapshot(snapshot => {
-            attendanceLogs = [];
-            snapshot.forEach(doc => attendanceLogs.push(doc.data()));
-            renderLogs();
-            updateStats();
-        });
-
-        // Ambil juga keseluruhan log untuk rekap bulanan/tahunan
         db.collection("attendance").where("mode", "==", currentSystemMode).onSnapshot(snapshot => {
             const allLogs = [];
             snapshot.forEach(doc => allLogs.push(doc.data()));
-            if(allLogs.length > 0) attendanceLogs = allLogs;
+            attendanceLogs = allLogs;
             renderLogs();
             updateStats();
         });
@@ -735,7 +726,7 @@
         statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah...</span>`;
 
         try {
-            const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
             const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
 
             if (!detection) {
@@ -768,7 +759,6 @@
         }
     }
 
-    // LOGIKA UTAMA 1 BARIS UNIK PER HARI
     function prosesAbsensi(identifier, metode, statusManual = null) {
         const student = students.find(s => s.nis === identifier.toString());
         const resultBox = (modePindai === 'qr') ? document.getElementById('scan-result') : document.getElementById('scan-result-wajah');
@@ -811,7 +801,6 @@
         }
 
         if (existingLog) {
-            // Update baris yang sama tanpa bikin dobel row
             existingLog.waktu = nowTimeStr;
             existingLog.status = statusFinal;
             existingLog.keteranganPulang = catatan;
@@ -896,13 +885,18 @@
         }).forEach((student) => {
             const hasVector = student.faceVector && student.faceVector.length > 0;
             const faceClass = hasVector ? 'badge-face badge-face-active' : 'badge-face badge-face-inactive';
+            const faceTitle = hasVector ? 'Biometrik Terdaftar' : 'Belum Ada Biometrik';
+            const faceLabel = hasVector ? 'FACE' : 'FACE';
 
             const item = document.createElement('div');
             item.className = 'student-item';
             item.innerHTML = `
                 <div class="student-avatar">${student.nama.charAt(0)}</div>
                 <div style="flex:1; min-width: 0; padding-right: 4px;">
-                    <div style="font-weight:600; font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${student.nama}</div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="font-weight:600; font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${student.nama}</div>
+                        <span class="${faceClass}" title="${faceTitle}">${faceLabel}</span>
+                    </div>
                     <div style="font-size:11px; color:var(--text-muted);">${student.nis} • ${student.kelas}</div>
                     <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
                         <button onclick="prosesAbsensi('${student.nis}', 'Manual', 'Hadir')" style="font-size:9px; padding:2px 6px; background:rgba(74,222,128,0.2); color:#4ade80; border:1px solid rgba(74,222,128,0.4); border-radius:4px; cursor:pointer;">Hadir</button>
@@ -944,7 +938,7 @@
         hentikanSemuaAksiPindai();
         document.getElementById('face-register-modal').classList.add('active');
         const video = document.getElementById('video-daftar-wajah'), statusCap = document.getElementById('status-capture-wajah');
-        statusCap.innerText = "Memuat kamera & Model AI...";
+        statusCap.innerText = "Memuat kamera & Model Tiny AI...";
         await loadFaceApiModels();
 
         try {
@@ -971,7 +965,7 @@
         statusCap.innerHTML = `<span style="color:#38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Mengekstraksi biometrik wajah...</span>`;
 
         try {
-            const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
             const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
 
             if (!detection) {
@@ -1174,7 +1168,7 @@
         document.getElementById('input-hari').value = 'Senin - Sabtu';
     }
 
-    // EKSPOR CSV BERSIH DENGAN PEMISAHAN MODE & REKAP TAHUNAN
+    // FUNGSI DOWNLOAD CSV YANG DIOPTIMALKAN AGAR LANCAR DI BERBAGAI HP
     function exportCSV() {
         const modeLap = document.getElementById('mode-laporan').value;
         let filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
@@ -1201,7 +1195,7 @@
         });
 
         try {
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -1211,7 +1205,7 @@
             document.body.removeChild(a);
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         } catch (e) {
-            const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csv);
+            const encodedUri = encodeURI('data:text/csv;charset=utf-8,\ufeff' + csv);
             window.open(encodedUri);
         }
     }
