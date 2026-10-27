@@ -485,11 +485,24 @@
     }
 
     function speakText(text) {
-        if ('speechSynthesis' in window) {
-            const utterance = new SpeechSynthesisUtterance(text);
+        // Gunakan TTS bawaan WebView; beberapa perangkat baru memuat daftar suara secara terlambat.
+        if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return;
+        try {
+            const synth = window.speechSynthesis;
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(String(text || ''));
             utterance.lang = 'id-ID';
-            utterance.rate = 1.0;
-            window.speechSynthesis.speak(utterance);
+            utterance.rate = 0.95;
+            utterance.pitch = 1.0;
+            const voices = synth.getVoices ? synth.getVoices() : [];
+            const indoVoice = voices.find(v => /^id([-_]|$)/i.test(v.lang));
+            if (indoVoice) utterance.voice = indoVoice;
+            // Beri kesempatan WebView mengaktifkan TTS setelah interaksi tombol pengguna.
+            window.setTimeout(() => {
+                try { synth.speak(utterance); } catch (err) { console.warn('TTS tidak tersedia:', err); }
+            }, 100);
+        } catch (err) {
+            console.warn('TTS tidak tersedia:', err);
         }
     }
 
@@ -773,7 +786,7 @@
 
         if (!student) {
             playErrorSound();
-            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Anggota Tidak Ditemukan</span>`;
+            if(resultBox) resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Anggota Tidak Ditemukan</span>`;
             return;
         }
 
@@ -837,7 +850,11 @@
     function simpanLogKeDatabase(logData, resultBox, namaSiswa, infoPesan) {
         if (navigator.onLine) {
             db.collection("attendance").add(logData).then(() => {
-                if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil: ${namaSiswa} - ${infoPesan}</span>`;
+                if(resultBox) resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil: ${namaSiswa} - ${infoPesan}</span>`;
+                renderLogs();
+            }).catch(err => {
+                console.error('Gagal menyimpan absensi:', err);
+                if(resultBox) resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Gagal menyimpan absensi. Periksa koneksi dan izin database.</span>`;
             });
         } else {
             const cacheKey = 'abseno_offline_cache_' + currentSystemMode;
@@ -846,7 +863,7 @@
             localStorage.setItem(cacheKey, JSON.stringify(offlineLogs));
             attendanceLogs.unshift(logData);
             renderLogs();
-            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #38bdf8; font-weight:700;">✓ Disimpan Offline: ${namaSiswa}</span>`;
+            if(resultBox) resultBox.innerHTML = `<span style="color: #38bdf8; font-weight:700;">✓ Disimpan Offline: ${namaSiswa}</span>`;
         }
     }
 
@@ -861,7 +878,7 @@
                     metode: logData.metode,
                     waktuPulang: logData.waktuPulang
                 }).then(() => {
-                    if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa} - ${infoPesan}</span>`;
+                    if(resultBox) resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa} - ${infoPesan}</span>`;
                     renderLogs();
                 });
             } else {
@@ -869,7 +886,7 @@
                     if (!snapshot.empty) {
                         const docId = snapshot.docs[0].id;
                         db.collection("attendance").doc(docId).update(logData).then(() => {
-                            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa} - ${infoPesan}</span>`;
+                            if(resultBox) resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa} - ${infoPesan}</span>`;
                             renderLogs();
                         });
                     }
@@ -877,7 +894,7 @@
             }
         } else {
             renderLogs();
-            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Diperbarui: ${namaSiswa}</span>`;
+            if(resultBox) resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Diperbarui: ${namaSiswa}</span>`;
         }
     }
 
@@ -1188,19 +1205,19 @@
         document.getElementById('input-hari').value = 'Senin - Sabtu';
     }
 
-    function exportCSV() {
+    async function exportCSV() {
         const modeLap = document.getElementById('mode-laporan').value;
         let filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
-        
+
         if (modeLap === 'harian') {
             const filterTanggal = document.getElementById('filter-tanggal').value;
             filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
         } else if (modeLap === 'bulanan') {
             const filterBulan = document.getElementById('filter-bulan').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterBulan));
+            filteredLogs = filteredLogs.filter(log => (log.tanggal || '').startsWith(filterBulan));
         } else if (modeLap === 'tahunan') {
             const filterTahun = document.getElementById('filter-tahun').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterTahun));
+            filteredLogs = filteredLogs.filter(log => (log.tanggal || '').startsWith(filterTahun));
         }
 
         if (!filteredLogs || filteredLogs.length === 0) {
@@ -1208,24 +1225,39 @@
             return;
         }
 
-        let csv = 'ID/NIK,Nama,Kelas/Departemen,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan/Metode\n';
-        filteredLogs.forEach(l => {
-            csv += `"${l.nis || ''}","${l.nama || ''}","${l.kelas || ''}","${l.tanggal || '-'}","${l.waktu || ''}","${l.waktuPulang || '-'}","${l.status || ''}","${l.keteranganPulang || l.metode || ''}"\n`;
-        });
+        const csvCell = value => '"' + String(value == null ? '' : value).replace(/"/g, '""') + '"';
+        let csv = '\ufeff' + [
+            ['ID/NIK','Nama','Kelas/Departemen','Tanggal','Jam Masuk','Jam Pulang','Status','Keterangan/Metode'],
+            ...filteredLogs.map(l => [l.nis, l.nama, l.kelas, l.tanggal || '-', l.waktu, l.waktuPulang || '-', l.status, l.keteranganPulang || l.metode || ''])
+        ].map(row => row.map(csvCell).join(',')).join('\r\n');
 
+        const filename = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
         try {
-            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+            // Android WebView sering tidak menangani unduhan <a download>. Jika tersedia,
+            // tampilkan lembar berbagi Android agar pengguna bisa menyimpan file CSV.
+            if (typeof navigator.share === 'function' && typeof File !== 'undefined') {
+                const file = new File([blob], filename, { type: 'text/csv;charset=utf-8;' });
+                if (typeof navigator.canShare !== 'function' || navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: 'Laporan AbsenO', text: 'Laporan absensi CSV' });
+                    return;
+                }
+            }
+
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
+            a.download = filename;
+            a.style.display = 'none';
             document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            a.remove();
+            // Jangan langsung mencabut URL agar WebView punya waktu memproses unduhan.
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
         } catch (e) {
-            const encodedUri = encodeURI('data:text/csv;charset=utf-8,\ufeff' + csv);
-            window.open(encodedUri);
+            console.error('Ekspor CSV gagal:', e);
+            alert('CSV belum bisa diunduh langsung di perangkat ini. Coba lagi atau gunakan APK yang mendukung berbagi file.');
         }
     }
 </script>
