@@ -718,8 +718,12 @@
 
     async function inisialisasiKameraWajah() {
         const video = document.getElementById('video-wajah'), statusText = document.getElementById('text-status-wajah');
+        if(!video) return;
         statusText.innerText = "Memeriksa perangkat kamera...";
-        if (streamKamera) streamKamera.getTracks().forEach(track => track.stop());
+        if (streamKamera) {
+            streamKamera.getTracks().forEach(track => track.stop());
+            streamKamera = null;
+        }
 
         try {
             const constraints = { 
@@ -897,8 +901,11 @@
                 setTimeout(() => {
                     faceScanBusy = false;
                     const stWajah = document.getElementById('text-status-wajah');
-                    if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Silakan pindai wajah siswa berikutnya.</span>';
-                }, 2000);
+                    if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Kamera Aktif. Silakan Pindai Siswa Berikutnya.</span>';
+                    if (modePindai === 'wajah') {
+                        inisialisasiKameraWajah();
+                    }
+                }, 2500);
             }).catch(err => {
                 console.error('Gagal simpan:', err);
                 if(resultBox) resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Gagal menyimpan ke database.</span>`;
@@ -915,8 +922,11 @@
             setTimeout(() => {
                 faceScanBusy = false;
                 const stWajah = document.getElementById('text-status-wajah');
-                if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Silakan pindai wajah siswa berikutnya.</span>';
-            }, 2000);
+                if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Kamera Aktif. Silakan Pindai Siswa Berikutnya.</span>';
+                if (modePindai === 'wajah') {
+                    inisialisasiKameraWajah();
+                }
+            }, 2500);
         }
     }
 
@@ -936,8 +946,11 @@
                     setTimeout(() => {
                         faceScanBusy = false;
                         const stWajah = document.getElementById('text-status-wajah');
-                        if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Silakan pindai wajah siswa berikutnya.</span>';
-                    }, 2000);
+                        if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Kamera Aktif. Silakan Pindai Siswa Berikutnya.</span>';
+                        if (modePindai === 'wajah') {
+                            inisialisasiKameraWajah();
+                        }
+                    }, 2500);
                 }).catch(() => { faceScanBusy = false; });
             } else {
                 db.collection("attendance").where("nis", "==", logData.nis).where("tanggal", "==", logData.tanggal).where("mode", "==", currentSystemMode).get().then(snapshot => {
@@ -949,8 +962,11 @@
                             setTimeout(() => {
                                 faceScanBusy = false;
                                 const stWajah = document.getElementById('text-status-wajah');
-                                if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Silakan pindai wajah siswa berikutnya.</span>';
-                            }, 2000);
+                                if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Kamera Aktif. Silakan Pindai Siswa Berikutnya.</span>';
+                                if (modePindai === 'wajah') {
+                                    inisialisasiKameraWajah();
+                                }
+                            }, 2500);
                         }).catch(() => { faceScanBusy = false; });
                     } else {
                         faceScanBusy = false;
@@ -963,8 +979,11 @@
             setTimeout(() => {
                 faceScanBusy = false;
                 const stWajah = document.getElementById('text-status-wajah');
-                if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Silakan pindai wajah siswa berikutnya.</span>';
-            }, 2000);
+                if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Kamera Aktif. Silakan Pindai Siswa Berikutnya.</span>';
+                if (modePindai === 'wajah') {
+                    inisialisasiKameraWajah();
+                }
+            }, 2500);
         }
     }
 
