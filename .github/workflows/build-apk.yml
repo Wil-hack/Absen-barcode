@@ -1,5 +1,4 @@
-
-name: Build AbsenO APK
+Name: Build AbsenO APK
 
 on:
   push:
@@ -103,6 +102,10 @@ jobs:
               </platform>
           </widget>
           EOF
+
+          # Menambahkan plugin file dan social sharing agar export CSV berfungsi di APK
+          cordova plugin add cordova-plugin-file
+          cordova plugin add cordova-plugin-x-socialsharing
 
           cordova platform add android
 
