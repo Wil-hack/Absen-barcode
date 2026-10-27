@@ -95,7 +95,7 @@
         #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color) !important; }
         .scan-result-box { margin-top: 14px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px dashed var(--border-color); text-align: center; min-height: 48px; display: flex; align-items: center; justify-content: center; }
 
-        .form-control { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 14px; outline: none; margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 14px; outline: none; margin-bottom: 10px; }
         .form-control option { background: var(--bg-card); color: var(--text-main); }
 
         .student-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border-color); margin-bottom: 8px; }
@@ -107,9 +107,7 @@
         .btn-qr { background: rgba(217, 119, 6, 0.2); color: #fbbf24; }
         .btn-delete { background: rgba(220, 38, 38, 0.2); color: #f87171; }
         
-        .badge-face { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); letter-spacing: 0.5px; }
-        .badge-face-active { background: rgba(74, 222, 128, 0.15); color: #4ade80; border-color: rgba(74, 222, 128, 0.4); }
-        .badge-face-inactive { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); text-decoration: line-through; }
+        .badge-shift { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(212,175,55,0.15); color: var(--primary); border: 1px solid var(--border-color); }
 
         .fab { position: fixed; bottom: 90px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #000000; border: none; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 6px 16px rgba(0,0,0,0.5); cursor: pointer; z-index: 10; }
 
@@ -118,7 +116,7 @@
         .nav-item.active { color: var(--primary); font-weight: 700; }
         .nav-item i { font-size: 17px; margin-bottom: 3px; }
 
-        .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: #000000; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 10px; }
+        .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: #000000; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 6px; }
         .btn-secondary { background: rgba(212, 175, 55, 0.15); color: var(--primary); border: 1px solid var(--primary); }
 
         #video-container { position: relative; width: 100%; max-width: 300px; height: 300px; margin: 0 auto; border-radius: 15px; overflow: hidden; border: 2px solid var(--primary); background: #000; }
@@ -126,7 +124,7 @@
 
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
         .modal.active { display: flex; }
-        .modal-content { background: var(--bg-card); border-radius: 18px; width: 100%; max-width: 380px; padding: 20px; border: 1px solid var(--border-color); }
+        .modal-content { background: var(--bg-card); border-radius: 18px; width: 100%; max-width: 380px; padding: 20px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; }
         .printable-card { background: #ffffff; color: #000000; border: 2px solid #8c4a27; border-radius: 12px; padding: 20px; text-align: center; margin: 10px 0; }
         #qrcode img { margin: 12px auto; }
 
@@ -196,37 +194,44 @@
             <div class="glass-card">
                 <div class="section-title" id="title-label-data">Data Siswa</div>
                 <div style="display:flex; gap:8px; margin-bottom:10px;">
-                    <select id="filter-kelas" class="form-control" onchange="renderStudentList()">
+                    <select id="filter-kelas" class="form-control" style="margin-bottom:0;" onchange="renderStudentList()">
                         <option value="">Semua Kelas</option>
                     </select>
                 </div>
-                <input type="text" id="search-siswa" class="form-control" placeholder="Cari Nama atau NIS/NIK..." oninput="renderStudentList()">
+                <input type="text" id="search-siswa" class="form-control" style="margin-bottom:0;" placeholder="Cari Nama atau NIS/NIK..." oninput="renderStudentList()">
             </div>
             <div id="student-list"></div>
             <button class="fab" onclick="openAddStudentModal()"><i class="fa-solid fa-plus"></i></button>
         </div>
 
-        <!-- TAB 3: JADWAL & KETERLAMBATAN -->
+        <!-- TAB 3: JADWAL & SHIFT -->
         <div id="tab-jadwal" class="tab-content">
             <div class="glass-card">
-                <div class="section-title">Atur Jam Presensi & Toleransi</div>
-                <label style="font-size: 13px; margin-bottom: 6px; display: block;">Hari Operasional</label>
-                <input type="text" id="input-hari" class="form-control" placeholder="Contoh: Senin - Sabtu" style="margin-bottom: 12px;">
-                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <div class="section-title">Atur Jam Presensi & Shift Pabrik</div>
+                
+                <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Pilih Shift Kerja</label>
+                <select id="input-shift-pilihan" class="form-control" onchange="muatPengaturanShift()">
+                    <option value="reguler">Reguler / Umum</option>
+                    <option value="shift1">Shift 1 (Pagi: 07:00 - 15:00)</option>
+                    <option value="shift2">Shift 2 (Sore: 15:00 - 23:00)</option>
+                    <option value="shift3">Shift 3 (Malam: 23:00 - 07:00)</option>
+                </select>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 8px;">
                     <div style="flex: 1;">
-                        <label style="font-size: 13px; margin-bottom: 6px; display: block;">Jam Masuk</label>
-                        <input type="time" id="input-jam-masuk" class="form-control">
+                        <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Jam Masuk</label>
+                        <input type="time" id="input-jam-masuk" class="form-control" style="margin-bottom:0;">
                     </div>
                     <div style="flex: 1;">
-                        <label style="font-size: 13px; margin-bottom: 6px; display: block;">Jam Pulang</label>
-                        <input type="time" id="input-jam-pulang" class="form-control">
+                        <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Jam Pulang</label>
+                        <input type="time" id="input-jam-pulang" class="form-control" style="margin-bottom:0;">
                     </div>
                 </div>
-                <button class="btn-primary" onclick="saveSchedule()">Simpan Jadwal</button>
+                <button class="btn-primary" onclick="saveSchedule()">Simpan Jadwal Shift</button>
             </div>
             <div class="glass-card" style="text-align: center;">
-                <div class="section-title">Jadwal & Deteksi Terlambat Aktif</div>
-                <div id="display-schedule" style="font-size: 15px; font-weight: 600; color: var(--primary); margin-top: 8px;">Memuat jadwal...</div>
+                <div class="section-title">Status Jadwal Aktif</div>
+                <div id="display-schedule" style="font-size: 14px; font-weight: 600; color: var(--primary); margin-top: 4px;">Memuat jadwal...</div>
             </div>
         </div>
 
@@ -240,29 +245,29 @@
                     <div class="stat-box"><div class="stat-num" id="stat-izin">0</div><div class="stat-label">Izin</div></div>
                     <div class="stat-box"><div class="stat-num" id="stat-alpa">0</div><div class="stat-label">Alpa</div></div>
                 </div>
-                <label style="font-size: 13px; margin-bottom: 4px; display: block;">Pilih Mode Laporan</label>
-                <select id="mode-laporan" class="form-control" onchange="toggleReportMode()" style="margin-bottom: 10px;">
+                <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Pilih Mode Laporan</label>
+                <select id="mode-laporan" class="form-control" onchange="toggleReportMode()">
                     <option value="harian">1. Rekap Harian</option>
                     <option value="terlambat">2. Belum Masuk / Terlambat</option>
                     <option value="mingguan">3. Rekap Mingguan</option>
                     <option value="bulanan">4. Rekap Bulanan</option>
                     <option value="tahunan">5. Rekap Tahunan</option>
                 </select>
-                <div id="box-filter-harian" style="display: flex; gap: 8px; margin-bottom: 10px;">
-                    <input type="date" id="filter-tanggal" class="form-control" onchange="renderLogs()">
+                <div id="box-filter-harian" style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="date" id="filter-tanggal" class="form-control" style="margin-bottom:0;" onchange="renderLogs()">
                     <button class="btn-primary btn-secondary" style="width: auto; margin-top:0;" onclick="setTodayFilter()">Hari Ini</button>
                 </div>
-                <div id="box-filter-bulanan" style="display: none; gap: 8px; margin-bottom: 10px;">
-                    <input type="month" id="filter-bulan" class="form-control" onchange="renderLogs()">
+                <div id="box-filter-bulanan" style="display: none; gap: 8px; margin-bottom: 8px;">
+                    <input type="month" id="filter-bulan" class="form-control" style="margin-bottom:0;" onchange="renderLogs()">
                 </div>
-                <div id="box-filter-tahunan" style="display: none; gap: 8px; margin-bottom: 10px;">
-                    <select id="filter-tahun" class="form-control" onchange="renderLogs()">
+                <div id="box-filter-tahunan" style="display: none; gap: 8px; margin-bottom: 8px;">
+                    <select id="filter-tahun" class="form-control" style="margin-bottom:0;" onchange="renderLogs()">
                         <option value="2026">2026</option>
                         <option value="2025">2025</option>
                         <option value="2027">2027</option>
                     </select>
                 </div>
-                <button class="btn-primary" onclick="exportCSV()"><i class="fa-solid fa-file-excel"></i> Download CSV</button>
+                <button class="btn-primary" onclick="openExportModal()"><i class="fa-solid fa-file-excel"></i> Download Laporan CSV</button>
             </div>
             <div id="attendance-logs"></div>
         </div>
@@ -271,48 +276,48 @@
         <div id="tab-akun" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Mode Sistem Operasional</div>
-                <label style="font-size: 13px; margin-bottom: 6px; display: block;">Pilih Mode Instansi</label>
-                <select id="select-system-mode" class="form-control" onchange="changeSystemMode(this.value)" style="margin-bottom: 14px;">
+                <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Pilih Mode Instansi</label>
+                <select id="select-system-mode" class="form-control" onchange="changeSystemMode(this.value)">
                     <option value="sekolah">Mode Sekolah (Siswa / Kelas)</option>
-                    <option value="pabrik">Mode Pabrik (Karyawan / Departemen)</option>
+                    <option value="pabrik">Mode Pabrik (Karyawan / Shift)</option>
                 </select>
 
-                <div style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 14px;">
-                    <label style="font-size: 13px; margin-bottom: 6px; display: block;">Tema Visual</label>
-                    <select id="theme-select" class="form-control" onchange="changeTheme(this.value)" style="margin-bottom: 14px;">
+                <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 10px;">
+                    <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Tema Visual</label>
+                    <select id="theme-select" class="form-control" onchange="changeTheme(this.value)">
                         <option value="heritage">Jawa Heritage (Cokelat Emas)</option>
                         <option value="ocean">Ocean Blue (Modern)</option>
                         <option value="light">Light Heritage (Terang)</option>
                     </select>
                 </div>
 
-                <div style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 14px;">
-                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 10px; text-align: center;">Konfigurasi Database Cloud</div>
+                <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 10px;">
+                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 8px; text-align: center;">Konfigurasi Database Cloud</div>
                     
-                    <label style="font-size: 12px; margin-bottom: 4px; display: block;">Database API Key</label>
-                    <input type="text" id="fb-apikey" class="form-control" placeholder="Masukkan API Key..." style="margin-bottom: 8px;">
+                    <label style="font-size: 11px; margin-bottom: 2px; display: block; color: var(--text-muted);">Database API Key</label>
+                    <input type="text" id="fb-apikey" class="form-control" placeholder="Masukkan API Key...">
 
-                    <label style="font-size: 12px; margin-bottom: 4px; display: block;">Database Project ID</label>
-                    <input type="text" id="fb-projectid" class="form-control" placeholder="Masukkan Project ID..." style="margin-bottom: 8px;">
+                    <label style="font-size: 11px; margin-bottom: 2px; display: block; color: var(--text-muted);">Database Project ID</label>
+                    <input type="text" id="fb-projectid" class="form-control" placeholder="Masukkan Project ID...">
 
                     <button class="btn-primary" onclick="saveSchoolDatabaseConfig()">Simpan & Hubungkan Database</button>
-                    <button class="btn-primary btn-secondary" style="margin-top: 8px;" onclick="resetDatabaseConfig()">Reset ke Default Database</button>
+                    <button class="btn-primary btn-secondary" style="margin-top: 6px;" onclick="resetDatabaseConfig()">Reset ke Default Database</button>
                 </div>
             </div>
 
             <!-- KARTU QRIS DONASI DI BAWAH -->
-            <div class="glass-card" style="text-align: center; padding: 20px 14px;">
-                <div class="section-title" style="color: var(--primary); font-size: 16px; margin-bottom: 6px;">Dukung Pengembang</div>
-                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4;">
-                    Terima kasih telah menggunakan aplikasi <b>AbsenO</b>! Berikan dukungan pengembangan sukarela melalui QRIS di bawah ini. ☕
+            <div class="glass-card" style="text-align: center; padding: 16px 14px;">
+                <div class="section-title" style="color: var(--primary); font-size: 15px; margin-bottom: 4px;">Dukung Pengembang</div>
+                <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
+                    Dukung pengembangan aplikasi <b>AbsenO</b> melalui QRIS di bawah ini. ☕
                 </p>
                 
-                <div style="background: #ffffff; padding: 12px; border-radius: 14px; display: inline-block; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border: 2px solid var(--primary); margin-bottom: 8px; cursor: pointer;" onclick="openFullscreenQRIS()" title="Ketuk untuk memperbesar gambar">
-                    <img src="qris.jpg" alt="QRIS Donasi" style="width: 150px; height: 150px; object-fit: contain; display: block; border-radius: 6px;" onerror="this.src='https://via.placeholder.com/150?text=QRIS+Barcode'">
-                    <div style="font-size: 10px; font-weight: 700; color: #333; margin-top: 6px; letter-spacing: 0.5px;"><i class="fa-solid fa-expand"></i> KETUK PERBESAR</div>
+                <div style="background: #ffffff; padding: 10px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border: 2px solid var(--primary); margin-bottom: 6px; cursor: pointer;" onclick="openFullscreenQRIS()" title="Ketuk untuk memperbesar gambar">
+                    <img src="qris.jpg" alt="QRIS Donasi" style="width: 130px; height: 130px; object-fit: contain; display: block; border-radius: 6px;" onerror="this.src='https://via.placeholder.com/130?text=QRIS+Barcode'">
+                    <div style="font-size: 9px; font-weight: 700; color: #333; margin-top: 4px; letter-spacing: 0.5px;"><i class="fa-solid fa-expand"></i> KETUK PERBESAR</div>
                 </div>
 
-                <div style="font-size: 11px; color: var(--accent); font-weight: 600;">
+                <div style="font-size: 10px; color: var(--accent); font-weight: 600;">
                     Scan via GoPay, OVO, Dana, ShopeePay, BCA, dll.
                 </div>
             </div>
@@ -340,6 +345,23 @@
     <div style="color: #fff; font-size: 12px; margin-top: 12px; font-weight: 600; opacity: 0.8;">Ketuk di mana saja untuk menutup</div>
 </div>
 
+<!-- MODAL KHUSUS DOWNLOAD APK (DIJAMIN TEMBUS DI ANDROID) -->
+<div id="export-modal" class="modal">
+    <div class="modal-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="font-weight: 700; color: var(--primary); font-family: var(--font-heading); font-size: 16px;">Pratinjau File Laporan CSV</div>
+            <i class="fa-solid fa-xmark" style="cursor: pointer; font-size: 18px;" onclick="closeModal('export-modal')"></i>
+        </div>
+        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+            Salin teks di bawah ini atau ketuk tombol simpan untuk mengunduh laporan di perangkat Android Anda.
+        </p>
+        <textarea id="export-textarea" class="form-control" style="height: 140px; font-size: 11px; font-family: monospace; resize: none;" readonly></textarea>
+        
+        <button class="btn-primary" onclick="salinTeksExport()"><i class="fa-solid fa-copy"></i> Salin Teks Laporan</button>
+        <button class="btn-primary btn-secondary" style="margin-top: 6px;" onclick="downloadCsvFileAsText()"><i class="fa-solid fa-download"></i> Simpan Sebagai File .CSV</button>
+    </div>
+</div>
+
 <!-- Modals -->
 <div id="qr-modal" class="modal">
     <div class="modal-content">
@@ -361,19 +383,29 @@
 <!-- Modal Tambah/Edit Anggota & Pendaftaran Wajah -->
 <div id="student-modal" class="modal">
     <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <div style="font-weight: 700;" id="modal-student-title">Tambah Siswa Baru</div>
             <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeModal('student-modal')"></i>
         </div>
         <input type="hidden" id="edit-index">
-        <input type="text" id="input-nis" class="form-control" placeholder="NIS / NIK Karyawan..." style="margin-bottom: 10px;">
-        <input type="text" id="input-nama" class="form-control" placeholder="Nama Lengkap..." style="margin-bottom: 10px;">
-        <input type="text" id="input-kelas" class="form-control" placeholder="Kelas / Departemen..." style="margin-bottom: 10px;">
+        <input type="text" id="input-nis" class="form-control" placeholder="NIS / NIK Karyawan...">
+        <input type="text" id="input-nama" class="form-control" placeholder="Nama Lengkap...">
+        <input type="text" id="input-kelas" class="form-control" placeholder="Kelas / Departemen...">
         
+        <div id="box-pilihan-shift" style="display:none; margin-bottom:10px;">
+            <label style="font-size: 11px; margin-bottom: 2px; display: block; color: var(--text-muted);">Shift Kerja Karyawan</label>
+            <select id="input-student-shift" class="form-control" style="margin-bottom:0;">
+                <option value="Reguler">Shift Reguler</option>
+                <option value="Shift 1">Shift 1 (Pagi)</option>
+                <option value="Shift 2">Shift 2 (Sore)</option>
+                <option value="Shift 3">Shift 3 (Malam)</option>
+            </select>
+        </div>
+
         <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--border-color); border-radius: 10px; padding: 10px; text-align: center; margin-bottom: 10px;">
-            <div style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 6px;">Ekstraksi Kode Biometrik Wajah</div>
-            <div id="face-preview-box" style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Belum ada biometrik terdaftar</div>
-            <button type="button" class="btn-primary btn-secondary" style="margin-top:0; font-size: 12px; padding: 8px;" onclick="bukaKameraDaftarWajah()"><i class="fa-solid fa-face-smile"></i> Rekam Kode Wajah</button>
+            <div style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 4px;">Ekstraksi Kode Biometrik Wajah</div>
+            <div id="face-preview-box" style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Belum ada biometrik terdaftar</div>
+            <button type="button" class="btn-primary btn-secondary" style="margin-top:0; font-size: 11px; padding: 6px;" onclick="bukaKameraDaftarWajah()"><i class="fa-solid fa-face-smile"></i> Rekam Kode Wajah</button>
         </div>
 
         <button class="btn-primary" onclick="saveStudent()">Simpan Data</button>
@@ -387,10 +419,10 @@
             <div style="font-weight: 700;">Pengambilan Vektor Biometrik</div>
             <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="tutupKameraDaftarWajah()"></i>
         </div>
-        <div style="position: relative; width: 100%; max-width: 260px; height: 260px; margin: 0 auto 10px; border-radius: 12px; overflow: hidden; border: 2px solid var(--primary); background: #000;">
+        <div style="position: relative; width: 100%; max-width: 240px; height: 240px; margin: 0 auto 10px; border-radius: 12px; overflow: hidden; border: 2px solid var(--primary); background: #000;">
             <video id="video-daftar-wajah" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
         </div>
-        <div id="status-capture-wajah" style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Posisikan wajah tepat di tengah kamera...</div>
+        <div id="status-capture-wajah" style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">Posisikan wajah tepat di tengah kamera...</div>
         <button class="btn-primary" onclick="generateAndSaveFaceVector()">Kunci & Generate Kode Biometrik</button>
     </div>
 </div>
@@ -545,6 +577,7 @@
         const modalStudentTitle = document.getElementById('modal-student-title');
         const inputNis = document.getElementById('input-nis');
         const inputKelas = document.getElementById('input-kelas');
+        const boxShift = document.getElementById('box-pilihan-shift');
 
         selectMode.value = currentSystemMode;
 
@@ -557,6 +590,7 @@
             modalStudentTitle.innerText = 'Tambah Karyawan Baru';
             inputNis.placeholder = 'NIK Karyawan...';
             inputKelas.placeholder = 'Departemen...';
+            boxShift.style.display = 'block';
         } else {
             modeBadge.innerText = 'SEKOLAH';
             navLabelAnggota.innerText = 'Siswa';
@@ -566,6 +600,7 @@
             modalStudentTitle.innerText = 'Tambah Siswa Baru';
             inputNis.placeholder = 'NIS Siswa...';
             inputKelas.placeholder = 'Nama Kelas...';
+            boxShift.style.display = 'none';
         }
     }
 
@@ -823,6 +858,7 @@
             nis: student.nis,
             nama: student.nama,
             kelas: student.kelas,
+            shift: student.shift || 'Reguler',
             tanggal: todayDate,
             waktu: nowTimeStr,
             waktuPulang: '-',
@@ -902,13 +938,17 @@
         }).forEach((student) => {
             const hasVector = student.faceVector && student.faceVector.length > 0;
             const faceClass = hasVector ? 'badge-face badge-face-active' : 'badge-face badge-face-inactive';
+            const shiftBadge = (currentSystemMode === 'pabrik' && student.shift) ? `<span class="badge-shift">${student.shift}</span>` : '';
 
             const item = document.createElement('div');
             item.className = 'student-item';
             item.innerHTML = `
                 <div class="student-avatar">${student.nama.charAt(0)}</div>
                 <div style="flex:1; min-width: 0; padding-right: 4px;">
-                    <div style="font-weight:600; font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${student.nama}</div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="font-weight:600; font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${student.nama}</div>
+                        ${shiftBadge}
+                    </div>
                     <div style="font-size:11px; color:var(--text-muted);">${student.nis} • ${student.kelas}</div>
                     <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
                         <button onclick="prosesAbsensi('${student.nis}', 'Manual', 'Hadir')" style="font-size:9px; padding:2px 6px; background:rgba(74,222,128,0.2); color:#4ade80; border:1px solid rgba(74,222,128,0.4); border-radius:4px; cursor:pointer;">Hadir</button>
@@ -941,6 +981,7 @@
         document.getElementById('input-nis').value = '';
         document.getElementById('input-nama').value = '';
         document.getElementById('input-kelas').value = '';
+        document.getElementById('input-student-shift').value = 'Reguler';
         tempFaceVector = null;
         document.getElementById('face-preview-box').innerHTML = 'Belum ada biometrik terdaftar';
         document.getElementById('student-modal').classList.add('active');
@@ -999,11 +1040,12 @@
         const nis = document.getElementById('input-nis').value.trim();
         const nama = document.getElementById('input-nama').value.trim();
         const kelas = document.getElementById('input-kelas').value.trim() || 'Umum';
+        const shift = document.getElementById('input-student-shift').value;
         const docId = document.getElementById('edit-index').value;
 
         if(!nis || !nama) return alert('ID/NIK dan Nama wajib diisi!');
 
-        const studentData = { nis, nama, kelas, mode: currentSystemMode };
+        const studentData = { nis, nama, kelas, shift, mode: currentSystemMode };
         if (tempFaceVector) studentData.faceVector = tempFaceVector;
 
         if(docId === '') {
@@ -1031,6 +1073,7 @@
         document.getElementById('input-nis').value = s.nis;
         document.getElementById('input-nama').value = s.nama;
         document.getElementById('input-kelas').value = s.kelas;
+        document.getElementById('input-student-shift').value = s.shift || 'Reguler';
         tempFaceVector = s.faceVector || null;
         
         document.getElementById('face-preview-box').innerHTML = tempFaceVector ? '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Biometrik Terdaftar</span>' : 'Belum ada biometrik terdaftar';
@@ -1128,7 +1171,7 @@
             item.innerHTML = `
                 <div style="flex:1;">
                     <div style="font-weight:600; font-size:14px;">${log.nama}</div>
-                    <div style="font-size:11px; color:var(--text-muted);">${log.kelas} • ${log.tanggal} (Masuk: ${log.waktu}${log.waktuPulang !== '-' ? ' • Pulang: '+log.waktuPulang : ''})</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${log.kelas} ${log.shift ? '• '+log.shift : ''} • ${log.tanggal} (Masuk: ${log.waktu}${log.waktuPulang !== '-' ? ' • Pulang: '+log.waktuPulang : ''})</div>
                 </div>
                 <div style="text-align: right;">
                     <span style="font-weight:700; font-size:12px; color: ${colorStatus}; display: block;">${log.status}</span>
@@ -1156,15 +1199,26 @@
         }
     }
 
+    function muatPengaturanShift() {
+        const jenisShift = document.getElementById('input-shift-pilihan').value;
+        const jamMasuk = document.getElementById('input-jam-masuk');
+        const jamPulang = document.getElementById('input-jam-pulang');
+
+        if(jenisShift === 'shift1') { jamMasuk.value = '07:00'; jamPulang.value = '15:00'; }
+        else if(jenisShift === 'shift2') { jamMasuk.value = '15:00'; jamPulang.value = '23:00'; }
+        else if(jenisShift === 'shift3') { jamMasuk.value = '23:00'; jamPulang.value = '07:00'; }
+        else { jamMasuk.value = '08:00'; jamPulang.value = '17:00'; }
+    }
+
     function saveSchedule() {
-        const hari = document.getElementById('input-hari').value || 'Senin - Sabtu';
+        const shiftPilihan = document.getElementById('input-shift-pilihan').value;
         const masuk = document.getElementById('input-jam-masuk').value || '07:00';
         const pulang = document.getElementById('input-jam-pulang').value || '14:00';
         
         activeSchedule = { jamMasuk: masuk, jamPulang: pulang };
         localStorage.setItem('abseno_schedule', JSON.stringify(activeSchedule));
-        document.getElementById('display-schedule').innerText = `${hari} | Masuk: ${masuk} (Batas Terlambat Otomatis)`;
-        alert('Jadwal dan toleransi keterlambatan berhasil disimpan!');
+        document.getElementById('display-schedule').innerText = `Shift: ${shiftPilihan.toUpperCase()} | Masuk: ${masuk} - Pulang: ${pulang}`;
+        alert('Jadwal shift berhasil disimpan!');
     }
 
     function loadSchedule() {
@@ -1173,67 +1227,76 @@
             activeSchedule = savedSch;
             document.getElementById('input-jam-masuk').value = savedSch.jamMasuk;
             document.getElementById('input-jam-pulang').value = savedSch.jamPulang;
-            document.getElementById('display-schedule').innerText = `Senin - Sabtu | Masuk: ${savedSch.jamMasuk}`;
+            document.getElementById('display-schedule').innerText = `Masuk: ${savedSch.jamMasuk} - Pulang: ${savedSch.jamPulang}`;
         } else {
-            document.getElementById('display-schedule').innerText = `Senin - Sabtu | Masuk: 07:00`;
+            document.getElementById('display-schedule').innerText = `Masuk: 07:00 - Pulang: 14:00`;
         }
-        document.getElementById('input-hari').value = 'Senin - Sabtu';
     }
 
-    // FUNGSI EKSPOR CSV DENGAN DOUBLE FALLBACK (MEMASTIKAN PEMBUATAN DAN UNDUHAN FILE PASTI BERJALAN)
-    function exportCSV() {
+    // FUNGSI EKSPOR CSV DIJAMIN TEMBUS DI APK ANDROID (MENGGUNAKAN PRATINJAU TEXTAREA MODAL)
+    let generatedCsvContent = '';
+    let generatedCsvFilename = '';
+
+    function openExportModal() {
+        const modeLap = document.getElementById('mode-laporan').value;
+        let filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
+        
+        if (modeLap === 'harian') {
+            const filterTanggal = document.getElementById('filter-tanggal').value;
+            filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
+        } else if (modeLap === 'bulanan') {
+            const filterBulan = document.getElementById('filter-bulan').value;
+            filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterBulan));
+        } else if (modeLap === 'tahunan') {
+            const filterTahun = document.getElementById('filter-tahun').value;
+            filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterTahun));
+        }
+
+        if (!filteredLogs || filteredLogs.length === 0) {
+            alert('Tidak ada data laporan untuk di-download pada filter ini!');
+            return;
+        }
+
+        let csvContent = '\ufeffID/NIK,Nama,Kelas/Departemen,Shift,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan/Metode\n';
+        filteredLogs.forEach(l => {
+            csvContent += `"${l.nis || ''}","${l.nama || ''}","${l.kelas || ''}","${l.shift || 'Reguler'}","${l.tanggal || '-'}","${l.waktu || ''}","${l.waktuPulang || '-'}","${l.status || ''}","${l.keteranganPulang || l.metode || ''}"\n`;
+        });
+
+        generatedCsvContent = csvContent;
+        generatedCsvFilename = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
+
+        document.getElementById('export-textarea').value = csvContent;
+        document.getElementById('export-modal').classList.add('active');
+    }
+
+    function salinTeksExport() {
+        const textarea = document.getElementById('export-textarea');
+        textarea.select();
+        textarea.setSelectionRange(0, 99999);
         try {
-            const modeLap = document.getElementById('mode-laporan').value;
-            let filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
-            
-            if (modeLap === 'harian') {
-                const filterTanggal = document.getElementById('filter-tanggal').value;
-                filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
-            } else if (modeLap === 'bulanan') {
-                const filterBulan = document.getElementById('filter-bulan').value;
-                filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterBulan));
-            } else if (modeLap === 'tahunan') {
-                const filterTahun = document.getElementById('filter-tahun').value;
-                filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterTahun));
-            }
-
-            if (!filteredLogs || filteredLogs.length === 0) {
-                alert('Tidak ada data laporan untuk di-download pada filter ini!');
-                return;
-            }
-
-            let csvContent = '\ufeffID/NIK,Nama,Kelas/Departemen,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan/Metode\n';
-            filteredLogs.forEach(l => {
-                csvContent += `"${l.nis || ''}","${l.nama || ''}","${l.kelas || ''}","${l.tanggal || '-'}","${l.waktu || ''}","${l.waktuPulang || '-'}","${l.status || ''}","${l.keteranganPulang || l.metode || ''}"\n`;
-            });
-
-            const filename = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
-
-            // Metode 1: Penggunaan Blob URL
-            try {
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-            } catch (errBlob) {
-                // Metode 2: Data URI Fallback jika Blob diblokir browser
-                const encodedUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = encodedUri;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            }
+            navigator.clipboard.writeText(textarea.value);
+            alert('Teks laporan berhasil disalin! Anda bisa langsung menempelkannya (*paste*) ke Microsoft Excel atau Notepad.');
         } catch (e) {
-            alert('Terjadi kesalahan saat memproses laporan: ' + e.message);
+            alert('Gagal menyalin otomatis. Silakan blok dan salin teks secara manual.');
+        }
+    }
+
+    function downloadCsvFileAsText() {
+        try {
+            const blob = new Blob([generatedCsvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = generatedCsvFilename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            alert('File CSV berhasil diunduh!');
+        } catch (e) {
+            const encodedUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(generatedCsvContent);
+            window.open(encodedUri);
         }
     }
 </script>
