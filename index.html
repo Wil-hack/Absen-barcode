@@ -122,9 +122,15 @@
         #video-container { position: relative; width: 100%; max-width: 300px; height: 300px; margin: 0 auto; border-radius: 15px; overflow: hidden; border: 2px solid var(--primary); background: #000; }
         #video-wajah { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 12px; }
         .modal.active { display: flex; }
-        .modal-content { background: var(--bg-card); border-radius: 18px; width: 100%; max-width: 380px; padding: 20px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: var(--bg-card); border-radius: 18px; width: 100%; max-width: 450px; padding: 18px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; }
+        
+        .preview-table-container { width: 100%; max-height: 260px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; margin: 10px 0; background: rgba(0,0,0,0.3); }
+        .preview-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
+        .preview-table th { background: var(--primary-light); color: var(--primary); padding: 8px; position: sticky; top: 0; z-index: 2; border-bottom: 1px solid var(--border-color); }
+        .preview-table td { padding: 7px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-main); }
+
         .printable-card { background: #ffffff; color: #000000; border: 2px solid #8c4a27; border-radius: 12px; padding: 20px; text-align: center; margin: 10px 0; }
         #qrcode img { margin: 12px auto; }
 
@@ -267,7 +273,7 @@
                         <option value="2027">2027</option>
                     </select>
                 </div>
-                <button class="btn-primary" onclick="openExportModal()"><i class="fa-solid fa-file-excel"></i> Download Laporan CSV</button>
+                <button class="btn-primary" onclick="openExportModal()"><i class="fa-solid fa-file-excel"></i> Pratinjau & Download Laporan</button>
             </div>
             <div id="attendance-logs"></div>
         </div>
@@ -345,20 +351,38 @@
     <div style="color: #fff; font-size: 12px; margin-top: 12px; font-weight: 600; opacity: 0.8;">Ketuk di mana saja untuk menutup</div>
 </div>
 
-<!-- MODAL KHUSUS DOWNLOAD APK (DIJAMIN TEMBUS DI ANDROID) -->
+<!-- MODAL PRATINJAU TABEL LAPORAN (DIJAMIN JELAS & ANTI-DOBEL) -->
 <div id="export-modal" class="modal">
     <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <div style="font-weight: 700; color: var(--primary); font-family: var(--font-heading); font-size: 16px;">Pratinjau File Laporan CSV</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="font-weight: 700; color: var(--primary); font-family: var(--font-heading); font-size: 16px;">Pratinjau Tabel Laporan</div>
             <i class="fa-solid fa-xmark" style="cursor: pointer; font-size: 18px;" onclick="closeModal('export-modal')"></i>
         </div>
-        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
-            Salin teks di bawah ini atau ketuk tombol simpan untuk mengunduh laporan di perangkat Android Anda.
+        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">
+            Data di bawah sudah dikonsolidasikan (bebas data dobel) dan dijamin akurat:
         </p>
-        <textarea id="export-textarea" class="form-control" style="height: 140px; font-size: 11px; font-family: monospace; resize: none;" readonly></textarea>
-        
-        <button class="btn-primary" onclick="salinTeksExport()"><i class="fa-solid fa-copy"></i> Salin Teks Laporan</button>
-        <button class="btn-primary btn-secondary" style="margin-top: 6px;" onclick="downloadCsvFileAsText()"><i class="fa-solid fa-download"></i> Simpan Sebagai File .CSV</button>
+
+        <!-- Tabel Pratinjau HTML yang Rapi dan Jelas -->
+        <div class="preview-table-container">
+            <table class="preview-table" id="table-preview-content">
+                <thead>
+                    <tr>
+                        <th>NIK/NIS</th>
+                        <th>Nama</th>
+                        <th>Shift</th>
+                        <th>Tanggal</th>
+                        <th>Masuk</th>
+                        <th>Pulang</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="table-preview-body">
+                    <!-- Data dimuat dinamis -->
+                </tbody>
+            </table>
+        </div>
+
+        <button class="btn-primary" onclick="downloadCsvFileAsText()"><i class="fa-solid fa-download"></i> Unduh File CSV Resmi</button>
     </div>
 </div>
 
@@ -1085,7 +1109,10 @@
     function updateStats() {
         let hadir = 0, sakit = 0, izin = 0, alpa = 0;
         const todayDate = new Date().toISOString().slice(0,10);
-        attendanceLogs.filter(l => l.tanggal === todayDate && l.mode === currentSystemMode).forEach(l => {
+        
+        // Menggunakan deduplikasi agar statistik akurat tanpa data dobel
+        const deduplicated = getDeduplicatedLogs().filter(l => l.tanggal === todayDate);
+        deduplicated.forEach(l => {
             if(l.status === 'Hadir' || l.status === 'Terlambat') hadir++;
             else if(l.status === 'Sakit') sakit++;
             else if(l.status === 'Izin' || l.status === 'Izin Pulang') izin++;
@@ -1108,6 +1135,37 @@
     function setTodayFilter() {
         document.getElementById('filter-tanggal').value = new Date().toISOString().slice(0,10);
         renderLogs();
+    }
+
+    // FUNGSI UTAMA: MENGHAPUS DATA DOBEL (KONSOLIDASI SCAN PER ORANG PER HARI)
+    function getDeduplicatedLogs() {
+        const map = new Map();
+        // Urutkan dari terlama ke terbaru agar scan pertama jadi Jam Masuk dan scan terakhir jadi Jam Pulang
+        const sorted = [...attendanceLogs].filter(l => l.mode === currentSystemMode).sort((a,b) => new Date(a.tanggal + ' ' + (a.waktu || '00:00')) - new Date(b.tanggal + ' ' + (b.waktu || '00:00')));
+        
+        sorted.forEach(l => {
+            const key = `${l.nis}_${l.tanggal}`;
+            if (!map.has(key)) {
+                map.set(key, { ...l });
+            } else {
+                let existing = map.get(key);
+                if (l.waktu && l.waktu !== '-' && l.waktu < existing.waktu) {
+                    existing.waktu = l.waktu;
+                }
+                if (l.waktuPulang && l.waktuPulang !== '-') {
+                    existing.waktuPulang = l.waktuPulang;
+                } else if (l.waktu && l.waktu !== existing.waktu) {
+                    existing.waktuPulang = l.waktu;
+                }
+                if (l.status && l.status !== 'Hadir') {
+                    existing.status = l.status;
+                }
+                if (l.keteranganPulang) {
+                    existing.keteranganPulang = l.keteranganPulang;
+                }
+            }
+        });
+        return Array.from(map.values());
     }
 
     function renderLogs() {
@@ -1143,7 +1201,7 @@
             return;
         }
 
-        let filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
+        let filteredLogs = getDeduplicatedLogs();
         if (modeLap === 'harian') {
             filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
         } else if (modeLap === 'bulanan') {
@@ -1171,7 +1229,7 @@
             item.innerHTML = `
                 <div style="flex:1;">
                     <div style="font-weight:600; font-size:14px;">${log.nama}</div>
-                    <div style="font-size:11px; color:var(--text-muted);">${log.kelas} ${log.shift ? '• '+log.shift : ''} • ${log.tanggal} (Masuk: ${log.waktu}${log.waktuPulang !== '-' ? ' • Pulang: '+log.waktuPulang : ''})</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${log.kelas} ${log.shift ? '• '+log.shift : ''} • ${log.tanggal} (Masuk: ${log.waktu}${log.waktuPulang && log.waktuPulang !== '-' ? ' • Pulang: '+log.waktuPulang : ''})</div>
                 </div>
                 <div style="text-align: right;">
                     <span style="font-weight:700; font-size:12px; color: ${colorStatus}; display: block;">${log.status}</span>
@@ -1233,13 +1291,13 @@
         }
     }
 
-    // FUNGSI EKSPOR CSV DIJAMIN TEMBUS DI APK ANDROID (MENGGUNAKAN PRATINJAU TEXTAREA MODAL)
+    // FUNGSI EKSPOR CSV DENGAN PRATINJAU TABEL YANG JELAS & BERSIH DARI DATA DOBEL
     let generatedCsvContent = '';
     let generatedCsvFilename = '';
 
     function openExportModal() {
         const modeLap = document.getElementById('mode-laporan').value;
-        let filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
+        let filteredLogs = getDeduplicatedLogs();
         
         if (modeLap === 'harian') {
             const filterTanggal = document.getElementById('filter-tanggal').value;
@@ -1257,28 +1315,38 @@
             return;
         }
 
-        let csvContent = '\ufeffID/NIK,Nama,Kelas/Departemen,Shift,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan/Metode\n';
+        let csvContent = '\ufeffID/NIK,Nama,Kelas/Departemen,Shift,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan\n';
+        let tableHtml = '';
+
         filteredLogs.forEach(l => {
-            csvContent += `"${l.nis || ''}","${l.nama || ''}","${l.kelas || ''}","${l.shift || 'Reguler'}","${l.tanggal || '-'}","${l.waktu || ''}","${l.waktuPulang || '-'}","${l.status || ''}","${l.keteranganPulang || l.metode || ''}"\n`;
+            const nik = l.nis || '';
+            const nama = l.nama || '';
+            const kelas = l.kelas || '';
+            const shift = l.shift || 'Reguler';
+            const tgl = l.tanggal || '-';
+            const masuk = l.waktu || '-';
+            const pulang = (l.waktuPulang && l.waktuPulang !== '-') ? l.waktuPulang : '-';
+            const status = l.status || '';
+            const ket = l.keteranganPulang || l.metode || '';
+
+            csvContent += `"${nik}","${nama}","${kelas}","${shift}","${tgl}","${masuk}","${pulang}","${status}","${ket}"\n`;
+            
+            tableHtml += `<tr>
+                <td><b>${nik}</b></td>
+                <td>${nama}</td>
+                <td>${shift}</td>
+                <td>${tgl}</td>
+                <td><span style="color:#4ade80;">${masuk}</span></td>
+                <td><span style="color:#38bdf8;">${pulang}</span></td>
+                <td><b>${status}</b></td>
+            </tr>`;
         });
 
         generatedCsvContent = csvContent;
         generatedCsvFilename = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
 
-        document.getElementById('export-textarea').value = csvContent;
+        document.getElementById('table-preview-body').innerHTML = tableHtml;
         document.getElementById('export-modal').classList.add('active');
-    }
-
-    function salinTeksExport() {
-        const textarea = document.getElementById('export-textarea');
-        textarea.select();
-        textarea.setSelectionRange(0, 99999);
-        try {
-            navigator.clipboard.writeText(textarea.value);
-            alert('Teks laporan berhasil disalin! Anda bisa langsung menempelkannya (*paste*) ke Microsoft Excel atau Notepad.');
-        } catch (e) {
-            alert('Gagal menyalin otomatis. Silakan blok dan salin teks secara manual.');
-        }
     }
 
     function downloadCsvFileAsText() {
@@ -1293,7 +1361,7 @@
             a.click();
             document.body.removeChild(a);
             setTimeout(() => URL.revokeObjectURL(url), 1000);
-            alert('File CSV berhasil diunduh!');
+            alert('File laporan CSV berhasil diunduh!');
         } catch (e) {
             const encodedUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(generatedCsvContent);
             window.open(encodedUri);
