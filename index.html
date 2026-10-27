@@ -722,14 +722,24 @@
         if (streamKamera) streamKamera.getTracks().forEach(track => track.stop());
 
         try {
-            const constraints = { video: { facingMode: useFrontCamera ? "user" : "environment" } };
+            const constraints = { 
+                video: { 
+                    facingMode: useFrontCamera ? "user" : "environment",
+                    width: { ideal: 640 },
+                    height: { ideal: 640 }
+                } 
+            };
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
             streamKamera = stream; 
             video.srcObject = stream;
+            video.setAttribute('playsinline', true);
+            video.muted = true;
+            await video.play().catch(e => console.log("Autoplay dicegah:", e));
             video.style.transform = useFrontCamera ? "scaleX(-1)" : "scaleX(1)";
             statusText.innerHTML = `<span style="font-size: 13px; color: var(--text-muted);">Kamera Aktif. Silakan Pindai.</span>`;
         } catch (err) {
-            statusText.innerText = "✕ Gagal mengakses kamera.";
+            console.error("Gagal buka kamera:", err);
+            statusText.innerText = "✕ Gagal mengakses kamera. Pastikan izin kamera diaktifkan.";
         }
     }
 
@@ -765,6 +775,7 @@
             const modelLoaded = await loadFaceApiModels();
             if (!modelLoaded) {
                 statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Model wajah gagal dimuat. Periksa koneksi lalu coba lagi.</span>';
+                faceScanBusy = false;
                 return;
             }
             statusText.innerHTML = '<span style="color:#38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah...</span>';
@@ -777,6 +788,7 @@
             if (!detection) {
                 playErrorSound();
                 statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Wajah Tidak Terdeteksi. Atur posisi lalu tekan Pindai Wajah lagi.</span>';
+                faceScanBusy = false;
                 return;
             }
 
@@ -786,23 +798,28 @@
             if (!labeledDescriptors.length) {
                 playWarningSound();
                 statusText.innerHTML = '<span style="color:#fbbf24;font-weight:700;">⚠ Belum ada biometrik terdaftar!</span>';
+                faceScanBusy = false;
                 return;
             }
             const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
             const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
             if (bestMatch.label !== 'unknown') {
                 const matchedStudent = students.find(st => st.nis === bestMatch.label);
-                if (matchedStudent) prosesAbsensi(matchedStudent.nis, 'AI Wajah');
-                else statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Data siswa tidak ditemukan.</span>';
+                if (matchedStudent) {
+                    prosesAbsensi(matchedStudent.nis, 'AI Wajah');
+                } else {
+                    statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Data siswa tidak ditemukan.</span>';
+                    faceScanBusy = false;
+                }
             } else {
                 playErrorSound();
                 statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Wajah Tidak Dikenali. Coba pindai lagi.</span>';
+                faceScanBusy = false;
             }
         } catch (err) {
             console.error('Pemindaian wajah gagal:', err);
             playErrorSound();
             statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Pemindaian gagal. Coba tekan Pindai Wajah lagi.</span>';
-        } finally {
             faceScanBusy = false;
         }
     }
@@ -817,6 +834,7 @@
         if (!student) {
             playErrorSound();
             if(resultBox) resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Anggota Tidak Ditemukan</span>`;
+            faceScanBusy = false;
             return;
         }
 
@@ -882,9 +900,11 @@
             db.collection("attendance").add(logData).then(() => {
                 if(resultBox) resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil: ${namaSiswa} - ${infoPesan}</span>`;
                 renderLogs();
+                faceScanBusy = false;
             }).catch(err => {
                 console.error('Gagal menyimpan absensi:', err);
                 if(resultBox) resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Gagal menyimpan absensi. Periksa koneksi dan izin database.</span>`;
+                faceScanBusy = false;
             });
         } else {
             const cacheKey = 'abseno_offline_cache_' + currentSystemMode;
@@ -894,6 +914,7 @@
             attendanceLogs.unshift(logData);
             renderLogs();
             if(resultBox) resultBox.innerHTML = `<span style="color: #38bdf8; font-weight:700;">✓ Disimpan Offline: ${namaSiswa}</span>`;
+            faceScanBusy = false;
         }
     }
 
@@ -910,7 +931,8 @@
                 }).then(() => {
                     if(resultBox) resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa} - ${infoPesan}</span>`;
                     renderLogs();
-                });
+                    faceScanBusy = false;
+                }).catch(() => { faceScanBusy = false; });
             } else {
                 db.collection("attendance").where("nis", "==", logData.nis).where("tanggal", "==", logData.tanggal).where("mode", "==", currentSystemMode).get().then(snapshot => {
                     if (!snapshot.empty) {
@@ -918,13 +940,17 @@
                         db.collection("attendance").doc(docId).update(logData).then(() => {
                             if(resultBox) resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa} - ${infoPesan}</span>`;
                             renderLogs();
-                        });
+                            faceScanBusy = false;
+                        }).catch(() => { faceScanBusy = false; });
+                    } else {
+                        faceScanBusy = false;
                     }
-                });
+                }).catch(() => { faceScanBusy = false; });
             }
         } else {
             renderLogs();
             if(resultBox) resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Diperbarui: ${namaSiswa}</span>`;
+            faceScanBusy = false;
         }
     }
 
