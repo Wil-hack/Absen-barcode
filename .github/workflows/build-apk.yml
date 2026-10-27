@@ -40,7 +40,7 @@ jobs:
         
         cd myApp
         
-        # Hapus plugin splashscreen agar tidak aktif
+        # Hapus plugin splashscreen
         cordova plugin rm cordova-plugin-splashscreen --save || true
 
         # Config.xml bersih tanpa splash screen
@@ -62,15 +62,13 @@ jobs:
 
         cordova platform add android
         
-        # Hapus paksa semua aset gambar yang mengandung kata splash atau screen
-        find platforms/android/app/src/main/res -name "*splash*" -type f -delete || true
-        find platforms/android/app/src/main/res -name "*screen*" -type f -delete || true
+        # Buat file gambar hitam kosong berukuran kecil menggunakan ImageMagick untuk menimpa semua gambar splash bawaan
+        sudo apt-get update && sudo apt-get install -y imagemagick
+        convert -size 100x100 xc:#14100c dummy_splash.png
         
-        # Paksa nonaktifkan Android 12+ SplashScreen API di styles.xml agar tidak memunculkan ikon default
-        STYLES_FILE="platforms/android/app/src/main/res/values/styles.xml"
-        if [ -f "$STYLES_FILE" ]; then
-            sed -i '/<resources>/a \    <style name="Theme.App.Starting" parent="Theme.AppCompat.NoActionBar">\n        <item name="android:windowBackground">@android:color/black</item>\n        <item name="android:windowSplashScreenAnimatedIcon">@null</item>\n    </style>' "$STYLES_FILE"
-        fi
+        # Timpa semua file gambar yang mengandung kata splash atau screen di folder android resources
+        find platforms/android/app/src/main/res -name "*splash*" -type f -exec cp dummy_splash.png {} \; || true
+        find platforms/android/app/src/main/res -name "*screen*" -type f -exec cp dummy_splash.png {} \; || true
         
         # Injeksi Izin Android
         sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n    <uses-permission android:name="android.permission.VIBRATE" />' platforms/android/app/src/main/AndroidManifest.xml
