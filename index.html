@@ -763,33 +763,23 @@
                 await inisialisasiKameraWajah();
             }
             if (!video.srcObject) throw new Error('Kamera belum aktif');
-            try { await video.play(); } catch (e) { console.warn('Video belum bisa diputar:', e); }
-            if (video.readyState < 2) {
-                await new Promise((resolve, reject) => {
-                    const timer = setTimeout(() => { cleanup(); reject(new Error('Kamera belum siap')); }, 4000);
-                    const ready = () => { cleanup(); resolve(); };
-                    const cleanup = () => { clearTimeout(timer); video.removeEventListener('loadeddata', ready); };
-                    video.addEventListener('loadeddata', ready, { once: true });
-                });
-            }
+            try { await video.play(); } catch (e) { console.warn('Video play error:', e); }
 
             const modelLoaded = await loadFaceApiModels();
             if (!modelLoaded) {
-                statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Model wajah gagal dimuat. Periksa koneksi.</span>';
+                statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Model AI gagal dimuat.</span>';
                 faceScanBusy = false;
                 return;
             }
             statusText.innerHTML = '<span style="color:#38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah...</span>';
 
             const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
-            const detectionPromise = faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 6000));
-            const detection = await Promise.race([detectionPromise, timeoutPromise]);
+            const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
 
             if (!detection) {
                 playErrorSound();
                 statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Wajah Tidak Terdeteksi. Coba lagi.</span>';
-                faceScanBusy = false;
+                setTimeout(() => { faceScanBusy = false; }, 1000);
                 return;
             }
 
@@ -812,18 +802,18 @@
                 if (matchedStudent) {
                     prosesAbsensi(matchedStudent.nis, 'AI Wajah');
                 } else {
-                    statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Data siswa tidak ditemukan.</span>';
+                    statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Siswa tidak ditemukan.</span>';
                     faceScanBusy = false;
                 }
             } else {
                 playErrorSound();
                 statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Wajah Tidak Dikenali.</span>';
-                faceScanBusy = false;
+                setTimeout(() => { faceScanBusy = false; }, 1000);
             }
         } catch (err) {
-            console.error('Pemindaian wajah gagal:', err);
+            console.error('Pemindaian gagal:', err);
             playErrorSound();
-            statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Pemindaian gagal. Coba lagi.</span>';
+            statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Error pemindaian. Coba lagi.</span>';
             faceScanBusy = false;
         }
     }
@@ -908,10 +898,10 @@
                     faceScanBusy = false;
                     const stWajah = document.getElementById('text-status-wajah');
                     if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Silakan pindai wajah siswa berikutnya.</span>';
-                }, 3000);
+                }, 2000);
             }).catch(err => {
-                console.error('Gagal menyimpan absensi:', err);
-                if(resultBox) resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Gagal menyimpan absensi.</span>`;
+                console.error('Gagal simpan:', err);
+                if(resultBox) resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Gagal menyimpan ke database.</span>`;
                 faceScanBusy = false;
             });
         } else {
@@ -926,7 +916,7 @@
                 faceScanBusy = false;
                 const stWajah = document.getElementById('text-status-wajah');
                 if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Silakan pindai wajah siswa berikutnya.</span>';
-            }, 3000);
+            }, 2000);
         }
     }
 
@@ -947,7 +937,7 @@
                         faceScanBusy = false;
                         const stWajah = document.getElementById('text-status-wajah');
                         if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Silakan pindai wajah siswa berikutnya.</span>';
-                    }, 3000);
+                    }, 2000);
                 }).catch(() => { faceScanBusy = false; });
             } else {
                 db.collection("attendance").where("nis", "==", logData.nis).where("tanggal", "==", logData.tanggal).where("mode", "==", currentSystemMode).get().then(snapshot => {
@@ -960,7 +950,7 @@
                                 faceScanBusy = false;
                                 const stWajah = document.getElementById('text-status-wajah');
                                 if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Silakan pindai wajah siswa berikutnya.</span>';
-                            }, 3000);
+                            }, 2000);
                         }).catch(() => { faceScanBusy = false; });
                     } else {
                         faceScanBusy = false;
@@ -974,7 +964,7 @@
                 faceScanBusy = false;
                 const stWajah = document.getElementById('text-status-wajah');
                 if(stWajah) stWajah.innerHTML = '<span style="font-size: 13px; color: var(--text-muted);">Silakan pindai wajah siswa berikutnya.</span>';
-            }, 3000);
+            }, 2000);
         }
     }
 
