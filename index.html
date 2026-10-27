@@ -486,7 +486,7 @@
 
     function speakText(text) {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // Hentikan antrean suara sebelumnya agar langsung responsif
+            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'id-ID';
             utterance.rate = 1.0;
@@ -1180,7 +1180,7 @@
         document.getElementById('input-hari').value = 'Senin - Sabtu';
     }
 
-    // FUNGSI DOWNLOAD / EKSPOR CSV YANG DISEMPURNAKAN
+    // FUNGSI EKSPOR CSV YANG DIOPTIMALKAN AGAR LANCAR DIDOWNLOAD DI SEMUA BROWSER
     function exportCSV() {
         const modeLap = document.getElementById('mode-laporan').value;
         let filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
@@ -1201,29 +1201,30 @@
             return;
         }
 
-        let csv = '\ufeffID/NIK,Nama,Kelas/Departemen,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan/Metode\n';
+        let csvContent = '\ufeffID/NIK,Nama,Kelas/Departemen,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan/Metode\n';
         filteredLogs.forEach(l => {
-            csv += `"${l.nis || ''}","${l.nama || ''}","${l.kelas || ''}","${l.tanggal || '-'}","${l.waktu || ''}","${l.waktuPulang || '-'}","${l.status || ''}","${l.keteranganPulang || l.metode || ''}"\n`;
+            csvContent += `"${l.nis || ''}","${l.nama || ''}","${l.kelas || ''}","${l.tanggal || '-'}","${l.waktu || ''}","${l.waktuPulang || '-'}","${l.status || ''}","${l.keteranganPulang || l.metode || ''}"\n`;
         });
 
-        try {
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-        } catch (e) {
-            const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csv);
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const filename = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
+
+        if (navigator.msSaveBlob) {
+            navigator.msSaveBlob(blob, filename);
+        } else {
             const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', `Laporan_AbsenO_${currentSystemMode}_${modeLap}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            } else {
+                window.open('data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent));
+            }
         }
     }
 </script>
