@@ -1,4 +1,4 @@
-Name: Build AbsenO APK
+name: Build AbsenO APK
 
 on:
   push:
