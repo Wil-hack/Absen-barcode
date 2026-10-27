@@ -483,6 +483,11 @@
     let faceApiLoaded = false;
     let audioCtx = null;
     let currentSystemMode = localStorage.getItem('abseno_system_mode') || 'sekolah';
+    // Listener Firestore harus dilepas saat berganti mode agar data lama tidak menimpa mode aktif.
+    let unsubscribeStudentsListener = null;
+    let unsubscribeAttendanceListener = null;
+    let dataLoadGeneration = 0;
+    let isSyncingOfflineCache = false;
 
     function initAudioContext() {
         if (!audioCtx) {
@@ -655,29 +660,77 @@
     }
 
     function loadDataFromDatabase() {
-        db.collection("students").where("mode", "==", currentSystemMode).onSnapshot(snapshot => {
-            students = [];
-            snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
-            updateFilterKelasDropdown();
-            renderStudentList();
-            if(document.getElementById('mode-laporan').value === 'terlambat') renderLogs();
-        });
+        const modeAtLoad = currentSystemMode;
+        const generation = ++dataLoadGeneration;
 
-        const todayDate = new Date().toISOString().slice(0,10);
-        db.collection("attendance").where("mode", "==", currentSystemMode).where("tanggal", "==", todayDate).onSnapshot(snapshot => {
-            attendanceLogs = [];
-            snapshot.forEach(doc => attendanceLogs.push(doc.data()));
-            renderLogs();
-            updateStats();
-        });
+        // Lepaskan listener mode sebelumnya. Tanpa ini, callback lama dapat menimpa data mode baru.
+        if (typeof unsubscribeStudentsListener === 'function') unsubscribeStudentsListener();
+        if (typeof unsubscribeAttendanceListener === 'function') unsubscribeAttendanceListener();
+        unsubscribeStudentsListener = null;
+        unsubscribeAttendanceListener = null;
 
-        db.collection("attendance").where("mode", "==", currentSystemMode).onSnapshot(snapshot => {
-            const allLogs = [];
-            snapshot.forEach(doc => allLogs.push(doc.data()));
-            if(allLogs.length > 0) attendanceLogs = allLogs;
-            renderLogs();
-            updateStats();
-        });
+        // Kosongkan tampilan/data memori dahulu; data setelah ini hanya berasal dari mode aktif di Firestore.
+        students = [];
+        attendanceLogs = [];
+        renderStudentList();
+        renderLogs();
+        updateStats();
+
+        unsubscribeStudentsListener = db.collection('students')
+            .where('mode', '==', modeAtLoad)
+            .onSnapshot(snapshot => {
+                if (generation !== dataLoadGeneration || modeAtLoad !== currentSystemMode) return;
+
+                // Hilangkan entri anggota berulang berdasarkan NIS/NIK dalam mode yang sama.
+                const uniqueStudents = new Map();
+                snapshot.forEach(doc => {
+                    const item = { id: doc.id, ...doc.data() };
+                    if (item.mode !== modeAtLoad) return;
+                    const identifier = String(item.nis == null ? '' : item.nis).trim();
+                    const key = identifier ? identifier : `doc:${doc.id}`;
+                    if (!uniqueStudents.has(key)) uniqueStudents.set(key, item);
+                });
+                students = Array.from(uniqueStudents.values());
+                updateFilterKelasDropdown();
+                renderStudentList();
+                if (document.getElementById('mode-laporan').value === 'terlambat') renderLogs();
+            }, error => {
+                console.error('Gagal memuat anggota dari database:', error);
+                if (generation === dataLoadGeneration) {
+                    const badge = document.getElementById('connection-status');
+                    if (badge) {
+                        badge.innerText = 'DATABASE ERROR';
+                        badge.className = 'status-badge status-offline';
+                    }
+                }
+            });
+
+        unsubscribeAttendanceListener = db.collection('attendance')
+            .where('mode', '==', modeAtLoad)
+            .onSnapshot(snapshot => {
+                if (generation !== dataLoadGeneration || modeAtLoad !== currentSystemMode) return;
+
+                // Ganti seluruh daftar, termasuk ketika hasilnya kosong. Jangan pertahankan data mode sebelumnya.
+                attendanceLogs = [];
+                snapshot.forEach(doc => {
+                    const item = { id: doc.id, ...doc.data() };
+                    if (item.mode === modeAtLoad) attendanceLogs.push(item);
+                });
+                renderLogs();
+                updateStats();
+            }, error => {
+                console.error('Gagal memuat presensi dari database:', error);
+                if (generation === dataLoadGeneration) {
+                    const badge = document.getElementById('connection-status');
+                    if (badge) {
+                        badge.innerText = 'DATABASE ERROR';
+                        badge.className = 'status-badge status-offline';
+                    }
+                }
+            });
+
+        // Catatan offline adalah antrean sinkronisasi, bukan sumber utama data anggota/laporan saat online.
+        if (navigator.onLine) syncOfflineCache();
     }
 
     function updateOnlineStatus() {
@@ -691,21 +744,39 @@
     }
 
     function syncOfflineCache() {
-        const offlineLogs = JSON.parse(localStorage.getItem('abseno_offline_cache_' + currentSystemMode)) || [];
-        if (offlineLogs.length > 0 && navigator.onLine) {
-            const badge = document.getElementById('connection-status');
-            badge.innerText = 'SYNCING...'; badge.className = 'status-badge status-sync';
-            let count = offlineLogs.length;
-            offlineLogs.forEach(log => {
-                db.collection("attendance").add(log).then(() => {
-                    count--;
-                    if(count === 0) {
-                        localStorage.removeItem('abseno_offline_cache_' + currentSystemMode);
-                        updateOnlineStatus();
-                    }
-                });
-            });
+        if (!navigator.onLine || isSyncingOfflineCache) return;
+        const modeToSync = currentSystemMode;
+        const cacheKey = 'abseno_offline_cache_' + modeToSync;
+        const offlineLogs = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+        if (!offlineLogs.length) return;
+
+        isSyncingOfflineCache = true;
+        const badge = document.getElementById('connection-status');
+        if (badge) {
+            badge.innerText = 'SYNCING...';
+            badge.className = 'status-badge status-sync';
         }
+
+        // Tambahkan mode yang benar dan tunggu semua penulisan selesai sebelum menghapus antrean lokal.
+        Promise.all(offlineLogs.map(log => db.collection('attendance').add({
+            ...log,
+            mode: modeToSync
+        }))).then(() => {
+            // Hapus hanya jika antrean belum berubah selama proses sinkronisasi.
+            const latestQueue = JSON.parse(localStorage.getItem(cacheKey) || '[]');
+            if (JSON.stringify(latestQueue) === JSON.stringify(offlineLogs)) {
+                localStorage.removeItem(cacheKey);
+            }
+            isSyncingOfflineCache = false;
+            updateOnlineStatus();
+        }).catch(error => {
+            console.error('Sinkronisasi presensi offline gagal:', error);
+            isSyncingOfflineCache = false;
+            if (badge) {
+                badge.innerText = 'SYNC GAGAL';
+                badge.className = 'status-badge status-offline';
+            }
+        });
     }
 
     function switchTab(tabId, el) {
@@ -1138,30 +1209,38 @@
 
     // FUNGSI UTAMA: MENGHAPUS DATA DOBEL (KONSOLIDASI SCAN PER ORANG PER HARI)
     function getDeduplicatedLogs() {
+        const mode = currentSystemMode;
         const map = new Map();
-        const sorted = [...attendanceLogs].filter(l => l.mode === currentSystemMode).sort((a,b) => new Date(a.tanggal + ' ' + (a.waktu || '00:00')) - new Date(b.tanggal + ' ' + (b.waktu || '00:00')));
-        
-        sorted.forEach(l => {
-            const key = `${l.nis}_${l.tanggal}`;
+        const sorted = [...attendanceLogs]
+            .filter(log => log.mode === mode && log.nis != null && String(log.nis).trim() !== '' && log.tanggal)
+            .sort((a, b) => {
+                const aTime = `${a.tanggal} ${a.waktu || '00:00'}`;
+                const bTime = `${b.tanggal} ${b.waktu || '00:00'}`;
+                return aTime.localeCompare(bTime);
+            });
+
+        sorted.forEach(log => {
+            const nis = String(log.nis).trim();
+            const key = `${mode}|${nis}|${log.tanggal}`;
             if (!map.has(key)) {
-                map.set(key, { ...l });
-            } else {
-                let existing = map.get(key);
-                if (l.waktu && l.waktu !== '-' && l.waktu < existing.waktu) {
-                    existing.waktu = l.waktu;
-                }
-                if (l.waktuPulang && l.waktuPulang !== '-') {
-                    existing.waktuPulang = l.waktuPulang;
-                } else if (l.waktu && l.waktu !== existing.waktu) {
-                    existing.waktuPulang = l.waktu;
-                }
-                if (l.status && l.status !== 'Hadir') {
-                    existing.status = l.status;
-                }
-                if (l.keteranganPulang) {
-                    existing.keteranganPulang = l.keteranganPulang;
-                }
+                map.set(key, { ...log });
+                return;
             }
+
+            const existing = map.get(key);
+            const existingMasuk = existing.waktu && existing.waktu !== '-' ? existing.waktu : '';
+            const newMasuk = log.waktu && log.waktu !== '-' ? log.waktu : '';
+            if (newMasuk && (!existingMasuk || newMasuk < existingMasuk)) {
+                existing.waktu = newMasuk;
+            }
+            if (log.waktuPulang && log.waktuPulang !== '-') {
+                existing.waktuPulang = log.waktuPulang;
+            } else if (newMasuk && newMasuk !== existing.waktu) {
+                existing.waktuPulang = newMasuk;
+            }
+            if (log.status && log.status !== 'Hadir') existing.status = log.status;
+            if (log.keteranganPulang) existing.keteranganPulang = log.keteranganPulang;
+            if (log.metode) existing.metode = log.metode;
         });
         return Array.from(map.values());
     }
@@ -1313,7 +1392,8 @@
             return;
         }
 
-        let csvContent = '\ufeffID/NIK,Nama,Kelas/Departemen,Shift,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan\n';
+        const csvCell = value => '"' + String(value == null ? '' : value).replace(/"/g, '""') + '"';
+        let csvContent = '\ufeffID/NIK,Nama,Kelas/Departemen,Shift,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan\r\n';
         let tableHtml = '';
 
         filteredLogs.forEach(l => {
@@ -1327,7 +1407,7 @@
             const status = l.status || '';
             const ket = l.keteranganPulang || l.metode || '';
 
-            csvContent += `"${nik}","${nama}","${kelas}","${shift}","${tgl}","${masuk}","${pulang}","${status}","${ket}"\n`;
+            csvContent += [nik, nama, kelas, shift, tgl, masuk, pulang, status, ket].map(csvCell).join(',') + '\r\n';
             
             tableHtml += `<tr>
                 <td><b>${nik}</b></td>
@@ -1347,29 +1427,66 @@
         document.getElementById('export-modal').classList.add('active');
     }
 
-    // SKRIP UNDUH FILE COMPATIBLE NATIVE ANDROID WEBVIEW
-    function downloadCsvFileAsText() {
+    // Unduh CSV: di Cordova tulis file terlebih dahulu, lalu buka menu berbagi Android.
+    async function downloadCsvFileAsText() {
         if (!generatedCsvContent) {
             alert('Tidak ada data laporan untuk diunduh!');
             return;
         }
 
-        const filename = generatedCsvFilename || `Laporan_AbsenO_${new Date().toISOString().slice(0,10)}.csv`;
+        const filename = generatedCsvFilename || `Laporan_AbsenO_${currentSystemMode}_${new Date().toISOString().slice(0,10)}.csv`;
+        const mime = 'text/csv;charset=utf-8;';
 
         try {
-            const encodedUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(generatedCsvContent);
+            if (window.cordova && window.resolveLocalFileSystemURL && window.cordova.file) {
+                const baseDir = window.cordova.file.cacheDirectory || window.cordova.file.dataDirectory;
+                if (!baseDir) throw new Error('Direktori penyimpanan Cordova tidak tersedia.');
+
+                const fileUri = await new Promise((resolve, reject) => {
+                    window.resolveLocalFileSystemURL(baseDir, directory => {
+                        directory.getFile(filename, { create: true, exclusive: false }, fileEntry => {
+                            fileEntry.createWriter(writer => {
+                                writer.onerror = event => reject(event.target.error || new Error('Gagal menulis CSV.'));
+                                writer.onwriteend = () => resolve(fileEntry.nativeURL || fileEntry.toURL());
+                                writer.write(new Blob([generatedCsvContent], { type: mime }));
+                            }, reject);
+                        }, reject);
+                    }, reject);
+                });
+
+                const sharing = window.plugins && window.plugins.socialsharing;
+                if (sharing && typeof sharing.shareWithOptions === 'function') {
+                    await new Promise((resolve, reject) => {
+                        sharing.shareWithOptions({
+                            message: 'Laporan absensi AbsenO',
+                            subject: 'Laporan AbsenO',
+                            files: [fileUri]
+                        }, result => {
+                            // Callback sukses hanya menyatakan dialog berbagi selesai; pengguna tetap memilih tujuan simpan.
+                            resolve(result);
+                        }, reject);
+                    });
+                    return;
+                }
+
+                alert('CSV berhasil dibuat di penyimpanan sementara aplikasi, tetapi menu berbagi tidak tersedia. Pastikan plugin SocialSharing terpasang pada APK.');
+                return;
+            }
+
+            // Browser biasa: gunakan unduhan Blob.
+            const blob = new Blob([generatedCsvContent], { type: mime });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', filename);
-            link.setAttribute('target', '_blank');
+            link.href = url;
+            link.download = filename;
+            link.style.display = 'none';
             document.body.appendChild(link);
-            
             link.click();
-            document.body.removeChild(link);
-        } catch (e) {
-            const blob = new Blob([generatedCsvContent], { type: 'text/csv;charset=utf-8;' });
-            const blobUrl = URL.createObjectURL(blob);
-            window.open(blobUrl, '_blank');
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 15000);
+        } catch (error) {
+            console.error('Unduh CSV gagal:', error);
+            alert('CSV belum berhasil dibagikan atau diunduh. Periksa izin dan plugin APK, lalu coba lagi.');
         }
     }
 </script>
