@@ -425,6 +425,7 @@
     let activeSchedule = { jamMasuk: '07:00', jamPulang: '14:00' };
     let useFrontCamera = true;
     let faceApiLoaded = false;
+    let faceScanBusy = false;
     let audioCtx = null;
     let currentSystemMode = localStorage.getItem('abseno_system_mode') || 'sekolah';
 
@@ -485,22 +486,41 @@
     }
 
     function speakText(text) {
-        // Gunakan TTS bawaan WebView; beberapa perangkat baru memuat daftar suara secara terlambat.
-        if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return;
+        // TTS WebView Android: muat suara yang tersedia lalu ucapkan nama.
+        const phrase = String(text || '').trim();
+        if (!phrase) return;
+        if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+            console.warn('Text-to-Speech tidak didukung WebView ini.');
+            return;
+        }
         try {
             const synth = window.speechSynthesis;
             synth.cancel();
-            const utterance = new SpeechSynthesisUtterance(String(text || ''));
+            const utterance = new SpeechSynthesisUtterance(phrase);
             utterance.lang = 'id-ID';
-            utterance.rate = 0.95;
-            utterance.pitch = 1.0;
+            utterance.rate = 0.9;
+            utterance.pitch = 1;
+            const speakNow = () => {
+                const voices = synth.getVoices ? synth.getVoices() : [];
+                const voice = voices.find(v => /^id([-_]|$)/i.test(v.lang));
+                if (voice) utterance.voice = voice;
+                try { synth.speak(utterance); } catch (e) { console.warn('Gagal memutar suara:', e); }
+            };
+            // Android kadang baru mengembalikan daftar suara setelah voiceschanged.
             const voices = synth.getVoices ? synth.getVoices() : [];
-            const indoVoice = voices.find(v => /^id([-_]|$)/i.test(v.lang));
-            if (indoVoice) utterance.voice = indoVoice;
-            // Beri kesempatan WebView mengaktifkan TTS setelah interaksi tombol pengguna.
-            window.setTimeout(() => {
-                try { synth.speak(utterance); } catch (err) { console.warn('TTS tidak tersedia:', err); }
-            }, 100);
+            if (voices.length) {
+                speakNow();
+            } else {
+                let done = false;
+                const onVoices = () => {
+                    if (done) return;
+                    done = true;
+                    if (synth.removeEventListener) synth.removeEventListener('voiceschanged', onVoices);
+                    speakNow();
+                };
+                if (synth.addEventListener) synth.addEventListener('voiceschanged', onVoices);
+                window.setTimeout(onVoices, 700);
+            }
         } catch (err) {
             console.warn('TTS tidak tersedia:', err);
         }
@@ -725,55 +745,68 @@
     }
 
     async function scanAndMatchFaceBiometrics() {
+        if (faceScanBusy) return;
+        faceScanBusy = true;
         const video = document.getElementById('video-wajah');
         const statusText = document.getElementById('text-status-wajah');
-
-        if (!video.srcObject || video.paused) {
-            await inisialisasiKameraWajah();
-            return;
-        }
-
-        const modelLoaded = await loadFaceApiModels();
-        if (!modelLoaded) return;
-        statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah...</span>`;
-
         try {
+            // Pastikan kamera benar-benar siap; jangan berhenti hanya karena video sempat paused.
+            if (!video.srcObject || !streamKamera || !streamKamera.getVideoTracks().some(t => t.readyState === 'live')) {
+                await inisialisasiKameraWajah();
+            }
+            if (!video.srcObject) throw new Error('Kamera belum aktif');
+            try { await video.play(); } catch (e) { console.warn('Video belum bisa diputar:', e); }
+            if (video.readyState < 2) {
+                await new Promise((resolve, reject) => {
+                    const timer = setTimeout(() => { cleanup(); reject(new Error('Kamera belum siap')); }, 4000);
+                    const ready = () => { cleanup(); resolve(); };
+                    const cleanup = () => { clearTimeout(timer); video.removeEventListener('loadeddata', ready); };
+                    video.addEventListener('loadeddata', ready, { once: true });
+                });
+            }
+
+            const modelLoaded = await loadFaceApiModels();
+            if (!modelLoaded) {
+                statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Model wajah gagal dimuat. Periksa koneksi lalu coba lagi.</span>';
+                return;
+            }
+            statusText.innerHTML = '<span style="color:#38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah...</span>';
+
             const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
-            
-            // Batas waktu (timeout) 6 detik agar tidak macet / memindai terus
-            let detection = null;
             const detectionPromise = faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
             const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 6000));
-
-            detection = await Promise.race([detectionPromise, timeoutPromise]);
+            const detection = await Promise.race([detectionPromise, timeoutPromise]);
 
             if (!detection) {
                 playErrorSound();
-                statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Terdeteksi. Coba geser posisi.</span>`;
+                statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Wajah Tidak Terdeteksi. Atur posisi lalu tekan Pindai Wajah lagi.</span>';
+                return;
+            }
+
+            const labeledDescriptors = students
+                .filter(st => st.faceVector && Array.isArray(st.faceVector))
+                .map(st => new faceapi.LabeledFaceDescriptors(st.nis, [new Float32Array(st.faceVector)]));
+            if (!labeledDescriptors.length) {
+                playWarningSound();
+                statusText.innerHTML = '<span style="color:#fbbf24;font-weight:700;">⚠ Belum ada biometrik terdaftar!</span>';
+                return;
+            }
+            const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
+            const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+            if (bestMatch.label !== 'unknown') {
+                const matchedStudent = students.find(st => st.nis === bestMatch.label);
+                if (matchedStudent) prosesAbsensi(matchedStudent.nis, 'AI Wajah');
+                else statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Data siswa tidak ditemukan.</span>';
             } else {
-                const labeledDescriptors = students
-                    .filter(s => s.faceVector && Array.isArray(s.faceVector))
-                    .map(s => new faceapi.LabeledFaceDescriptors(s.nis, [new Float32Array(s.faceVector)]));
-
-                if (labeledDescriptors.length === 0) {
-                    playWarningSound();
-                    statusText.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ Belum ada biometrik terdaftar!</span>`;
-                } else {
-                    const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
-                    const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
-
-                    if (bestMatch.label !== 'unknown') {
-                        const matchedStudent = students.find(s => s.nis === bestMatch.label);
-                        prosesAbsensi(matchedStudent.nis, 'AI Wajah');
-                    } else {
-                        playErrorSound();
-                        statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Dikenali</span>`;
-                    }
-                }
+                playErrorSound();
+                statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Wajah Tidak Dikenali. Coba pindai lagi.</span>';
             }
         } catch (err) {
+            console.error('Pemindaian wajah gagal:', err);
             playErrorSound();
-            statusText.innerHTML = `<span style="color: #f87171;">✕ Waktu pemindaian habis / Coba lagi</span>`;
+            statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Pemindaian gagal. Coba tekan Pindai Wajah lagi.</span>';
+        } finally {
+            faceScanBusy = false;
         }
     }
 
@@ -1226,25 +1259,66 @@
         }
 
         const csvCell = value => '"' + String(value == null ? '' : value).replace(/"/g, '""') + '"';
-        let csv = '\ufeff' + [
+        const csv = '\ufeff' + [
             ['ID/NIK','Nama','Kelas/Departemen','Tanggal','Jam Masuk','Jam Pulang','Status','Keterangan/Metode'],
             ...filteredLogs.map(l => [l.nis, l.nama, l.kelas, l.tanggal || '-', l.waktu, l.waktuPulang || '-', l.status, l.keteranganPulang || l.metode || ''])
         ].map(row => row.map(csvCell).join(',')).join('\r\n');
 
         const filename = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
-        try {
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const mime = 'text/csv;charset=utf-8;';
 
-            // Android WebView sering tidak menangani unduhan <a download>. Jika tersedia,
-            // tampilkan lembar berbagi Android agar pengguna bisa menyimpan file CSV.
+        // Android Cordova: simpan file memakai cordova-plugin-file, lalu buka lembar berbagi
+        // memakai cordova-plugin-x-socialsharing jika plugin tersedia.
+        const saveWithCordova = () => new Promise((resolve, reject) => {
+            if (!window.cordova || !window.resolveLocalFileSystemURL || !window.cordova.file) {
+                reject(new Error('Plugin file Cordova tidak tersedia'));
+                return;
+            }
+            const baseDir = window.cordova.file.cacheDirectory || window.cordova.file.dataDirectory;
+            if (!baseDir) { reject(new Error('Direktori penyimpanan tidak tersedia')); return; }
+            window.resolveLocalFileSystemURL(baseDir, dir => {
+                dir.getFile(filename, { create: true, exclusive: false }, fileEntry => {
+                    fileEntry.createWriter(writer => {
+                        writer.onwriteend = () => {
+                            const fileUri = fileEntry.nativeURL || fileEntry.toURL();
+                            const sharePlugin = window.plugins && window.plugins.socialsharing;
+                            if (sharePlugin && typeof sharePlugin.shareWithOptions === 'function') {
+                                sharePlugin.shareWithOptions({
+                                    message: 'Laporan absensi AbsenO',
+                                    subject: 'Laporan AbsenO',
+                                    files: [fileUri]
+                                }, () => resolve(true), err => reject(err || new Error('Berbagi file dibatalkan atau gagal')));
+                            } else if (sharePlugin && typeof sharePlugin.share === 'function') {
+                                sharePlugin.share('Laporan absensi AbsenO', 'Laporan AbsenO', fileUri, null, () => resolve(true), reject);
+                            } else {
+                                alert('CSV sudah dibuat di penyimpanan sementara aplikasi, tetapi fitur berbagi belum terpasang. Tambahkan plugin SocialSharing pada workflow GitHub Actions.');
+                                resolve(true);
+                            }
+                        };
+                        writer.onerror = err => reject(err);
+                        writer.write(new Blob([csv], { type: mime }));
+                    }, reject);
+                }, reject);
+            }, reject);
+        });
+
+        try {
+            if (window.cordova && window.resolveLocalFileSystemURL && window.cordova.file) {
+                await saveWithCordova();
+                return;
+            }
+
+            // Browser biasa / WebView tanpa plugin: coba Android share sheet dahulu.
+            const blob = new Blob([csv], { type: mime });
             if (typeof navigator.share === 'function' && typeof File !== 'undefined') {
-                const file = new File([blob], filename, { type: 'text/csv;charset=utf-8;' });
+                const file = new File([blob], filename, { type: mime });
                 if (typeof navigator.canShare !== 'function' || navigator.canShare({ files: [file] })) {
                     await navigator.share({ files: [file], title: 'Laporan AbsenO', text: 'Laporan absensi CSV' });
                     return;
                 }
             }
 
+            // Fallback browser: gunakan data URL untuk WebView yang tidak mendukung Blob URL.
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -1253,11 +1327,10 @@
             document.body.appendChild(a);
             a.click();
             a.remove();
-            // Jangan langsung mencabut URL agar WebView punya waktu memproses unduhan.
-            setTimeout(() => URL.revokeObjectURL(url), 10000);
+            setTimeout(() => URL.revokeObjectURL(url), 15000);
         } catch (e) {
             console.error('Ekspor CSV gagal:', e);
-            alert('CSV belum bisa diunduh langsung di perangkat ini. Coba lagi atau gunakan APK yang mendukung berbagi file.');
+            alert('CSV gagal dibagikan/diunduh. Pastikan workflow GitHub Actions memasang cordova-plugin-file dan cordova-plugin-x-socialsharing, lalu buat APK baru.');
         }
     }
 </script>
