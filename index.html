@@ -136,7 +136,7 @@
         #fullscreen-qris-modal.active { display: flex; }
     </style>
 </head>
-<body data-theme="heritage" onclick="initAudioContext()">
+<body data-theme="heritage">
 
 <div id="app-container">
     <div class="batik-overlay"></div>
@@ -426,16 +426,7 @@
     let useFrontCamera = true;
     let faceApiLoaded = false;
     let faceScanBusy = false;
-    let audioCtx = null;
     let currentSystemMode = localStorage.getItem('abseno_system_mode') || 'sekolah';
-
-    function initAudioContext() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        } else if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-    }
 
     function openFullscreenQRIS() {
         document.getElementById('fullscreen-qris-modal').classList.add('active');
@@ -444,85 +435,11 @@
         document.getElementById('fullscreen-qris-modal').classList.remove('active');
     }
 
-    function playSuccessSound() {
-        initAudioContext();
-        if ("vibrate" in navigator) navigator.vibrate(100);
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.15);
-    }
-
-    function playWarningSound() {
-        initAudioContext();
-        if ("vibrate" in navigator) navigator.vibrate([100, 50, 100]);
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.type = "triangle";
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-        osc.frequency.setValueAtTime(440, audioCtx.currentTime + 0.12);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.25);
-    }
-
-    function playErrorSound() {
-        initAudioContext();
-        if ("vibrate" in navigator) navigator.vibrate(300);
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
-    }
-
-    function speakText(text) {
-        const phrase = String(text || '').trim();
-        if (!phrase) return;
-        if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
-            console.warn('Text-to-Speech tidak didukung WebView ini.');
-            return;
-        }
-        try {
-            const synth = window.speechSynthesis;
-            synth.cancel();
-            const utterance = new SpeechSynthesisUtterance(phrase);
-            utterance.lang = 'id-ID';
-            utterance.rate = 0.9;
-            utterance.pitch = 1;
-            const speakNow = () => {
-                const voices = synth.getVoices ? synth.getVoices() : [];
-                const voice = voices.find(v => /^id([-_]|$)/i.test(v.lang));
-                if (voice) utterance.voice = voice;
-                try { synth.speak(utterance); } catch (e) { console.warn('Gagal memutar suara:', e); }
-            };
-            const voices = synth.getVoices ? synth.getVoices() : [];
-            if (voices.length) {
-                speakNow();
-            } else {
-                let done = false;
-                const onVoices = () => {
-                    if (done) return;
-                    done = true;
-                    if (synth.removeEventListener) synth.removeEventListener('voiceschanged', onVoices);
-                    speakNow();
-                };
-                if (synth.addEventListener) synth.addEventListener('voiceschanged', onVoices);
-                window.setTimeout(onVoices, 700);
-            }
-        } catch (err) {
-            console.warn('TTS tidak tersedia:', err);
-        }
-    }
+    // Fungsi suara dinonaktifkan sementara untuk menguji performa kamera
+    function playSuccessSound() {}
+    function playWarningSound() {}
+    function playErrorSound() {}
+    function speakText(text) {}
 
     async function loadFaceApiModels() {
         if (faceApiLoaded) return true;
@@ -781,7 +698,6 @@
             const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
 
             if (!detection) {
-                playErrorSound();
                 statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Wajah Tidak Terdeteksi. Coba lagi.</span>';
                 setTimeout(() => { faceScanBusy = false; }, 1000);
                 return;
@@ -792,7 +708,6 @@
                 .map(st => new faceapi.LabeledFaceDescriptors(st.nis, [new Float32Array(st.faceVector)]));
             
             if (!labeledDescriptors.length) {
-                playWarningSound();
                 statusText.innerHTML = '<span style="color:#fbbf24;font-weight:700;">⚠ Belum ada biometrik terdaftar!</span>';
                 faceScanBusy = false;
                 return;
@@ -810,13 +725,11 @@
                     faceScanBusy = false;
                 }
             } else {
-                playErrorSound();
                 statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Wajah Tidak Dikenali.</span>';
                 setTimeout(() => { faceScanBusy = false; }, 1000);
             }
         } catch (err) {
             console.error('Pemindaian gagal:', err);
-            playErrorSound();
             statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Error pemindaian. Coba lagi.</span>';
             faceScanBusy = false;
         }
@@ -830,7 +743,6 @@
         const todayDate = nowObj.toISOString().slice(0,10);
 
         if (!student) {
-            playErrorSound();
             if(resultBox) resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Anggota Tidak Ditemukan</span>`;
             faceScanBusy = false;
             return;
@@ -841,8 +753,6 @@
         if (existingLog && (statusManual === 'Izin Pulang' || statusManual === 'Pulang')) {
             existingLog.waktuPulang = nowTimeStr;
             existingLog.keteranganPulang = `Pulang jam ${nowTimeStr}`;
-            playSuccessSound();
-            speakText(`${student.nama} izin pulang`);
             updateLogKeDatabase(existingLog, resultBox, student.nama, `Pulang Jam ${nowTimeStr}`);
             return;
         }
@@ -869,8 +779,6 @@
             existingLog.status = statusFinal;
             existingLog.keteranganPulang = catatan;
             existingLog.metode = metode;
-            playSuccessSound();
-            speakText(`${student.nama} ${statusFinal}`);
             updateLogKeDatabase(existingLog, resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}`);
             return;
         }
@@ -888,8 +796,6 @@
             mode: currentSystemMode
         };
 
-        playSuccessSound();
-        speakText(`${student.nama} ${statusFinal}`);
         simpanLogKeDatabase(logData, resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}`);
     }
 
@@ -905,7 +811,7 @@
                     if (modePindai === 'wajah') {
                         inisialisasiKameraWajah();
                     }
-                }, 2500);
+                }, 2000);
             }).catch(err => {
                 console.error('Gagal simpan:', err);
                 if(resultBox) resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Gagal menyimpan ke database.</span>`;
@@ -926,7 +832,7 @@
                 if (modePindai === 'wajah') {
                     inisialisasiKameraWajah();
                 }
-            }, 2500);
+            }, 2000);
         }
     }
 
@@ -950,7 +856,7 @@
                         if (modePindai === 'wajah') {
                             inisialisasiKameraWajah();
                         }
-                    }, 2500);
+                    }, 2000);
                 }).catch(() => { faceScanBusy = false; });
             } else {
                 db.collection("attendance").where("nis", "==", logData.nis).where("tanggal", "==", logData.tanggal).where("mode", "==", currentSystemMode).get().then(snapshot => {
@@ -966,7 +872,7 @@
                                 if (modePindai === 'wajah') {
                                     inisialisasiKameraWajah();
                                 }
-                            }, 2500);
+                            }, 2000);
                         }).catch(() => { faceScanBusy = false; });
                     } else {
                         faceScanBusy = false;
@@ -983,7 +889,7 @@
                 if (modePindai === 'wajah') {
                     inisialisasiKameraWajah();
                 }
-            }, 2500);
+            }, 2000);
         }
     }
 
@@ -1095,16 +1001,13 @@
             const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
 
             if (!detection) {
-                playErrorSound();
                 statusCap.innerHTML = `<span style="color:#f87171;">✕ Wajah tidak terdeteksi!</span>`;
             } else {
-                playSuccessSound();
                 tempFaceVector = Array.from(detection.descriptor);
                 document.getElementById('face-preview-box').innerHTML = '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Biometrik Terkunci!</span>';
                 tutupKameraDaftarWajah();
             }
         } catch (err) {
-            playErrorSound();
             statusCap.innerHTML = `<span style="color:#f87171;">✕ Gagal ekstraksi wajah</span>`;
         }
     }
