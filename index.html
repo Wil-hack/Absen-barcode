@@ -726,11 +726,17 @@
 
         try {
             const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
-            const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
+            
+            // Batas waktu (timeout) 6 detik agar tidak macet / memindai terus
+            let detection = null;
+            const detectionPromise = faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 6000));
+
+            detection = await Promise.race([detectionPromise, timeoutPromise]);
 
             if (!detection) {
                 playErrorSound();
-                statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Terdeteksi</span>`;
+                statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Terdeteksi. Coba geser posisi.</span>`;
             } else {
                 const labeledDescriptors = students
                     .filter(s => s.faceVector && Array.isArray(s.faceVector))
@@ -754,7 +760,7 @@
             }
         } catch (err) {
             playErrorSound();
-            statusText.innerHTML = `<span style="color: #f87171;">✕ Error sistem</span>`;
+            statusText.innerHTML = `<span style="color: #f87171;">✕ Waktu pemindaian habis / Coba lagi</span>`;
         }
     }
 
@@ -800,7 +806,6 @@
         }
 
         if (existingLog) {
-            // MENCEGAH DUPLIKASI DATA: UPDATE LOG YANG SUDAH ADA DI HARI YANG SAMA
             existingLog.waktu = nowTimeStr;
             existingLog.status = statusFinal;
             existingLog.keteranganPulang = catatan;
@@ -847,7 +852,6 @@
 
     function updateLogKeDatabase(logData, resultBox, namaSiswa, infoPesan) {
         if (navigator.onLine) {
-            // Cari dokumen berdasarkan ID jika ada, atau query berdasarkan NIS & Tanggal & Mode
             const targetDocId = logData.id;
             if (targetDocId) {
                 db.collection("attendance").doc(targetDocId).update({
@@ -1124,7 +1128,7 @@
             let colorStatus = '#4ade80';
             if(log.status === 'Sakit') colorStatus = '#fbbf24';
             else if(log.status === 'Izin' || log.status === 'Izin Pulang') colorStatus = '#38bdf8';
-            else if(log.status === 'Terlambat') colorStatus = '#ef4444'; // WARNA MERAH JELAS UNTUK TERLAMBAT
+            else if(log.status === 'Terlambat') colorStatus = '#ef4444';
             else if(log.status === 'Alpa') colorStatus = '#f87171';
 
             const item = document.createElement('div');
