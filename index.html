@@ -1427,54 +1427,83 @@
         document.getElementById('export-modal').classList.add('active');
     }
 
-    // Unduh CSV: di Cordova tulis file terlebih dahulu, lalu buka menu berbagi Android.
+    // Unduh CSV: APK menulis file dulu, lalu membuka menu berbagi Android.
+    // Pengguna memilih tujuan "Simpan ke..." jika ingin menyimpan ke Download.
     async function downloadCsvFileAsText() {
         if (!generatedCsvContent) {
             alert('Tidak ada data laporan untuk diunduh!');
             return;
         }
 
-        const filename = generatedCsvFilename || `Laporan_AbsenO_${currentSystemMode}_${new Date().toISOString().slice(0,10)}.csv`;
+        const filename = (generatedCsvFilename ||
+            `Laporan_AbsenO_${currentSystemMode}_${new Date().toISOString().slice(0,10)}.csv`)
+            .replace(/[\\/:*?"<>|]/g, '_');
         const mime = 'text/csv;charset=utf-8;';
 
         try {
-            if (window.cordova && window.resolveLocalFileSystemURL && window.cordova.file) {
-                const baseDir = window.cordova.file.cacheDirectory || window.cordova.file.dataDirectory;
-                if (!baseDir) throw new Error('Direktori penyimpanan Cordova tidak tersedia.');
+            if (window.cordova) {
+                const filePluginReady = window.resolveLocalFileSystemURL &&
+                    window.cordova.file;
+                const sharing = window.plugins && window.plugins.socialsharing;
+
+                if (!filePluginReady) {
+                    throw new Error('Plugin Cordova File belum tersedia di APK.');
+                }
+                if (!sharing || typeof sharing.shareWithOptions !== 'function') {
+                    throw new Error('Plugin berbagi file belum tersedia di APK.');
+                }
+
+                const baseDir = window.cordova.file.cacheDirectory ||
+                    window.cordova.file.dataDirectory;
+                if (!baseDir) {
+                    throw new Error('Direktori sementara aplikasi tidak tersedia.');
+                }
 
                 const fileUri = await new Promise((resolve, reject) => {
                     window.resolveLocalFileSystemURL(baseDir, directory => {
                         directory.getFile(filename, { create: true, exclusive: false }, fileEntry => {
                             fileEntry.createWriter(writer => {
-                                writer.onerror = event => reject(event.target.error || new Error('Gagal menulis CSV.'));
-                                writer.onwriteend = () => resolve(fileEntry.nativeURL || fileEntry.toURL());
-                                writer.write(new Blob([generatedCsvContent], { type: mime }));
+                                let writingStarted = false;
+                                writer.onerror = event => reject(
+                                    event.target.error || new Error('Gagal menulis file CSV.')
+                                );
+                                writer.onwriteend = () => {
+                                    if (!writingStarted) {
+                                        writingStarted = true;
+                                        writer.seek(0);
+                                        writer.write(new Blob(
+                                            ['\ufeff', generatedCsvContent],
+                                            { type: mime }
+                                        ));
+                                    } else {
+                                        resolve(fileEntry.nativeURL || fileEntry.toURL());
+                                    }
+                                };
+                                writer.truncate(0);
                             }, reject);
                         }, reject);
                     }, reject);
                 });
 
-                const sharing = window.plugins && window.plugins.socialsharing;
-                if (sharing && typeof sharing.shareWithOptions === 'function') {
-                    await new Promise((resolve, reject) => {
-                        sharing.shareWithOptions({
-                            message: 'Laporan absensi AbsenO',
-                            subject: 'Laporan AbsenO',
-                            files: [fileUri]
-                        }, result => {
-                            // Callback sukses hanya menyatakan dialog berbagi selesai; pengguna tetap memilih tujuan simpan.
-                            resolve(result);
-                        }, reject);
-                    });
-                    return;
-                }
-
-                alert('CSV berhasil dibuat di penyimpanan sementara aplikasi, tetapi menu berbagi tidak tersedia. Pastikan plugin SocialSharing terpasang pada APK.');
+                // File sudah benar-benar ditulis sebelum menu berbagi dibuka.
+                sharing.shareWithOptions({
+                    message: 'Laporan absensi AbsenO (' + currentSystemMode + ')',
+                    subject: 'Laporan AbsenO - ' + currentSystemMode,
+                    files: [fileUri]
+                }, result => {
+                    // Selesai memilih/menutup share sheet tidak selalu berarti file disimpan.
+                    if (result && result.completed === true) {
+                        alert('Menu berbagi selesai. Pastikan pilih opsi Simpan/Download agar CSV tersimpan di HP.');
+                    }
+                }, error => {
+                    console.error('AbsenO CSV share error:', error);
+                    alert('CSV sudah dibuat sementara, tetapi menu berbagi gagal dibuka. Coba build ulang APK dan pastikan plugin SocialSharing terpasang.');
+                });
                 return;
             }
 
-            // Browser biasa: gunakan unduhan Blob.
-            const blob = new Blob([generatedCsvContent], { type: mime });
+            // Browser biasa: unduhan Blob.
+            const blob = new Blob(['\ufeff', generatedCsvContent], { type: mime });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -1485,8 +1514,8 @@
             link.remove();
             setTimeout(() => URL.revokeObjectURL(url), 15000);
         } catch (error) {
-            console.error('Unduh CSV gagal:', error);
-            alert('CSV belum berhasil dibagikan atau diunduh. Periksa izin dan plugin APK, lalu coba lagi.');
+            console.error('Unduh CSV AbsenO gagal:', error);
+            alert('CSV gagal disiapkan: ' + (error && error.message ? error.message : 'kesalahan tidak diketahui'));
         }
     }
 </script>
