@@ -40,7 +40,7 @@ jobs:
         
         cd myApp
         
-        # Config.xml dengan Splash Screen dan Logo dimatikan total tanpa sisa
+        # Config.xml dengan Ikon AbsenO dan Splash Screen dimatikan
         cat <<EOT > config.xml
         <?xml version='1.0' encoding='utf-8'?>
         <widget id="com.abseno.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
@@ -54,9 +54,9 @@ jobs:
             <preference name="SplashScreen" value="none" />
             <preference name="ShowSplashScreen" value="false" />
             <preference name="SplashScreenDelay" value="0" />
-            <preference name="FadeSplashScreen" value="false" />
-            <preference name="SplashMaintainAspectRatio" value="true" />
-            <preference name="SplashScreenBackgroundColor" value="#14100c" />
+            <platform name="android">
+                <icon src="www/logo-abseno.png" />
+            </platform>
         </widget>
         EOT
 
