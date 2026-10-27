@@ -40,7 +40,10 @@ jobs:
         
         cd myApp
         
-        # Config.xml dengan Ikon AbsenO dan Splash Screen dimatikan
+        # Hapus plugin splashscreen bawaan agar tidak memunculkan logo apa pun
+        cordova plugin rm cordova-plugin-splashscreen --save || true
+
+        # Config.xml bersih tanpa splash screen
         cat <<EOT > config.xml
         <?xml version='1.0' encoding='utf-8'?>
         <widget id="com.abseno.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
@@ -51,9 +54,6 @@ jobs:
             <allow-intent href="http://*/*" />
             <allow-intent href="https://*/*" />
             <preference name="BackgroundColor" value="#14100c" />
-            <preference name="SplashScreen" value="none" />
-            <preference name="ShowSplashScreen" value="false" />
-            <preference name="SplashScreenDelay" value="0" />
             <platform name="android">
                 <icon src="www/logo-abseno.png" />
             </platform>
