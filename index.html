@@ -684,11 +684,14 @@
         const statusText = document.getElementById('text-status-wajah');
         
         try {
-            if (!video.srcObject || !streamKamera || !streamKamera.getVideoTracks().some(t => t.readyState === 'live')) {
+            if (!video || !video.srcObject || !streamKamera || !streamKamera.getVideoTracks().some(t => t.readyState === 'live')) {
                 await inisialisasiKameraWajah();
+                const freshVideo = document.getElementById('video-wajah');
+                if (!freshVideo || !freshVideo.srcObject) throw new Error('Kamera belum aktif');
             }
-            if (!video.srcObject) throw new Error('Kamera belum aktif');
-            try { await video.play(); } catch (e) { console.warn('Video play error:', e); }
+            
+            const activeVideo = document.getElementById('video-wajah');
+            try { await activeVideo.play(); } catch (e) { console.warn('Video play error:', e); }
 
             const modelLoaded = await loadFaceApiModels();
             if (!modelLoaded) {
@@ -699,7 +702,7 @@
             statusText.innerHTML = '<span style="color:#38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah...</span>';
 
             const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
-            const detection = await faceapi.detectSingleFace(video, options).withFaceLandmarks().withFaceDescriptor();
+            const detection = await faceapi.detectSingleFace(activeVideo, options).withFaceLandmarks().withFaceDescriptor();
 
             if (!detection) {
                 statusText.innerHTML = '<span style="color:#f87171;font-weight:700;">✕ Wajah Tidak Terdeteksi. Coba lagi.</span>';
