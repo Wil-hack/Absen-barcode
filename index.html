@@ -1105,10 +1105,10 @@
             filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
         } else if (modeLap === 'bulanan') {
             const filterBulan = document.getElementById('filter-bulan').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterBulan));
+            filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterBulan));
         } else if (modeLap === 'tahunan') {
             const filterTahun = document.getElementById('filter-tahun').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterTahun));
+            filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterTahun));
         }
 
         if(filteredLogs.length === 0) {
@@ -1180,44 +1180,60 @@
         document.getElementById('input-hari').value = 'Senin - Sabtu';
     }
 
-    // FUNGSI EKSPOR CSV MENGGUNAKAN DATA URI (STABIL DI SEMUA BROWSER & LOKAL OFFLINE)
+    // FUNGSI EKSPOR CSV DENGAN DOUBLE FALLBACK (MEMASTIKAN PEMBUATAN DAN UNDUHAN FILE PASTI BERJALAN)
     function exportCSV() {
-        const modeLap = document.getElementById('mode-laporan').value;
-        let filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
-        
-        if (modeLap === 'harian') {
-            const filterTanggal = document.getElementById('filter-tanggal').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
-        } else if (modeLap === 'bulanan') {
-            const filterBulan = document.getElementById('filter-bulan').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterBulan));
-        } else if (modeLap === 'tahunan') {
-            const filterTahun = document.getElementById('filter-tahun').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterTahun));
-        }
-
-        if (!filteredLogs || filteredLogs.length === 0) {
-            alert('Tidak ada data laporan untuk di-download!');
-            return;
-        }
-
-        let csvContent = '\ufeffID/NIK,Nama,Kelas/Departemen,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan/Metode\n';
-        filteredLogs.forEach(l => {
-            csvContent += `"${l.nis || ''}","${l.nama || ''}","${l.kelas || ''}","${l.tanggal || '-'}","${l.waktu || ''}","${l.waktuPulang || '-'}","${l.status || ''}","${l.keteranganPulang || l.metode || ''}"\n`;
-        });
-
-        const filename = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
-        
         try {
-            const encodedUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', filename);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const modeLap = document.getElementById('mode-laporan').value;
+            let filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
+            
+            if (modeLap === 'harian') {
+                const filterTanggal = document.getElementById('filter-tanggal').value;
+                filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
+            } else if (modeLap === 'bulanan') {
+                const filterBulan = document.getElementById('filter-bulan').value;
+                filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterBulan));
+            } else if (modeLap === 'tahunan') {
+                const filterTahun = document.getElementById('filter-tahun').value;
+                filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterTahun));
+            }
+
+            if (!filteredLogs || filteredLogs.length === 0) {
+                alert('Tidak ada data laporan untuk di-download pada filter ini!');
+                return;
+            }
+
+            let csvContent = '\ufeffID/NIK,Nama,Kelas/Departemen,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan/Metode\n';
+            filteredLogs.forEach(l => {
+                csvContent += `"${l.nis || ''}","${l.nama || ''}","${l.kelas || ''}","${l.tanggal || '-'}","${l.waktu || ''}","${l.waktuPulang || '-'}","${l.status || ''}","${l.keteranganPulang || l.metode || ''}"\n`;
+            });
+
+            const filename = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
+
+            // Metode 1: Penggunaan Blob URL
+            try {
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            } catch (errBlob) {
+                // Metode 2: Data URI Fallback jika Blob diblokir browser
+                const encodedUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = encodedUri;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
         } catch (e) {
-            window.open('data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent));
+            alert('Terjadi kesalahan saat memproses laporan: ' + e.message);
         }
     }
 </script>
