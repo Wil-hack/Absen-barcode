@@ -1110,7 +1110,6 @@
         let hadir = 0, sakit = 0, izin = 0, alpa = 0;
         const todayDate = new Date().toISOString().slice(0,10);
         
-        // Menggunakan deduplikasi agar statistik akurat tanpa data dobel
         const deduplicated = getDeduplicatedLogs().filter(l => l.tanggal === todayDate);
         deduplicated.forEach(l => {
             if(l.status === 'Hadir' || l.status === 'Terlambat') hadir++;
@@ -1140,7 +1139,6 @@
     // FUNGSI UTAMA: MENGHAPUS DATA DOBEL (KONSOLIDASI SCAN PER ORANG PER HARI)
     function getDeduplicatedLogs() {
         const map = new Map();
-        // Urutkan dari terlama ke terbaru agar scan pertama jadi Jam Masuk dan scan terakhir jadi Jam Pulang
         const sorted = [...attendanceLogs].filter(l => l.mode === currentSystemMode).sort((a,b) => new Date(a.tanggal + ' ' + (a.waktu || '00:00')) - new Date(b.tanggal + ' ' + (b.waktu || '00:00')));
         
         sorted.forEach(l => {
@@ -1291,7 +1289,7 @@
         }
     }
 
-    // FUNGSI EKSPOR CSV DENGAN PRATINJAU TABEL YANG JELAS & BERSIH DARI DATA DOBEL
+    // PRATINJAU TABEL & PENANGANAN DOWNLOAD KHUSUS APK ANDROID
     let generatedCsvContent = '';
     let generatedCsvFilename = '';
 
@@ -1349,22 +1347,29 @@
         document.getElementById('export-modal').classList.add('active');
     }
 
+    // SKRIP UNDUH FILE COMPATIBLE NATIVE ANDROID WEBVIEW
     function downloadCsvFileAsText() {
+        if (!generatedCsvContent) {
+            alert('Tidak ada data laporan untuk diunduh!');
+            return;
+        }
+
+        const filename = generatedCsvFilename || `Laporan_AbsenO_${new Date().toISOString().slice(0,10)}.csv`;
+
         try {
-            const blob = new Blob([generatedCsvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = generatedCsvFilename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-            alert('File laporan CSV berhasil diunduh!');
-        } catch (e) {
             const encodedUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(generatedCsvContent);
-            window.open(encodedUri);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', filename);
+            link.setAttribute('target', '_blank');
+            document.body.appendChild(link);
+            
+            link.click();
+            document.body.removeChild(link);
+        } catch (e) {
+            const blob = new Blob([generatedCsvContent], { type: 'text/csv;charset=utf-8;' });
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, '_blank');
         }
     }
 </script>
