@@ -197,7 +197,7 @@
                 <div class="section-title" id="title-label-data">Data Siswa</div>
                 <div style="display:flex; gap:8px; margin-bottom:10px;">
                     <select id="filter-kelas" class="form-control" onchange="renderStudentList()">
-                        <option value="">Semua Kelas / Departemen</option>
+                        <option value="">Semua Kelas</option>
                     </select>
                 </div>
                 <input type="text" id="search-siswa" class="form-control" placeholder="Cari Nama atau NIS/NIK..." oninput="renderStudentList()">
@@ -246,6 +246,7 @@
                     <option value="terlambat">2. Belum Masuk / Terlambat</option>
                     <option value="mingguan">3. Rekap Mingguan</option>
                     <option value="bulanan">4. Rekap Bulanan</option>
+                    <option value="tahunan">5. Rekap Tahunan</option>
                 </select>
                 <div id="box-filter-harian" style="display: flex; gap: 8px; margin-bottom: 10px;">
                     <input type="date" id="filter-tanggal" class="form-control" onchange="renderLogs()">
@@ -253,6 +254,13 @@
                 </div>
                 <div id="box-filter-bulanan" style="display: none; gap: 8px; margin-bottom: 10px;">
                     <input type="month" id="filter-bulan" class="form-control" onchange="renderLogs()">
+                </div>
+                <div id="box-filter-tahunan" style="display: none; gap: 8px; margin-bottom: 10px;">
+                    <select id="filter-tahun" class="form-control" onchange="renderLogs()">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2027">2027</option>
+                    </select>
                 </div>
                 <button class="btn-primary" onclick="exportCSV()"><i class="fa-solid fa-file-excel"></i> Download CSV</button>
             </div>
@@ -402,7 +410,6 @@
     try {
         firebase.initializeApp(savedConfig);
     } catch (e) {
-        console.warn("Mereset ke config default:", e);
         firebase.initializeApp(defaultDatabaseConfig);
     }
     const db = firebase.firestore();
@@ -500,7 +507,6 @@
             if (statusText) statusText.innerHTML = `<span style="color: #4ade80;">Model AI Siap!</span>`;
             return true;
         } catch (err) {
-            console.error("Gagal memuat Model AI:", err);
             if (statusText) statusText.innerHTML = `<span style="color: #f87171;">✕ Gagal memuat AI Online</span>`;
             return false;
         }
@@ -512,6 +518,7 @@
         const today = new Date().toISOString().slice(0,10);
         document.getElementById('filter-tanggal').value = today;
         document.getElementById('filter-bulan').value = today.slice(0,7);
+        document.getElementById('filter-tahun').value = today.slice(0,4);
         
         loadSettings();
         loadSchedule();
@@ -524,7 +531,7 @@
         currentSystemMode = mode;
         localStorage.setItem('abseno_system_mode', mode);
         applySystemModeUI();
-        renderStudentList();
+        loadDataFromDatabase();
     }
 
     function applySystemModeUI() {
@@ -548,7 +555,7 @@
             modalCardTitle.innerText = 'Kartu Presensi Karyawan';
             modalStudentTitle.innerText = 'Tambah Karyawan Baru';
             inputNis.placeholder = 'NIK Karyawan...';
-            inputKelas.placeholder = 'Departemen / Divisi...';
+            inputKelas.placeholder = 'Departemen...';
         } else {
             modeBadge.innerText = 'SEKOLAH';
             navLabelAnggota.innerText = 'Siswa';
@@ -588,7 +595,8 @@
     }
 
     function loadDataFromDatabase() {
-        db.collection("students").onSnapshot(snapshot => {
+        // Ambil data anggota terisolasi berdasarkan mode (sekolah / pabrik)
+        db.collection("students").where("mode", "==", currentSystemMode).onSnapshot(snapshot => {
             students = [];
             snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
             updateFilterKelasDropdown();
@@ -597,9 +605,18 @@
         });
 
         const todayDate = new Date().toISOString().slice(0,10);
-        db.collection("attendance").where("tanggal", "==", todayDate).onSnapshot(snapshot => {
+        db.collection("attendance").where("mode", "==", currentSystemMode).where("tanggal", "==", todayDate).onSnapshot(snapshot => {
             attendanceLogs = [];
             snapshot.forEach(doc => attendanceLogs.push(doc.data()));
+            renderLogs();
+            updateStats();
+        });
+
+        // Ambil juga keseluruhan log untuk rekap bulanan/tahunan
+        db.collection("attendance").where("mode", "==", currentSystemMode).onSnapshot(snapshot => {
+            const allLogs = [];
+            snapshot.forEach(doc => allLogs.push(doc.data()));
+            if(allLogs.length > 0) attendanceLogs = allLogs;
             renderLogs();
             updateStats();
         });
@@ -616,7 +633,7 @@
     }
 
     function syncOfflineCache() {
-        const offlineLogs = JSON.parse(localStorage.getItem('abseno_offline_cache')) || [];
+        const offlineLogs = JSON.parse(localStorage.getItem('abseno_offline_cache_' + currentSystemMode)) || [];
         if (offlineLogs.length > 0 && navigator.onLine) {
             const badge = document.getElementById('connection-status');
             badge.innerText = 'SYNCING...'; badge.className = 'status-badge status-sync';
@@ -625,7 +642,7 @@
                 db.collection("attendance").add(log).then(() => {
                     count--;
                     if(count === 0) {
-                        localStorage.removeItem('abseno_offline_cache');
+                        localStorage.removeItem('abseno_offline_cache_' + currentSystemMode);
                         updateOnlineStatus();
                     }
                 });
@@ -751,12 +768,12 @@
         }
     }
 
-    // LOGIKA UTAMA PRESENSI & DETEKSI TERLAMBAT OTOMATIS
+    // LOGIKA UTAMA 1 BARIS UNIK PER HARI
     function prosesAbsensi(identifier, metode, statusManual = null) {
         const student = students.find(s => s.nis === identifier.toString());
         const resultBox = (modePindai === 'qr') ? document.getElementById('scan-result') : document.getElementById('scan-result-wajah');
         const nowObj = new Date();
-        const nowTimeStr = nowObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const nowTimeStr = nowObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
         const todayDate = nowObj.toISOString().slice(0,10);
 
         if (!student) {
@@ -765,28 +782,17 @@
             return;
         }
 
-        const existingLog = attendanceLogs.find(l => l.nis === student.nis && l.tanggal === todayDate);
+        const existingLog = attendanceLogs.find(l => l.nis === student.nis && l.tanggal === todayDate && l.mode === currentSystemMode);
 
-        // Jika sudah absen hadir dan admin mengklik tombol "Izin Pulang" / "Pulang" cepat
         if (existingLog && (statusManual === 'Izin Pulang' || statusManual === 'Pulang')) {
             existingLog.waktuPulang = nowTimeStr;
             existingLog.keteranganPulang = `Pulang jam ${nowTimeStr}`;
-            
             playSuccessSound();
             speakText(`${student.nama} izin pulang`);
-
-            // Update ke Firebase / LocalStorage
-            simpanLogKeDatabase(existingLog, resultBox, student.nama, `Pulang Jam ${nowTimeStr}`);
+            updateLogKeDatabase(existingLog, resultBox, student.nama, `Pulang Jam ${nowTimeStr}`);
             return;
         }
 
-        if (existingLog && !statusManual) {
-            playWarningSound();
-            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ ${student.nama} sudah absen hari ini!</span>`;
-            return;
-        }
-
-        // Tentukan Status (Hadir / Terlambat otomatis berdasarkan jam masuk)
         let statusFinal = statusManual || 'Hadir';
         let catatan = '';
 
@@ -800,10 +806,19 @@
                 statusFinal = 'Terlambat';
                 catatan = `Telat ${selisih} mnt`;
             }
+        } else if(statusManual && statusManual !== 'Hadir') {
+            catatan = statusManual;
         }
 
-        if(statusManual && statusManual !== 'Hadir') {
-            catatan = statusManual;
+        if (existingLog) {
+            // Update baris yang sama tanpa bikin dobel row
+            existingLog.waktu = nowTimeStr;
+            existingLog.status = statusFinal;
+            existingLog.keteranganPulang = catatan;
+            existingLog.metode = metode;
+            playSuccessSound();
+            updateLogKeDatabase(existingLog, resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}`);
+            return;
         }
 
         const logData = {
@@ -815,42 +830,45 @@
             waktuPulang: '-',
             status: statusFinal,
             keteranganPulang: catatan,
-            metode: metode
+            metode: metode,
+            mode: currentSystemMode
         };
 
-        if(statusFinal === 'Hadir' || statusFinal === 'Terlambat') {
-            playSuccessSound();
-            speakText(`${student.nama} ${statusFinal === 'Terlambat' ? 'terlambat' : 'hadir'}`);
-        } else {
-            playSuccessSound();
-        }
-
+        playSuccessSound();
+        speakText(`${student.nama} ${statusFinal}`);
         simpanLogKeDatabase(logData, resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}`);
     }
 
     function simpanLogKeDatabase(logData, resultBox, namaSiswa, infoPesan) {
         if (navigator.onLine) {
-            // Cek apakah data sudah ada di firestore untuk di-update atau ditambah baru
-            db.collection("attendance").where("nis", "==", logData.nis).where("tanggal", "==", logData.tanggal).get().then(snapshot => {
-                if (!snapshot.empty && logData.waktuPulang !== '-') {
+            db.collection("attendance").add(logData).then(() => {
+                if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil: ${namaSiswa} - ${infoPesan}</span>`;
+            });
+        } else {
+            const cacheKey = 'abseno_offline_cache_' + currentSystemMode;
+            const offlineLogs = JSON.parse(localStorage.getItem(cacheKey)) || [];
+            offlineLogs.push(logData);
+            localStorage.setItem(cacheKey, JSON.stringify(offlineLogs));
+            attendanceLogs.unshift(logData);
+            renderLogs();
+            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #38bdf8; font-weight:700;">✓ Disimpan Offline: ${namaSiswa}</span>`;
+        }
+    }
+
+    function updateLogKeDatabase(logData, resultBox, namaSiswa, infoPesan) {
+        if (navigator.onLine) {
+            db.collection("attendance").where("nis", "==", logData.nis).where("tanggal", "==", logData.tanggal).where("mode", "==", currentSystemMode).get().then(snapshot => {
+                if (!snapshot.empty) {
                     const docId = snapshot.docs[0].id;
-                    db.collection("attendance").doc(docId).update({
-                        waktuPulang: logData.waktuPulang,
-                        keteranganPulang: logData.keteranganPulang
-                    }).then(() => {
-                        if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ ${namaSiswa} Tercatat Pulang (${logData.waktuPulang})</span>`;
+                    db.collection("attendance").doc(docId).update(logData).then(() => {
+                        if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa} - ${infoPesan}</span>`;
                         renderLogs();
-                    });
-                } else {
-                    db.collection("attendance").add(logData).then(() => {
-                        if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil: ${namaSiswa} - ${infoPesan}</span>`;
                     });
                 }
             });
         } else {
-            attendanceLogs.unshift(logData);
             renderLogs();
-            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #38bdf8; font-weight:700;">✓ Disimpan Offline: ${namaSiswa}</span>`;
+            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Diperbarui: ${namaSiswa}</span>`;
         }
     }
 
@@ -858,15 +876,15 @@
         const filterSelect = document.getElementById('filter-kelas');
         const currentSelected = filterSelect.value;
         const uniqueClasses = [...new Set(students.map(s => s.kelas).filter(Boolean))].sort();
+        const labelSemua = currentSystemMode === 'pabrik' ? 'Semua Departemen' : 'Semua Kelas';
         
-        filterSelect.innerHTML = '<option value="">Semua Kelas / Departemen</option>';
+        filterSelect.innerHTML = `<option value="">${labelSemua}</option>`;
         uniqueClasses.forEach(cls => {
             const opt = document.createElement('option'); opt.value = cls; opt.innerText = cls; filterSelect.appendChild(opt);
         });
         filterSelect.value = currentSelected;
     }
 
-    // RENDER LIST SISWA DENGAN PINTASAN AKSI MANUAL CEPAT
     function renderStudentList() {
         const listContainer = document.getElementById('student-list'), filterKelas = document.getElementById('filter-kelas').value, searchQuery = document.getElementById('search-siswa').value.toLowerCase();
         listContainer.innerHTML = '';
@@ -878,7 +896,6 @@
         }).forEach((student) => {
             const hasVector = student.faceVector && student.faceVector.length > 0;
             const faceClass = hasVector ? 'badge-face badge-face-active' : 'badge-face badge-face-inactive';
-            const faceTitle = hasVector ? 'Biometrik Terdaftar' : 'Belum Ada Biometrik';
 
             const item = document.createElement('div');
             item.className = 'student-item';
@@ -887,7 +904,6 @@
                 <div style="flex:1; min-width: 0; padding-right: 4px;">
                     <div style="font-weight:600; font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${student.nama}</div>
                     <div style="font-size:11px; color:var(--text-muted);">${student.nis} • ${student.kelas}</div>
-                    <!-- PINTASAN MANUAL CEPAT DI SETIAP NAMA -->
                     <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
                         <button onclick="prosesAbsensi('${student.nis}', 'Manual', 'Hadir')" style="font-size:9px; padding:2px 6px; background:rgba(74,222,128,0.2); color:#4ade80; border:1px solid rgba(74,222,128,0.4); border-radius:4px; cursor:pointer;">Hadir</button>
                         <button onclick="prosesAbsensi('${student.nis}', 'Manual', 'Sakit')" style="font-size:9px; padding:2px 6px; background:rgba(251,191,36,0.2); color:#fbbf24; border:1px solid rgba(251,191,36,0.4); border-radius:4px; cursor:pointer;">Sakit</button>
@@ -1019,7 +1035,8 @@
 
     function updateStats() {
         let hadir = 0, sakit = 0, izin = 0, alpa = 0;
-        attendanceLogs.forEach(l => {
+        const todayDate = new Date().toISOString().slice(0,10);
+        attendanceLogs.filter(l => l.tanggal === todayDate && l.mode === currentSystemMode).forEach(l => {
             if(l.status === 'Hadir' || l.status === 'Terlambat') hadir++;
             else if(l.status === 'Sakit') sakit++;
             else if(l.status === 'Izin' || l.status === 'Izin Pulang') izin++;
@@ -1035,6 +1052,7 @@
         const mode = document.getElementById('mode-laporan').value;
         document.getElementById('box-filter-harian').style.display = (mode === 'harian' || mode === 'terlambat') ? 'flex' : 'none';
         document.getElementById('box-filter-bulanan').style.display = (mode === 'bulanan') ? 'flex' : 'none';
+        document.getElementById('box-filter-tahunan').style.display = (mode === 'tahunan') ? 'flex' : 'none';
         renderLogs();
     }
 
@@ -1044,12 +1062,13 @@
     }
 
     function renderLogs() {
-        const logsContainer = document.getElementById('attendance-logs'), filterTanggal = document.getElementById('filter-tanggal').value || new Date().toISOString().slice(0,10);
+        const logsContainer = document.getElementById('attendance-logs');
         if(!logsContainer) return; logsContainer.innerHTML = '';
         const modeLap = document.getElementById('mode-laporan').value;
+        const filterTanggal = document.getElementById('filter-tanggal').value || new Date().toISOString().slice(0,10);
 
         if (modeLap === 'terlambat') {
-            const hadirNis = new Set(attendanceLogs.filter(l => l.tanggal === filterTanggal).map(l => l.nis));
+            const hadirNis = new Set(attendanceLogs.filter(l => l.tanggal === filterTanggal && l.mode === currentSystemMode).map(l => l.nis));
             const belumMasuk = students.filter(s => !hadirNis.has(s.nis));
 
             const headerInfo = document.createElement('div');
@@ -1075,7 +1094,21 @@
             return;
         }
 
-        const filteredLogs = (modeLap === 'harian') ? attendanceLogs.filter(log => log.tanggal === filterTanggal) : attendanceLogs;
+        let filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
+        if (modeLap === 'harian') {
+            filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
+        } else if (modeLap === 'bulanan') {
+            const filterBulan = document.getElementById('filter-bulan').value;
+            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterBulan));
+        } else if (modeLap === 'tahunan') {
+            const filterTahun = document.getElementById('filter-tahun').value;
+            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterTahun));
+        }
+
+        if(filteredLogs.length === 0) {
+            logsContainer.innerHTML = `<div class="student-item" style="justify-content:center; color: var(--text-muted);">Tidak ada data laporan untuk filter ini.</div>`;
+            return;
+        }
 
         filteredLogs.forEach(log => {
             let colorStatus = '#4ade80';
@@ -1089,7 +1122,7 @@
             item.innerHTML = `
                 <div style="flex:1;">
                     <div style="font-weight:600; font-size:14px;">${log.nama}</div>
-                    <div style="font-size:11px; color:var(--text-muted);">${log.kelas} • Masuk: ${log.waktu} ${log.waktuPulang !== '-' ? '• Pulang: '+log.waktuPulang : ''}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${log.kelas} • ${log.tanggal} (Masuk: ${log.waktu}${log.waktuPulang !== '-' ? ' • Pulang: '+log.waktuPulang : ''})</div>
                 </div>
                 <div style="text-align: right;">
                     <span style="font-weight:700; font-size:12px; color: ${colorStatus}; display: block;">${log.status}</span>
@@ -1141,15 +1174,29 @@
         document.getElementById('input-hari').value = 'Senin - Sabtu';
     }
 
-    // EKSPOR CSV BERSIH DENGAN TIMESTAMP KEPULANGAN / IZIN
+    // EKSPOR CSV BERSIH DENGAN PEMISAHAN MODE & REKAP TAHUNAN
     function exportCSV() {
-        if (!attendanceLogs || attendanceLogs.length === 0) {
-            alert('Tidak ada data laporan absen untuk di-download!');
+        const modeLap = document.getElementById('mode-laporan').value;
+        let filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
+        
+        if (modeLap === 'harian') {
+            const filterTanggal = document.getElementById('filter-tanggal').value;
+            filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
+        } else if (modeLap === 'bulanan') {
+            const filterBulan = document.getElementById('filter-bulan').value;
+            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterBulan));
+        } else if (modeLap === 'tahunan') {
+            const filterTahun = document.getElementById('filter-tahun').value;
+            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterTahun));
+        }
+
+        if (!filteredLogs || filteredLogs.length === 0) {
+            alert('Tidak ada data laporan untuk di-download!');
             return;
         }
 
-        let csv = 'NIS/NIK,Nama,Kelas/Departemen,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan/Metode\n';
-        attendanceLogs.forEach(l => {
+        let csv = 'ID/NIK,Nama,Kelas/Departemen,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan/Metode\n';
+        filteredLogs.forEach(l => {
             csv += `"${l.nis || ''}","${l.nama || ''}","${l.kelas || ''}","${l.tanggal || '-'}","${l.waktu || ''}","${l.waktuPulang || '-'}","${l.status || ''}","${l.keteranganPulang || l.metode || ''}"\n`;
         });
 
@@ -1158,7 +1205,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `Laporan_AbsenO_${currentSystemMode}_${new Date().toISOString().slice(0,10)}.csv`;
+            a.download = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
