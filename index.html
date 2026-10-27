@@ -493,7 +493,6 @@
         }
     }
 
-    // MENGGUNAKAN TINY FACE DETECTOR UNTUK LOADING YANG JAUH LEBIH RINGAN DAN CEPAT
     async function loadFaceApiModels() {
         if (faceApiLoaded) return true;
         const statusText = document.getElementById('text-status-wajah') || document.getElementById('status-capture-wajah');
@@ -606,7 +605,7 @@
 
         db.collection("attendance").where("mode", "==", currentSystemMode).onSnapshot(snapshot => {
             const allLogs = [];
-            snapshot.forEach(doc => allLogs.push(doc.data()));
+            snapshot.forEach(doc => allLogs.push({ id: doc.id, ...doc.data() }));
             attendanceLogs = allLogs;
             renderLogs();
             updateStats();
@@ -801,11 +800,13 @@
         }
 
         if (existingLog) {
+            // MENCEGAH DUPLIKASI DATA: UPDATE LOG YANG SUDAH ADA DI HARI YANG SAMA
             existingLog.waktu = nowTimeStr;
             existingLog.status = statusFinal;
             existingLog.keteranganPulang = catatan;
             existingLog.metode = metode;
             playSuccessSound();
+            speakText(`${student.nama} ${statusFinal}`);
             updateLogKeDatabase(existingLog, resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}`);
             return;
         }
@@ -846,15 +847,30 @@
 
     function updateLogKeDatabase(logData, resultBox, namaSiswa, infoPesan) {
         if (navigator.onLine) {
-            db.collection("attendance").where("nis", "==", logData.nis).where("tanggal", "==", logData.tanggal).where("mode", "==", currentSystemMode).get().then(snapshot => {
-                if (!snapshot.empty) {
-                    const docId = snapshot.docs[0].id;
-                    db.collection("attendance").doc(docId).update(logData).then(() => {
-                        if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa} - ${infoPesan}</span>`;
-                        renderLogs();
-                    });
-                }
-            });
+            // Cari dokumen berdasarkan ID jika ada, atau query berdasarkan NIS & Tanggal & Mode
+            const targetDocId = logData.id;
+            if (targetDocId) {
+                db.collection("attendance").doc(targetDocId).update({
+                    waktu: logData.waktu,
+                    status: logData.status,
+                    keteranganPulang: logData.keteranganPulang,
+                    metode: logData.metode,
+                    waktuPulang: logData.waktuPulang
+                }).then(() => {
+                    if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa} - ${infoPesan}</span>`;
+                    renderLogs();
+                });
+            } else {
+                db.collection("attendance").where("nis", "==", logData.nis).where("tanggal", "==", logData.tanggal).where("mode", "==", currentSystemMode).get().then(snapshot => {
+                    if (!snapshot.empty) {
+                        const docId = snapshot.docs[0].id;
+                        db.collection("attendance").doc(docId).update(logData).then(() => {
+                            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa} - ${infoPesan}</span>`;
+                            renderLogs();
+                        });
+                    }
+                });
+            }
         } else {
             renderLogs();
             if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Diperbarui: ${namaSiswa}</span>`;
@@ -1108,7 +1124,7 @@
             let colorStatus = '#4ade80';
             if(log.status === 'Sakit') colorStatus = '#fbbf24';
             else if(log.status === 'Izin' || log.status === 'Izin Pulang') colorStatus = '#38bdf8';
-            else if(log.status === 'Terlambat') colorStatus = '#f59e0b';
+            else if(log.status === 'Terlambat') colorStatus = '#ef4444'; // WARNA MERAH JELAS UNTUK TERLAMBAT
             else if(log.status === 'Alpa') colorStatus = '#f87171';
 
             const item = document.createElement('div');
@@ -1168,7 +1184,6 @@
         document.getElementById('input-hari').value = 'Senin - Sabtu';
     }
 
-    // FUNGSI DOWNLOAD CSV YANG DIOPTIMALKAN AGAR LANCAR DI BERBAGAI HP
     function exportCSV() {
         const modeLap = document.getElementById('mode-laporan').value;
         let filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
