@@ -435,7 +435,6 @@
         document.getElementById('fullscreen-qris-modal').classList.remove('active');
     }
 
-    // Fungsi suara dinonaktifkan sementara untuk menguji performa kamera
     function playSuccessSound() {}
     function playWarningSound() {}
     function playErrorSound() {}
@@ -634,9 +633,14 @@
     }
 
     async function inisialisasiKameraWajah() {
-        const video = document.getElementById('video-wajah'), statusText = document.getElementById('text-status-wajah');
-        if(!video) return;
-        statusText.innerText = "Memeriksa perangkat kamera...";
+        const container = document.getElementById('video-container');
+        if (!container) return;
+        
+        container.innerHTML = '<video id="video-wajah" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>';
+        const video = document.getElementById('video-wajah');
+        const statusText = document.getElementById('text-status-wajah');
+        
+        statusText.innerText = "Menghidupkan ulang kamera...";
         if (streamKamera) {
             streamKamera.getTracks().forEach(track => track.stop());
             streamKamera = null;
@@ -811,7 +815,7 @@
                     if (modePindai === 'wajah') {
                         inisialisasiKameraWajah();
                     }
-                }, 2000);
+                }, 2500);
             }).catch(err => {
                 console.error('Gagal simpan:', err);
                 if(resultBox) resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Gagal menyimpan ke database.</span>`;
@@ -832,7 +836,7 @@
                 if (modePindai === 'wajah') {
                     inisialisasiKameraWajah();
                 }
-            }, 2000);
+            }, 2500);
         }
     }
 
@@ -856,7 +860,7 @@
                         if (modePindai === 'wajah') {
                             inisialisasiKameraWajah();
                         }
-                    }, 2000);
+                    }, 2500);
                 }).catch(() => { faceScanBusy = false; });
             } else {
                 db.collection("attendance").where("nis", "==", logData.nis).where("tanggal", "==", logData.tanggal).where("mode", "==", currentSystemMode).get().then(snapshot => {
@@ -872,7 +876,7 @@
                                 if (modePindai === 'wajah') {
                                     inisialisasiKameraWajah();
                                 }
-                            }, 2000);
+                            }, 2500);
                         }).catch(() => { faceScanBusy = false; });
                     } else {
                         faceScanBusy = false;
@@ -889,7 +893,7 @@
                 if (modePindai === 'wajah') {
                     inisialisasiKameraWajah();
                 }
-            }, 2000);
+            }, 2500);
         }
     }
 
