@@ -1267,8 +1267,6 @@
         const filename = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
         const mime = 'text/csv;charset=utf-8;';
 
-        // Android Cordova: simpan file memakai cordova-plugin-file, lalu buka lembar berbagi
-        // memakai cordova-plugin-x-socialsharing jika plugin tersedia.
         const saveWithCordova = () => new Promise((resolve, reject) => {
             if (!window.cordova || !window.resolveLocalFileSystemURL || !window.cordova.file) {
                 reject(new Error('Plugin file Cordova tidak tersedia'));
@@ -1291,7 +1289,7 @@
                             } else if (sharePlugin && typeof sharePlugin.share === 'function') {
                                 sharePlugin.share('Laporan absensi AbsenO', 'Laporan AbsenO', fileUri, null, () => resolve(true), reject);
                             } else {
-                                alert('CSV sudah dibuat di penyimpanan sementara aplikasi, tetapi fitur berbagi belum terpasang. Tambahkan plugin SocialSharing pada workflow GitHub Actions.');
+                                alert('CSV berhasil dibuat di penyimpanan aplikasi.');
                                 resolve(true);
                             }
                         };
@@ -1308,7 +1306,6 @@
                 return;
             }
 
-            // Browser biasa / WebView tanpa plugin: coba Android share sheet dahulu.
             const blob = new Blob([csv], { type: mime });
             if (typeof navigator.share === 'function' && typeof File !== 'undefined') {
                 const file = new File([blob], filename, { type: mime });
@@ -1318,7 +1315,6 @@
                 }
             }
 
-            // Fallback browser: gunakan data URL untuk WebView yang tidak mendukung Blob URL.
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
