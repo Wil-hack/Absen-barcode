@@ -76,8 +76,6 @@
         .status-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.4); letter-spacing: 0.5px; pointer-events: none; }
         .status-online { color: #4ade80; border-color: rgba(74, 222, 128, 0.4); }
         .status-offline { color: #fbbf24; border-color: rgba(251, 191, 36, 0.4); }
-        .status-sync { color: #38bdf8; border-color: rgba(56, 189, 248, 0.4); animation: pulseSync 1.5s infinite; }
-        @keyframes pulseSync { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         main { position: relative; z-index: 1; padding: 0 16px; flex: 1; }
         .tab-content { display: none; animation: fadeIn 0.3s ease; }
@@ -114,7 +112,6 @@
         nav.bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; height: 68px; background: var(--nav-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 100; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 11px; width: 20%; cursor: pointer; }
         .nav-item.active { color: var(--primary); font-weight: 700; }
-        .nav-item i { font-size: 17px; margin-bottom: 3px; }
 
         .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: #000000; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 6px; }
         .btn-secondary { background: rgba(212, 175, 55, 0.15); color: var(--primary); border: 1px solid var(--primary); }
@@ -149,7 +146,6 @@
         </div>
         <div style="display: flex; gap: 6px; align-items: center;">
             <div id="mode-badge" class="status-badge" style="color: var(--primary); border-color: var(--primary);">SEKOLAH</div>
-            <!-- Indikator Status Non-Klik -->
             <div id="connection-status" class="status-badge status-offline">LOKAL</div>
         </div>
     </header>
@@ -313,7 +309,6 @@
                     <label style="font-size: 11px; margin-bottom: 2px; display: block; color: var(--text-muted);">Database Project ID</label>
                     <input type="text" id="fb-projectid" class="form-control" placeholder="Kosongkan jika hanya memakai HP lokal...">
 
-                    <!-- Tombol yang telah disederhanakan -->
                     <button class="btn-primary" onclick="saveSchoolDatabaseConfig()">Simpan Config Database</button>
                     <button class="btn-primary btn-secondary" style="margin-top: 6px;" onclick="resetDatabaseConfig()">Reset & Gunakan HP Lokal 100%</button>
                 </div>
@@ -338,12 +333,23 @@
         </div>
     </main>
 
+    <!-- NAVIGASI BAWAH AMAN OFFLINE (MENGGUNAKAN EMOJI) -->
     <nav class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('pindai', this)"><i class="fa-solid fa-qrcode"></i><span>Pindai</span></div>
-        <div class="nav-item" onclick="switchTab('siswa', this)"><i class="fa-solid fa-users"></i><span id="nav-label-anggota">Siswa</span></div>
-        <div class="nav-item" onclick="switchTab('jadwal', this)"><i class="fa-solid fa-calendar-days"></i><span>Jadwal</span></div>
-        <div class="nav-item" onclick="switchTab('laporan', this)"><i class="fa-solid fa-chart-line"></i><span>Laporan</span></div>
-        <div class="nav-item" onclick="switchTab('akun', this)"><i class="fa-solid fa-gear"></i><span>Akun</span></div>
+        <div class="nav-item active" onclick="switchTab('pindai', this)">
+            <span style="font-size: 18px; margin-bottom: 2px;">📷</span><span>Pindai</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('siswa', this)">
+            <span style="font-size: 18px; margin-bottom: 2px;">👥</span><span id="nav-label-anggota">Siswa</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('jadwal', this)">
+            <span style="font-size: 18px; margin-bottom: 2px;">📅</span><span>Jadwal</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('laporan', this)">
+            <span style="font-size: 18px; margin-bottom: 2px;">📊</span><span>Laporan</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('akun', this)">
+            <span style="font-size: 18px; margin-bottom: 2px;">⚙️</span><span>Akun</span>
+        </div>
     </nav>
 </div>
 
