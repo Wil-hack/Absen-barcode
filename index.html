@@ -87,11 +87,6 @@
         .glass-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow); }
         .section-title { font-family: var(--font-heading); font-size: 18px; color: var(--primary); letter-spacing: 0.5px; margin-bottom: 12px; text-align: center; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
-        .stat-box { background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 2px; text-align: center; }
-        .stat-num { font-size: 15px; font-weight: 700; color: var(--primary); }
-        .stat-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
-
         #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color) !important; }
         .scan-result-box { margin-top: 14px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px dashed var(--border-color); text-align: center; min-height: 48px; display: flex; align-items: center; justify-content: center; }
 
@@ -112,7 +107,7 @@
         .fab { position: fixed; bottom: 90px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #000000; border: none; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 6px 16px rgba(0,0,0,0.5); cursor: pointer; z-index: 10; }
 
         nav.bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; height: 68px; background: var(--nav-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 11px; width: 20%; cursor: pointer; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 11px; width: 25%; cursor: pointer; }
         .nav-item.active { color: var(--primary); font-weight: 700; }
         .nav-item i { font-size: 17px; margin-bottom: 3px; }
 
@@ -126,11 +121,6 @@
         .modal.active { display: flex; }
         .modal-content { background: var(--bg-card); border-radius: 18px; width: 100%; max-width: 450px; padding: 18px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; }
         
-        .preview-table-container { width: 100%; max-height: 260px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; margin: 10px 0; background: rgba(0,0,0,0.3); }
-        .preview-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
-        .preview-table th { background: var(--primary-light); color: var(--primary); padding: 8px; position: sticky; top: 0; z-index: 2; border-bottom: 1px solid var(--border-color); }
-        .preview-table td { padding: 7px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-main); }
-
         .printable-card { background: #ffffff; color: #000000; border: 2px solid #8c4a27; border-radius: 12px; padding: 20px; text-align: center; margin: 10px 0; }
         #qrcode img { margin: 12px auto; }
 
@@ -241,44 +231,7 @@
             </div>
         </div>
 
-        <!-- TAB 4: LAPORAN -->
-        <div id="tab-laporan" class="tab-content">
-            <div class="glass-card">
-                <div class="section-title">Laporan & Statistik Absen</div>
-                <div class="stats-grid">
-                    <div class="stat-box"><div class="stat-num" id="stat-hadir">0</div><div class="stat-label">Hadir</div></div>
-                    <div class="stat-box"><div class="stat-num" id="stat-sakit">0</div><div class="stat-label">Sakit</div></div>
-                    <div class="stat-box"><div class="stat-num" id="stat-izin">0</div><div class="stat-label">Izin</div></div>
-                    <div class="stat-box"><div class="stat-num" id="stat-alpa">0</div><div class="stat-label">Alpa</div></div>
-                </div>
-                <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Pilih Mode Laporan</label>
-                <select id="mode-laporan" class="form-control" onchange="toggleReportMode()">
-                    <option value="harian">1. Rekap Harian</option>
-                    <option value="terlambat">2. Belum Masuk / Terlambat</option>
-                    <option value="mingguan">3. Rekap Mingguan</option>
-                    <option value="bulanan">4. Rekap Bulanan</option>
-                    <option value="tahunan">5. Rekap Tahunan</option>
-                </select>
-                <div id="box-filter-harian" style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <input type="date" id="filter-tanggal" class="form-control" style="margin-bottom:0;" onchange="renderLogs()">
-                    <button class="btn-primary btn-secondary" style="width: auto; margin-top:0;" onclick="setTodayFilter()">Hari Ini</button>
-                </div>
-                <div id="box-filter-bulanan" style="display: none; gap: 8px; margin-bottom: 8px;">
-                    <input type="month" id="filter-bulan" class="form-control" style="margin-bottom:0;" onchange="renderLogs()">
-                </div>
-                <div id="box-filter-tahunan" style="display: none; gap: 8px; margin-bottom: 8px;">
-                    <select id="filter-tahun" class="form-control" style="margin-bottom:0;" onchange="renderLogs()">
-                        <option value="2026">2026</option>
-                        <option value="2025">2025</option>
-                        <option value="2027">2027</option>
-                    </select>
-                </div>
-                <button class="btn-primary" onclick="openExportModal()"><i class="fa-solid fa-file-excel"></i> Pratinjau & Download Laporan</button>
-            </div>
-            <div id="attendance-logs"></div>
-        </div>
-
-        <!-- TAB 5: AKUN, CONFIG & DONASI -->
+        <!-- TAB 4: AKUN, CONFIG & DONASI -->
         <div id="tab-akun" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Mode Sistem Operasional</div>
@@ -334,7 +287,6 @@
         <div class="nav-item active" onclick="switchTab('pindai', this)"><i class="fa-solid fa-qrcode"></i><span>Pindai</span></div>
         <div class="nav-item" onclick="switchTab('siswa', this)"><i class="fa-solid fa-users"></i><span id="nav-label-anggota">Siswa</span></div>
         <div class="nav-item" onclick="switchTab('jadwal', this)"><i class="fa-solid fa-calendar-days"></i><span>Jadwal</span></div>
-        <div class="nav-item" onclick="switchTab('laporan', this)"><i class="fa-solid fa-chart-line"></i><span>Laporan</span></div>
         <div class="nav-item" onclick="switchTab('akun', this)"><i class="fa-solid fa-gear"></i><span>Akun</span></div>
     </nav>
 </div>
@@ -349,49 +301,6 @@
         <img src="qris.jpg" alt="QRIS Fullscreen" style="width: 100%; height: auto; max-height: 78vh; object-fit: contain; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/350?text=QRIS+Barcode'">
     </div>
     <div style="color: #fff; font-size: 12px; margin-top: 12px; font-weight: 600; opacity: 0.8;">Ketuk di mana saja untuk menutup</div>
-</div>
-
-<!-- MODAL PRATINJAU TABEL LAPORAN (DENGAN 2 TOMBOL TERPISAH) -->
-<div id="export-modal" class="modal">
-    <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <div style="font-weight: 700; color: var(--primary); font-family: var(--font-heading); font-size: 16px;">Pratinjau Tabel Laporan</div>
-            <i class="fa-solid fa-xmark" style="cursor: pointer; font-size: 18px;" onclick="closeModal('export-modal')"></i>
-        </div>
-        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">
-            Data di bawah sudah dikonsolidasikan (bebas data dobel) dan dijamin akurat:
-        </p>
-
-        <!-- Tabel Pratinjau HTML -->
-        <div class="preview-table-container">
-            <table class="preview-table" id="table-preview-content">
-                <thead>
-                    <tr>
-                        <th>NIK/NIS</th>
-                        <th>Nama</th>
-                        <th>Shift</th>
-                        <th>Tanggal</th>
-                        <th>Masuk</th>
-                        <th>Pulang</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="table-preview-body">
-                    <!-- Data dimuat dinamis -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- 2 Tombol Terpisah: Unduh Langsung dan Bagikan File -->
-        <div style="display: flex; gap: 8px; margin-top: 6px;">
-            <button type="button" class="btn-primary" style="flex: 1; background: var(--primary);" onclick="window.requestStoragePermissionAndDownload()">
-                <i class="fa-solid fa-download"></i> Unduh File CSV
-            </button>
-            <button type="button" class="btn-primary btn-secondary" style="flex: 1; margin-top: 0;" onclick="window.shareCsvFile()">
-                <i class="fa-solid fa-share-nodes"></i> Bagikan File
-            </button>
-        </div>
-    </div>
 </div>
 
 <!-- Modals -->
@@ -584,11 +493,6 @@
     window.onload = function() {
         applySystemModeUI();
         loadDataFromDatabase();
-        const today = new Date().toISOString().slice(0,10);
-        document.getElementById('filter-tanggal').value = today;
-        document.getElementById('filter-bulan').value = today.slice(0,7);
-        document.getElementById('filter-tahun').value = today.slice(0,4);
-        
         loadSettings();
         loadSchedule();
         updateOnlineStatus();
@@ -678,8 +582,6 @@
         students = [];
         attendanceLogs = [];
         renderStudentList();
-        renderLogs();
-        updateStats();
 
         unsubscribeStudentsListener = db.collection('students')
             .where('mode', '==', modeAtLoad)
@@ -697,7 +599,6 @@
                 students = Array.from(uniqueStudents.values());
                 updateFilterKelasDropdown();
                 renderStudentList();
-                if (document.getElementById('mode-laporan').value === 'terlambat') renderLogs();
             }, error => {
                 console.error('Gagal memuat anggota dari database:', error);
             });
@@ -712,8 +613,6 @@
                     const item = { id: doc.id, ...doc.data() };
                     if (item.mode === modeAtLoad) attendanceLogs.push(item);
                 });
-                renderLogs();
-                updateStats();
             }, error => {
                 console.error('Gagal memuat presensi dari database:', error);
             });
@@ -965,7 +864,6 @@
             offlineLogs.push(logData);
             localStorage.setItem(cacheKey, JSON.stringify(offlineLogs));
             attendanceLogs.unshift(logData);
-            renderLogs();
             if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #38bdf8; font-weight:700;">✓ Disimpan Offline: ${namaSiswa}</span>`;
         }
     }
@@ -981,12 +879,10 @@
                             const stWajah = document.getElementById('text-status-wajah');
                             if(stWajah) stWajah.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa}</span>`;
                         }
-                        renderLogs();
                     });
                 }
             });
         } else {
-            renderLogs();
             if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Diperbarui: ${namaSiswa}</span>`;
         }
     }
@@ -1006,6 +902,7 @@
 
     function renderStudentList() {
         const listContainer = document.getElementById('student-list'), filterKelas = document.getElementById('filter-kelas').value, searchQuery = document.getElementById('search-siswa').value.toLowerCase();
+        if(!listContainer) return;
         listContainer.innerHTML = '';
 
         students.filter(student => {
@@ -1013,8 +910,6 @@
             const matchSearch = student.nama.toLowerCase().includes(searchQuery) || student.nis.includes(searchQuery);
             return matchKelas && matchSearch;
         }).forEach((student) => {
-            const hasVector = student.faceVector && student.faceVector.length > 0;
-            const faceClass = hasVector ? 'badge-face badge-face-active' : 'badge-face badge-face-inactive';
             const shiftBadge = (currentSystemMode === 'pabrik' && student.shift) ? `<span class="badge-shift">${student.shift}</span>` : '';
 
             const item = document.createElement('div');
@@ -1159,145 +1054,6 @@
 
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-    function updateStats() {
-        let hadir = 0, sakit = 0, izin = 0, alpa = 0;
-        const todayDate = new Date().toISOString().slice(0,10);
-        
-        const deduplicated = getDeduplicatedLogs().filter(l => l.tanggal === todayDate);
-        deduplicated.forEach(l => {
-            if(l.status === 'Hadir' || l.status === 'Terlambat') hadir++;
-            else if(l.status === 'Sakit') sakit++;
-            else if(l.status === 'Izin' || l.status === 'Izin Pulang') izin++;
-            else if(l.status === 'Alpa') alpa++;
-        });
-        document.getElementById('stat-hadir').innerText = hadir;
-        document.getElementById('stat-sakit').innerText = sakit;
-        document.getElementById('stat-izin').innerText = izin;
-        document.getElementById('stat-alpa').innerText = alpa;
-    }
-
-    function toggleReportMode() {
-        const mode = document.getElementById('mode-laporan').value;
-        document.getElementById('box-filter-harian').style.display = (mode === 'harian' || mode === 'terlambat') ? 'flex' : 'none';
-        document.getElementById('box-filter-bulanan').style.display = (mode === 'bulanan') ? 'flex' : 'none';
-        document.getElementById('box-filter-tahunan').style.display = (mode === 'tahunan') ? 'flex' : 'none';
-        renderLogs();
-    }
-
-    function setTodayFilter() {
-        document.getElementById('filter-tanggal').value = new Date().toISOString().slice(0,10);
-        renderLogs();
-    }
-
-    function getDeduplicatedLogs() {
-        const mode = currentSystemMode;
-        const map = new Map();
-        const sorted = [...attendanceLogs]
-            .filter(log => log.mode === mode && log.nis != null && String(log.nis).trim() !== '' && log.tanggal)
-            .sort((a, b) => {
-                const aTime = `${a.tanggal} ${a.waktu || '00:00'}`;
-                const bTime = `${b.tanggal} ${b.waktu || '00:00'}`;
-                return aTime.localeCompare(bTime);
-            });
-
-        sorted.forEach(log => {
-            const nis = String(log.nis).trim();
-            const key = `${mode}|${nis}|${log.tanggal}`;
-            if (!map.has(key)) {
-                map.set(key, { ...log });
-                return;
-            }
-
-            const existing = map.get(key);
-            const existingMasuk = existing.waktu && existing.waktu !== '-' ? existing.waktu : '';
-            const newMasuk = log.waktu && log.waktu !== '-' ? log.waktu : '';
-            if (newMasuk && (!existingMasuk || newMasuk < existingMasuk)) {
-                existing.waktu = newMasuk;
-            }
-            if (log.waktuPulang && log.waktuPulang !== '-') {
-                existing.waktuPulang = log.waktuPulang;
-            } else if (newMasuk && newMasuk !== existing.waktu) {
-                existing.waktuPulang = newMasuk;
-            }
-            if (log.status && log.status !== 'Hadir') existing.status = log.status;
-            if (log.keteranganPulang) existing.keteranganPulang = log.keteranganPulang;
-            if (log.metode) existing.metode = log.metode;
-        });
-        return Array.from(map.values());
-    }
-
-    function renderLogs() {
-        const logsContainer = document.getElementById('attendance-logs');
-        if(!logsContainer) return; logsContainer.innerHTML = '';
-        const modeLap = document.getElementById('mode-laporan').value;
-        const filterTanggal = document.getElementById('filter-tanggal').value || new Date().toISOString().slice(0,10);
-
-        if (modeLap === 'terlambat') {
-            const hadirNis = new Set(attendanceLogs.filter(l => l.tanggal === filterTanggal && l.mode === currentSystemMode).map(l => l.nis));
-            const belumMasuk = students.filter(s => !hadirNis.has(s.nis));
-
-            const headerInfo = document.createElement('div');
-            headerInfo.innerHTML = `<div style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 8px; text-align:center;">Belum Melakukan Presensi (${filterTanggal})</div>`;
-            logsContainer.appendChild(headerInfo);
-
-            if(belumMasuk.length === 0) {
-                logsContainer.innerHTML += `<div class="student-item" style="justify-content:center; color: #4ade80; font-weight:600;">Semua anggota sudah presensi!</div>`;
-                return;
-            }
-
-            belumMasuk.forEach(student => {
-                const item = document.createElement('div');
-                item.className = 'student-item';
-                item.innerHTML = `
-                    <div style="flex:1;">
-                        <div style="font-weight:600; font-size:14px;">${student.nama}</div>
-                        <div style="font-size:12px; color:var(--text-muted);">${student.kelas} • Belum Absen</div>
-                    </div>
-                `;
-                logsContainer.appendChild(item);
-            });
-            return;
-        }
-
-        let filteredLogs = getDeduplicatedLogs();
-        if (modeLap === 'harian') {
-            filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
-        } else if (modeLap === 'bulanan') {
-            const filterBulan = document.getElementById('filter-bulan').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterBulan));
-        } else if (modeLap === 'tahunan') {
-            const filterTahun = document.getElementById('filter-tahun').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterTahun));
-        }
-
-        if(filteredLogs.length === 0) {
-            logsContainer.innerHTML = `<div class="student-item" style="justify-content:center; color: var(--text-muted);">Tidak ada data laporan untuk filter ini.</div>`;
-            return;
-        }
-
-        filteredLogs.forEach(log => {
-            let colorStatus = '#4ade80';
-            if(log.status === 'Sakit') colorStatus = '#fbbf24';
-            else if(log.status === 'Izin' || log.status === 'Izin Pulang') colorStatus = '#38bdf8';
-            else if(log.status === 'Terlambat') colorStatus = '#f59e0b';
-            else if(log.status === 'Alpa') colorStatus = '#f87171';
-
-            const item = document.createElement('div');
-            item.className = 'student-item';
-            item.innerHTML = `
-                <div style="flex:1;">
-                    <div style="font-weight:600; font-size:14px;">${log.nama}</div>
-                    <div style="font-size:11px; color:var(--text-muted);">${log.kelas} ${log.shift ? '• '+log.shift : ''} • ${log.tanggal} (Masuk: ${log.waktu}${log.waktuPulang && log.waktuPulang !== '-' ? ' • Pulang: '+log.waktuPulang : ''})</div>
-                </div>
-                <div style="text-align: right;">
-                    <span style="font-weight:700; font-size:12px; color: ${colorStatus}; display: block;">${log.status}</span>
-                    <span style="font-size:10px; color: var(--text-muted);">${log.keteranganPulang || log.metode || ''}</span>
-                </div>
-            `;
-            logsContainer.appendChild(item);
-        });
-    }
-
     function changeTheme(themeName) {
         document.body.setAttribute('data-theme', themeName);
         localStorage.setItem('abseno_theme', themeName);
@@ -1348,135 +1104,6 @@
             document.getElementById('display-schedule').innerText = `Masuk: 07:00 - Pulang: 14:00`;
         }
     }
-
-    let generatedCsvContent = '';
-    let generatedCsvFilename = '';
-
-    function openExportModal() {
-        const modeLap = document.getElementById('mode-laporan').value;
-        let filteredLogs = getDeduplicatedLogs();
-        
-        if (modeLap === 'harian') {
-            const filterTanggal = document.getElementById('filter-tanggal').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
-        } else if (modeLap === 'bulanan') {
-            const filterBulan = document.getElementById('filter-bulan').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterBulan));
-        } else if (modeLap === 'tahunan') {
-            const filterTahun = document.getElementById('filter-tahun').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterTahun));
-        }
-
-        if (!filteredLogs || filteredLogs.length === 0) {
-            alert('Tidak ada data laporan untuk di-download pada filter ini!');
-            return;
-        }
-
-        const csvCell = value => '"' + String(value == null ? '' : value).replace(/"/g, '""') + '"';
-        let csvContent = '\ufeffID/NIK,Nama,Kelas/Departemen,Shift,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan\r\n';
-        let tableHtml = '';
-
-        filteredLogs.forEach(l => {
-            const nik = l.nis || '';
-            const nama = l.nama || '';
-            const kelas = l.kelas || '';
-            const shift = l.shift || 'Reguler';
-            const tgl = l.tanggal || '-';
-            const masuk = l.waktu || '-';
-            const pulang = (l.waktuPulang && l.waktuPulang !== '-') ? l.waktuPulang : '-';
-            const status = l.status || '';
-            const ket = l.keteranganPulang || l.metode || '';
-
-            csvContent += [nik, nama, kelas, shift, tgl, masuk, pulang, status, ket].map(csvCell).join(',') + '\r\n';
-            
-            tableHtml += `<tr>
-                <td><b>${nik}</b></td>
-                <td>${nama}</td>
-                <td>${shift}</td>
-                <td>${tgl}</td>
-                <td><span style="color:#4ade80;">${masuk}</span></td>
-                <td><span style="color:#38bdf8;">${pulang}</span></td>
-                <td><b>${status}</b></td>
-            </tr>`;
-        });
-
-        generatedCsvContent = csvContent;
-        generatedCsvFilename = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
-
-        document.getElementById('table-preview-body').innerHTML = tableHtml;
-        document.getElementById('export-modal').classList.add('active');
-    }
-
-    // Fungsi untuk meminta izin penyimpanan secara runtime sebelum mendownload file CSV
-    window.requestStoragePermissionAndDownload = async function () {
-        if (window.Android && typeof window.Android.requestPermission === 'function') {
-            try {
-                window.Android.requestPermission("android.permission.WRITE_EXTERNAL_STORAGE");
-            } catch (e) {
-                console.log("Bridge permission error:", e);
-            }
-        }
-        window.downloadCsvDirect();
-    };
-
-    // Fungsi khusus untuk mengunduh file CSV menggunakan metode Base64 Data URI agar tembus di WebView APK
-    window.downloadCsvDirect = function () {
-        if (!generatedCsvContent) {
-            alert('Tidak ada data laporan untuk diunduh!');
-            return;
-        }
-
-        const filename = (generatedCsvFilename || `Laporan_AbsenO_${currentSystemMode}.csv`).replace(/[\\/:*?"<>|]/g, '_');
-        
-        try {
-            const utf8Content = '\ufeff' + generatedCsvContent;
-            const base64Data = btoa(unescape(encodeURIComponent(utf8Content)));
-            const dataUri = `data:text/csv;charset=utf-8;base64,${base64Data}`;
-
-            const link = document.createElement('a');
-            link.href = dataUri;
-            link.download = filename;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-
-            alert('✓ Perintah unduh dialihkan ke browser/pengelola sistem. Silakan periksa notifikasi atau folder Unduhan Anda.');
-        } catch (error) {
-            console.error('Gagal mengunduh:', error);
-            alert('Gagal memproses unduhan pada perangkat ini.');
-        }
-    };
-
-    // Fungsi khusus untuk membagikan file CSV (Kirim ke WhatsApp, Drive, File Manager, dll)
-    window.shareCsvFile = async function () {
-        if (!generatedCsvContent) {
-            alert('Tidak ada data laporan untuk dibagikan!');
-            return;
-        }
-
-        const filename = (generatedCsvFilename || `Laporan_AbsenO_${currentSystemMode}.csv`).replace(/[\\/:*?"<>|]/g, '_');
-        const mime = 'text/csv;charset=utf-8;';
-
-        try {
-            const file = new File([new Blob(['\ufeff', generatedCsvContent], { type: mime })], filename, { type: mime });
-
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    title: 'Laporan AbsenO',
-                    text: 'Berikut file rekap data laporan absensi.',
-                    files: [file]
-                });
-            } else {
-                alert('Fitur berbagi file (Share API) tidak didukung langsung di versi WebView ini. Silakan gunakan tombol "Unduh File CSV".');
-            }
-        } catch (error) {
-            if (error.name !== 'AbortError') {
-                console.error('Gagal membagikan file:', error);
-                alert('Gagal membagikan file.');
-            }
-        }
-    };
 </script>
 </body>
 </html>
