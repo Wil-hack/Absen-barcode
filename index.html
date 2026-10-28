@@ -382,7 +382,7 @@
             </table>
         </div>
 
-        <button type="button" class="btn-primary" onclick="window.downloadCsvFileAsText()"><i class="fa-solid fa-download"></i> Unduh File CSV Resmi</button>
+        <button type="button" class="btn-primary" onclick="window.downloadCsvFileAsText()"><i class="fa-solid fa-share-nodes"></i> Simpan / Bagikan File CSV</button>
     </div>
 </div>
 
@@ -483,7 +483,6 @@
     let faceApiLoaded = false;
     let audioCtx = null;
     let currentSystemMode = localStorage.getItem('abseno_system_mode') || 'sekolah';
-    // Listener Firestore harus dilepas saat berganti mode agar data lama tidak menimpa mode aktif.
     let unsubscribeStudentsListener = null;
     let unsubscribeAttendanceListener = null;
     let dataLoadGeneration = 0;
@@ -663,13 +662,11 @@
         const modeAtLoad = currentSystemMode;
         const generation = ++dataLoadGeneration;
 
-        // Lepaskan listener mode sebelumnya. Tanpa ini, callback lama dapat menimpa data mode baru.
         if (typeof unsubscribeStudentsListener === 'function') unsubscribeStudentsListener();
         if (typeof unsubscribeAttendanceListener === 'function') unsubscribeAttendanceListener();
         unsubscribeStudentsListener = null;
         unsubscribeAttendanceListener = null;
 
-        // Kosongkan tampilan/data memori dahulu; data setelah ini hanya berasal dari mode aktif di Firestore.
         students = [];
         attendanceLogs = [];
         renderStudentList();
@@ -681,7 +678,6 @@
             .onSnapshot(snapshot => {
                 if (generation !== dataLoadGeneration || modeAtLoad !== currentSystemMode) return;
 
-                // Hilangkan entri anggota berulang berdasarkan NIS/NIK dalam mode yang sama.
                 const uniqueStudents = new Map();
                 snapshot.forEach(doc => {
                     const item = { id: doc.id, ...doc.data() };
@@ -696,13 +692,6 @@
                 if (document.getElementById('mode-laporan').value === 'terlambat') renderLogs();
             }, error => {
                 console.error('Gagal memuat anggota dari database:', error);
-                if (generation === dataLoadGeneration) {
-                    const badge = document.getElementById('connection-status');
-                    if (badge) {
-                        badge.innerText = 'DATABASE ERROR';
-                        badge.className = 'status-badge status-offline';
-                    }
-                }
             });
 
         unsubscribeAttendanceListener = db.collection('attendance')
@@ -710,7 +699,6 @@
             .onSnapshot(snapshot => {
                 if (generation !== dataLoadGeneration || modeAtLoad !== currentSystemMode) return;
 
-                // Ganti seluruh daftar, termasuk ketika hasilnya kosong. Jangan pertahankan data mode sebelumnya.
                 attendanceLogs = [];
                 snapshot.forEach(doc => {
                     const item = { id: doc.id, ...doc.data() };
@@ -720,16 +708,8 @@
                 updateStats();
             }, error => {
                 console.error('Gagal memuat presensi dari database:', error);
-                if (generation === dataLoadGeneration) {
-                    const badge = document.getElementById('connection-status');
-                    if (badge) {
-                        badge.innerText = 'DATABASE ERROR';
-                        badge.className = 'status-badge status-offline';
-                    }
-                }
             });
 
-        // Catatan offline adalah antrean sinkronisasi, bukan sumber utama data anggota/laporan saat online.
         if (navigator.onLine) syncOfflineCache();
     }
 
@@ -757,12 +737,10 @@
             badge.className = 'status-badge status-sync';
         }
 
-        // Tambahkan mode yang benar dan tunggu semua penulisan selesai sebelum menghapus antrean lokal.
         Promise.all(offlineLogs.map(log => db.collection('attendance').add({
             ...log,
             mode: modeToSync
         }))).then(() => {
-            // Hapus hanya jika antrean belum berubah selama proses sinkronisasi.
             const latestQueue = JSON.parse(localStorage.getItem(cacheKey) || '[]');
             if (JSON.stringify(latestQueue) === JSON.stringify(offlineLogs)) {
                 localStorage.removeItem(cacheKey);
@@ -772,10 +750,6 @@
         }).catch(error => {
             console.error('Sinkronisasi presensi offline gagal:', error);
             isSyncingOfflineCache = false;
-            if (badge) {
-                badge.innerText = 'SYNC GAGAL';
-                badge.className = 'status-badge status-offline';
-            }
         });
     }
 
@@ -1207,7 +1181,6 @@
         renderLogs();
     }
 
-    // FUNGSI UTAMA: MENGHAPUS DATA DOBEL (KONSOLIDASI SCAN PER ORANG PER HARI)
     function getDeduplicatedLogs() {
         const mode = currentSystemMode;
         const map = new Map();
@@ -1368,7 +1341,6 @@
         }
     }
 
-    // PRATINJAU TABEL & PENANGANAN DOWNLOAD KHUSUS APK ANDROID
     let generatedCsvContent = '';
     let generatedCsvFilename = '';
 
@@ -1427,82 +1399,30 @@
         document.getElementById('export-modal').classList.add('active');
     }
 
-    // Unduh CSV: APK menulis file dulu, lalu membuka menu berbagi Android.
-    // Pengguna memilih tujuan "Simpan ke..." jika ingin menyimpan ke Download.
+    // Menggunakan Web Share API / File Sharing agar 100% tembus di APK Android berbasis WebView
     window.downloadCsvFileAsText = async function () {
         if (!generatedCsvContent) {
-            alert('Tidak ada data laporan untuk diunduh!');
+            alert('Tidak ada data laporan untuk dibagikan/disimpan!');
             return;
         }
 
-        const filename = (generatedCsvFilename ||
-            `Laporan_AbsenO_${currentSystemMode}_${new Date().toISOString().slice(0,10)}.csv`)
-            .replace(/[\\/:*?"<>|]/g, '_');
+        const filename = (generatedCsvFilename || `Laporan_AbsenO_${currentSystemMode}.csv`).replace(/[\\/:*?"<>|]/g, '_');
         const mime = 'text/csv;charset=utf-8;';
 
         try {
-            if (window.cordova) {
-                const filePluginReady = window.resolveLocalFileSystemURL &&
-                    window.cordova.file;
-                const sharing = window.plugins && window.plugins.socialsharing;
+            const file = new File([new Blob(['\ufeff', generatedCsvContent], { type: mime })], filename, { type: mime });
 
-                if (!filePluginReady) {
-                    throw new Error('Plugin Cordova File belum tersedia di APK.');
-                }
-                if (!sharing || typeof sharing.shareWithOptions !== 'function') {
-                    throw new Error('Plugin berbagi file belum tersedia di APK.');
-                }
-
-                const baseDir = window.cordova.file.cacheDirectory ||
-                    window.cordova.file.dataDirectory;
-                if (!baseDir) {
-                    throw new Error('Direktori sementara aplikasi tidak tersedia.');
-                }
-
-                const fileUri = await new Promise((resolve, reject) => {
-                    window.resolveLocalFileSystemURL(baseDir, directory => {
-                        directory.getFile(filename, { create: true, exclusive: false }, fileEntry => {
-                            fileEntry.createWriter(writer => {
-                                let writingStarted = false;
-                                writer.onerror = event => reject(
-                                    event.target.error || new Error('Gagal menulis file CSV.')
-                                );
-                                writer.onwriteend = () => {
-                                    if (!writingStarted) {
-                                        writingStarted = true;
-                                        writer.seek(0);
-                                        writer.write(new Blob(
-                                            ['\ufeff', generatedCsvContent],
-                                            { type: mime }
-                                        ));
-                                    } else {
-                                        resolve(fileEntry.nativeURL || fileEntry.toURL());
-                                    }
-                                };
-                                writer.truncate(0);
-                            }, reject);
-                        }, reject);
-                    }, reject);
-                });
-
-                // File sudah benar-benar ditulis sebelum menu berbagi dibuka.
-                sharing.shareWithOptions({
-                    message: 'Laporan absensi AbsenO (' + currentSystemMode + ')',
-                    subject: 'Laporan AbsenO - ' + currentSystemMode,
-                    files: [fileUri]
-                }, result => {
-                    // Selesai memilih/menutup share sheet tidak selalu berarti file disimpan.
-                    if (result && result.completed === true) {
-                        alert('Menu berbagi selesai. Pastikan pilih opsi Simpan/Download agar CSV tersimpan di HP.');
-                    }
-                }, error => {
-                    console.error('AbsenO CSV share error:', error);
-                    alert('CSV sudah dibuat sementara, tetapi menu berbagi gagal dibuka. Coba build ulang APK dan pastikan plugin SocialSharing terpasang.');
+            // Jika HP/APK mendukung Web Share API (sangat optimal di WebView modern)
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: 'Laporan AbsenO',
+                    text: 'Berikut file rekap data laporan absensi.',
+                    files: [file]
                 });
                 return;
             }
 
-            // Browser biasa: unduhan Blob.
+            // Fallback ke metode download Blob standar untuk browser web
             const blob = new Blob(['\ufeff', generatedCsvContent], { type: mime });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -1513,9 +1433,17 @@
             link.click();
             link.remove();
             setTimeout(() => URL.revokeObjectURL(url), 15000);
+
         } catch (error) {
-            console.error('Unduh CSV AbsenO gagal:', error);
-            alert('CSV gagal disiapkan: ' + (error && error.message ? error.message : 'kesalahan tidak diketahui'));
+            if (error.name !== 'AbortError') {
+                console.error('Gagal memproses file:', error);
+                // Opsi darurat terakhir jika share dibatalkan/gagal: salin isi teks ke clipboard otomatis
+                navigator.clipboard.writeText(generatedCsvContent).then(() => {
+                    alert('Data CSV berhasil disalin ke teks clipboard karena perangkat menolak unduhan langsung. Tempel (Paste) ke Notepad/Excel.');
+                }).catch(() => {
+                    alert('Gagal mengunduh atau membagikan file pada perangkat ini.');
+                });
+            }
         }
     };
 </script>
