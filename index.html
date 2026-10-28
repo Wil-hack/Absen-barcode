@@ -384,7 +384,7 @@
                     </div>
                 </div>
 
-                <!-- KONFIGURASI DATABASE CLOUD DI-RINGKAS MENJADI MENU LIPAT (ACCORDION) -->
+                <!-- KONFIGURASI DATABASE CLOUD (ACCORDION) -->
                 <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 10px;">
                     <button class="btn-primary btn-secondary" style="font-size: 13px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top:0;" onclick="toggleCloudConfig()">
                         <i class="fa-solid fa-cloud-arrow-up"></i> Konfigurasi Database Cloud <i class="fa-solid fa-chevron-down" id="cloud-icon" style="font-size: 10px;"></i>
@@ -575,7 +575,6 @@
         }
     }
 
-    // FUNGSI UNTUK MEMBUKA/MENUTUP KONFIGURASI DATABASE CLOUD
     function toggleCloudConfig() {
         const box = document.getElementById('cloud-config-box');
         if (box) {
@@ -593,6 +592,7 @@
         }
     });
 
+    /* --- SISTEM NADA & EFEK SUARA BEEP --- */
     function playSuccessSound() {
         initAudioContext();
         if ("vibrate" in navigator) navigator.vibrate(100);
@@ -634,12 +634,14 @@
         osc.start(); osc.stop(audioCtx.currentTime + 0.2);
     }
 
+    /* --- SUARA UCAPAN PINTAR (TEXT TO SPEECH) --- */
     function speakText(text) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'id-ID';
             utterance.rate = 1.0;
+            utterance.pitch = 1.0;
             window.speechSynthesis.speak(utterance);
         }
     }
@@ -902,6 +904,7 @@
 
             if (!detection) {
                 playErrorSound();
+                speakText("Wajah tidak terdeteksi");
                 if (statusText) statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Terdeteksi</span>`;
             } else {
                 const labeledDescriptors = students
@@ -910,6 +913,7 @@
 
                 if (labeledDescriptors.length === 0) {
                     playWarningSound();
+                    speakText("Belum ada biometrik terdaftar");
                     if (statusText) statusText.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ Belum ada biometrik terdaftar!</span>`;
                 } else {
                     const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
@@ -920,36 +924,49 @@
                         prosesAbsensi(matchedStudent.nis, 'AI Wajah');
                     } else {
                         playErrorSound();
+                        speakText("Wajah tidak cocok");
                         if (statusText) statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Dikenali</span>`;
                     }
                 }
             }
         } catch (err) {
             playErrorSound();
+            speakText("Sistem AI error");
             if (statusText) statusText.innerHTML = `<span style="color: #f87171;">✕ Error sistem AI</span>`;
         }
     }
 
+    /* --- PROSES ABSENSI UTAMA DENGAN UCAPAN SUARA PINTAR --- */
     function prosesAbsensi(identifier, metode, statusManual = null) {
         const student = students.find(s => s.nis === identifier.toString());
         const resultBox = (modePindai === 'qr') ? document.getElementById('scan-result') : document.getElementById('scan-result-wajah');
         const nowObj = new Date();
         const nowTimeStr = nowObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }).replace('.', ':');
         const todayDate = nowObj.toISOString().slice(0,10);
+        const currentHour = nowObj.getHours();
 
+        // Tentukan Sapaan Waktu (Pagi/Siang/Sore/Malam)
+        let sapaanWaktu = "Selamat Pagi";
+        if (currentHour >= 11 && currentHour < 15) sapaanWaktu = "Selamat Siang";
+        else if (currentHour >= 15 && currentHour < 18) sapaanWaktu = "Selamat Sore";
+        else if (currentHour >= 18 || currentHour < 4) sapaanWaktu = "Selamat Malam";
+
+        // 1. ANGGOTA TIDAK DITEMUKAN
         if (!student) {
             playErrorSound();
+            speakText("Data anggota tidak ditemukan");
             if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Anggota Tidak Ditemukan</span>`;
             return;
         }
 
         const existingLogIndex = attendanceLogs.findIndex(l => l.nis === student.nis && l.tanggal === todayDate && l.mode === currentSystemMode);
 
+        // 2. ABSEN PULANG / PULANG CEPAT
         if (existingLogIndex !== -1 && (statusManual === 'Izin Pulang' || statusManual === 'Pulang')) {
             attendanceLogs[existingLogIndex].waktuPulang = nowTimeStr;
             attendanceLogs[existingLogIndex].keteranganPulang = `Pulang jam ${nowTimeStr}`;
             playSuccessSound();
-            speakText(`${student.nama} izin pulang`);
+            speakText(`${student.nama}, izin pulang tercatat pada jam ${nowTimeStr}`);
             simpanSemuaLogLokal();
             tampilkanStatusProses(resultBox, student.nama, `Pulang Jam ${nowTimeStr}`);
             return;
@@ -957,33 +974,38 @@
 
         let statusFinal = statusManual || 'Hadir';
         let catatan = '';
+        let selisihTelat = 0;
 
+        // 3. HITUNG ATURAN TERLAMBAT
         if (!statusManual && activeSchedule.jamMasuk) {
             const [jamM, menitM] = activeSchedule.jamMasuk.split(':').map(Number);
             const batasMenitTotal = (jamM * 60) + menitM;
             const sekarangMenitTotal = (nowObj.getHours() * 60) + nowObj.getMinutes();
 
             if (sekarangMenitTotal > batasMenitTotal) {
-                const selisih = sekarangMenitTotal - batasMenitTotal;
+                selisihTelat = sekarangMenitTotal - batasMenitTotal;
                 statusFinal = 'Terlambat';
-                catatan = `Telat ${selisih} mnt`;
+                catatan = `Telat ${selisihTelat} mnt`;
             }
         } else if(statusManual && statusManual !== 'Hadir') {
             catatan = statusManual;
         }
 
+        // 4. BILA SUDAH ABSEN HARI INI (RE-SCAN MASUK)
         if (existingLogIndex !== -1) {
             attendanceLogs[existingLogIndex].waktu = nowTimeStr;
             attendanceLogs[existingLogIndex].status = statusFinal;
             attendanceLogs[existingLogIndex].keteranganPulang = catatan;
             attendanceLogs[existingLogIndex].metode = metode;
-            playSuccessSound();
-            speakText(`${student.nama} ${statusFinal}`);
+            
+            playWarningSound();
+            speakText(`${student.nama}, anda sudah melakukan presensi hari ini`);
             simpanSemuaLogLokal();
-            tampilkanStatusProses(resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}`);
+            tampilkanStatusProses(resultBox, student.nama, `Sudah Absen (${statusFinal})`);
             return;
         }
 
+        // 5. ABSEN MASUK PERTAMA KALI
         const logData = {
             id: 'log_' + Date.now(),
             nis: student.nis,
@@ -1001,8 +1023,19 @@
 
         attendanceLogs.unshift(logData);
         simpanSemuaLogLokal();
-        playSuccessSound();
-        speakText(`${student.nama} ${statusFinal}`);
+
+        // UCAPAN PINTAR BERDASARKAN STATUS
+        if (statusFinal === 'Hadir') {
+            playSuccessSound();
+            speakText(`${sapaanWaktu}, ${student.nama}. Presensi hadir berhasil.`);
+        } else if (statusFinal === 'Terlambat') {
+            playWarningSound();
+            speakText(`${sapaanWaktu}, ${student.nama}. Anda terlambat ${selisihTelat} menit.`);
+        } else {
+            playSuccessSound();
+            speakText(`${student.nama}, dicatat ${statusFinal}.`);
+        }
+
         tampilkanStatusProses(resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}`);
     }
 
@@ -1507,7 +1540,7 @@
         const schedDisplay = document.getElementById('display-schedule');
         if(savedSch) {
             activeSchedule = savedSch;
-            if (document.getElementById('input-jam-masuk')) document.getElementById('input-jam-masuk').value = savedSch.jamSch;
+            if (document.getElementById('input-jam-masuk')) document.getElementById('input-jam-masuk').value = savedSch.jamMasuk;
             if (document.getElementById('input-jam-pulang')) document.getElementById('input-jam-pulang').value = savedSch.jamPulang;
             if (schedDisplay) {
                 if (currentSystemMode === 'pabrik') {
