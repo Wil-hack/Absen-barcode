@@ -382,7 +382,7 @@
             </table>
         </div>
 
-        <button class="btn-primary" onclick="downloadCsvFileAsText()"><i class="fa-solid fa-download"></i> Unduh File CSV Resmi</button>
+        <button type="button" class="btn-primary" onclick="window.downloadCsvFileAsText()"><i class="fa-solid fa-download"></i> Unduh File CSV Resmi</button>
     </div>
 </div>
 
@@ -1429,7 +1429,7 @@
 
     // Unduh CSV: APK menulis file dulu, lalu membuka menu berbagi Android.
     // Pengguna memilih tujuan "Simpan ke..." jika ingin menyimpan ke Download.
-    async function downloadCsvFileAsText() {
+    window.downloadCsvFileAsText = async function () {
         if (!generatedCsvContent) {
             alert('Tidak ada data laporan untuk diunduh!');
             return;
@@ -1517,7 +1517,7 @@
             console.error('Unduh CSV AbsenO gagal:', error);
             alert('CSV gagal disiapkan: ' + (error && error.message ? error.message : 'kesalahan tidak diketahui'));
         }
-    }
+    };
 </script>
 </body>
 </html>
