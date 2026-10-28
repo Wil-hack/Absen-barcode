@@ -351,7 +351,7 @@
     <div style="color: #fff; font-size: 12px; margin-top: 12px; font-weight: 600; opacity: 0.8;">Ketuk di mana saja untuk menutup</div>
 </div>
 
-<!-- MODAL PRATINJAU TABEL LAPORAN (DIJAMIN JELAS & ANTI-DOBEL) -->
+<!-- MODAL PRATINJAU TABEL LAPORAN (DENGAN 2 TOMBOL TERPISAH) -->
 <div id="export-modal" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -362,7 +362,7 @@
             Data di bawah sudah dikonsolidasikan (bebas data dobel) dan dijamin akurat:
         </p>
 
-        <!-- Tabel Pratinjau HTML yang Rapi dan Jelas -->
+        <!-- Tabel Pratinjau HTML -->
         <div class="preview-table-container">
             <table class="preview-table" id="table-preview-content">
                 <thead>
@@ -382,7 +382,15 @@
             </table>
         </div>
 
-        <button type="button" class="btn-primary" onclick="window.downloadCsvFileAsText()"><i class="fa-solid fa-share-nodes"></i> Simpan / Bagikan File CSV</button>
+        <!-- 2 Tombol Terpisah: Unduh Langsung dan Bagikan File -->
+        <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <button type="button" class="btn-primary" style="flex: 1; background: var(--primary);" onclick="window.requestStoragePermissionAndDownload()">
+                <i class="fa-solid fa-download"></i> Unduh File CSV
+            </button>
+            <button type="button" class="btn-primary btn-secondary" style="flex: 1; margin-top: 0;" onclick="window.shareCsvFile()">
+                <i class="fa-solid fa-share-nodes"></i> Bagikan File
+            </button>
+        </div>
     </div>
 </div>
 
@@ -1399,30 +1407,29 @@
         document.getElementById('export-modal').classList.add('active');
     }
 
-    // Menggunakan Web Share API / File Sharing agar 100% tembus di APK Android berbasis WebView
-    window.downloadCsvFileAsText = async function () {
+    // Fungsi untuk meminta izin penyimpanan secara runtime sebelum mendownload file CSV
+    window.requestStoragePermissionAndDownload = async function () {
+        if (window.Android && typeof window.Android.requestPermission === 'function') {
+            try {
+                window.Android.requestPermission("android.permission.WRITE_EXTERNAL_STORAGE");
+            } catch (e) {
+                console.log("Bridge permission error:", e);
+            }
+        }
+        window.downloadCsvDirect();
+    };
+
+    // Fungsi khusus untuk mengunduh file CSV langsung ke folder Download ponsel
+    window.downloadCsvDirect = function () {
         if (!generatedCsvContent) {
-            alert('Tidak ada data laporan untuk dibagikan/disimpan!');
+            alert('Tidak ada data laporan untuk diunduh!');
             return;
         }
 
         const filename = (generatedCsvFilename || `Laporan_AbsenO_${currentSystemMode}.csv`).replace(/[\\/:*?"<>|]/g, '_');
         const mime = 'text/csv;charset=utf-8;';
-
+        
         try {
-            const file = new File([new Blob(['\ufeff', generatedCsvContent], { type: mime })], filename, { type: mime });
-
-            // Jika HP/APK mendukung Web Share API (sangat optimal di WebView modern)
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    title: 'Laporan AbsenO',
-                    text: 'Berikut file rekap data laporan absensi.',
-                    files: [file]
-                });
-                return;
-            }
-
-            // Fallback ke metode download Blob standar untuk browser web
             const blob = new Blob(['\ufeff', generatedCsvContent], { type: mime });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -1432,17 +1439,44 @@
             document.body.appendChild(link);
             link.click();
             link.remove();
-            setTimeout(() => URL.revokeObjectURL(url), 15000);
+            
+            setTimeout(() => {
+                URL.revokeObjectURL(url);
+            }, 15000);
 
+            alert('✓ Perintah unduh dikirim! Silakan cek folder Unduhan (Download) di ponsel Anda.');
+        } catch (error) {
+            console.error('Gagal mengunduh CSV:', error);
+            alert('Gagal mengunduh file pada perangkat ini.');
+        }
+    };
+
+    // Fungsi khusus untuk membagikan file CSV (Kirim ke WhatsApp, Drive, File Manager, dll)
+    window.shareCsvFile = async function () {
+        if (!generatedCsvContent) {
+            alert('Tidak ada data laporan untuk dibagikan!');
+            return;
+        }
+
+        const filename = (generatedCsvFilename || `Laporan_AbsenO_${currentSystemMode}.csv`).replace(/[\\/:*?"<>|]/g, '_');
+        const mime = 'text/csv;charset=utf-8;';
+
+        try {
+            const file = new File([new Blob(['\ufeff', generatedCsvContent], { type: mime })], filename, { type: mime });
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: 'Laporan AbsenO',
+                    text: 'Berikut file rekap data laporan absensi.',
+                    files: [file]
+                });
+            } else {
+                alert('Fitur berbagi file (Share API) tidak didukung langsung di versi WebView ini. Silakan gunakan tombol "Unduh File CSV".');
+            }
         } catch (error) {
             if (error.name !== 'AbortError') {
-                console.error('Gagal memproses file:', error);
-                // Opsi darurat terakhir jika share dibatalkan/gagal: salin isi teks ke clipboard otomatis
-                navigator.clipboard.writeText(generatedCsvContent).then(() => {
-                    alert('Data CSV berhasil disalin ke teks clipboard karena perangkat menolak unduhan langsung. Tempel (Paste) ke Notepad/Excel.');
-                }).catch(() => {
-                    alert('Gagal mengunduh atau membagikan file pada perangkat ini.');
-                });
+                console.error('Gagal membagikan file:', error);
+                alert('Gagal membagikan file.');
             }
         }
     };
