@@ -31,6 +31,63 @@
             --font-body: 'Plus Jakarta Sans', sans-serif;
         }
 
+        /* 1. ROYAL VELVET (Ungu Mewah & Emas) */
+        [data-theme="royal"] {
+            --bg-base: #120c1f;
+            --bg-card: #1b132e;
+            --primary: #f3e8ff;
+            --primary-light: #382559;
+            --accent: #e9d5ff;
+            --text-main: #f3e8ff;
+            --text-muted: #c084fc;
+            --border-color: #581c87;
+            --nav-bg: #160f26;
+            --shadow: 0 8px 24px rgba(88, 28, 135, 0.5);
+        }
+
+        /* 2. EMERALD LUXURY (Hijau Zamrud & Emas) */
+        [data-theme="emerald"] {
+            --bg-base: #061811;
+            --bg-card: #0d281e;
+            --primary: #6ee7b7;
+            --primary-light: #134e38;
+            --accent: #d1fae5;
+            --text-main: #ecfdf5;
+            --text-muted: #34d399;
+            --border-color: #065f46;
+            --nav-bg: #092017;
+            --shadow: 0 8px 24px rgba(6, 95, 70, 0.5);
+        }
+
+        /* 3. BORDEAUX ROSE (Merah Wine / Rosewood) */
+        [data-theme="bordeaux"] {
+            --bg-base: #1c0a0e;
+            --bg-card: #2b1118;
+            --primary: #fecdd3;
+            --primary-light: #4c1d28;
+            --accent: #ffe4e6;
+            --text-main: #fff1f2;
+            --text-muted: #fb7185;
+            --border-color: #881337;
+            --nav-bg: #220d13;
+            --shadow: 0 8px 24px rgba(136, 19, 55, 0.5);
+        }
+
+        /* 4. CYBER AMBER (Hitam Karbon & Amber Emas) */
+        [data-theme="amber"] {
+            --bg-base: #0f0f0f;
+            --bg-card: #1a1a1a;
+            --primary: #f59e0b;
+            --primary-light: #451a03;
+            --accent: #fef3c7;
+            --text-main: #fffbeb;
+            --text-muted: #fbbf24;
+            --border-color: #78350f;
+            --nav-bg: #141414;
+            --shadow: 0 8px 24px rgba(245, 158, 11, 0.25);
+        }
+
+        /* 5. OCEAN BLUE */
         [data-theme="ocean"] {
             --bg-base: #0f172a;
             --bg-card: #1e293b;
@@ -44,6 +101,7 @@
             --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         }
 
+        /* 6. LIGHT HERITAGE */
         [data-theme="light"] {
             --bg-base: #f7f4ef;
             --bg-card: #ffffff;
@@ -109,7 +167,6 @@
 
         .fab { position: fixed; bottom: 90px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #000000; border: none; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 6px 16px rgba(0,0,0,0.5); cursor: pointer; z-index: 10; }
 
-        /* TABEL RINGKAS CSS */
         .table-responsive { width: 100%; overflow-x: auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; margin-top: 10px; }
         .compact-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; white-space: nowrap; }
         .compact-table th, .compact-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-color); }
@@ -139,7 +196,7 @@
         #fullscreen-qris-modal.active { display: flex; }
     </style>
 </head>
-<body data-theme="heritage" onclick="initAudioContext()">
+<body data-theme="royal" onclick="initAudioContext()">
 
 <div id="app-container">
     <div class="batik-overlay"></div>
@@ -242,7 +299,7 @@
             </div>
         </div>
 
-        <!-- TAB 4: LAPORAN (DENGAN TABEL RINGKAS) -->
+        <!-- TAB 4: LAPORAN -->
         <div id="tab-laporan" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Laporan & Statistik Absen</div>
@@ -291,13 +348,17 @@
                 <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 10px;">
                     <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Tema Visual</label>
                     <select id="theme-select" class="form-control" onchange="changeTheme(this.value)">
+                        <option value="royal">👑 Royal Velvet (Ungu Mewah & Emas)</option>
+                        <option value="emerald">🌲 Emerald Luxury (Zamrud & Emas)</option>
+                        <option value="bordeaux">🍷 Bordeaux Rose (Wine & Rose Gold)</option>
+                        <option value="amber">⚡ Cyber Amber (Karbon & Amber)</option>
                         <option value="heritage">Jawa Heritage (Cokelat Emas)</option>
                         <option value="ocean">Ocean Blue (Modern)</option>
                         <option value="light">Light Heritage (Terang)</option>
                     </select>
                 </div>
 
-                <!-- DROPDOWN MANAJEMEN DATA (RANGKUMAN DOWLOAD, EKSPOR, IMPOR) -->
+                <!-- DROPDOWN MANAJEMEN DATA -->
                 <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 10px;">
                     <div style="position: relative; text-align: center;">
                         <button class="btn-primary btn-secondary" style="font-size: 13px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top:0;" onclick="toggleDropdown()">
@@ -358,7 +419,7 @@
         </div>
     </main>
 
-    <!-- NAVIGASI BAWAH AMAN OFFLINE (SVG VECTOR) -->
+    <!-- NAVIGASI BAWAH -->
     <nav class="bottom-nav">
         <div class="nav-item active" onclick="switchTab('pindai', this)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 3px;"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><rect x="7" y="7" width="10" height="10" rx="1"></rect></svg>
@@ -413,7 +474,6 @@
     </div>
 </div>
 
-<!-- Modal Tambah/Edit Anggota & Pendaftaran Wajah -->
 <div id="student-modal" class="modal">
     <div class="modal-content">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -445,7 +505,6 @@
     </div>
 </div>
 
-<!-- Modal Kamera Pendaftaran Kode Wajah -->
 <div id="face-register-modal" class="modal">
     <div class="modal-content" style="text-align: center;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -471,7 +530,6 @@
             db = firebase.firestore();
             useFirebase = true;
         } catch (e) {
-            console.log("Gagal inisialisasi Firebase Cloud, berpindah ke Penyimpanan HP Lokal.");
             useFirebase = false;
         }
     }
@@ -505,7 +563,6 @@
         document.getElementById('fullscreen-qris-modal').classList.remove('active');
     }
 
-    // FUNGSI DROPDOWN MANAJEMEN DATA
     function toggleDropdown() {
         const dropdown = document.getElementById('data-dropdown');
         if (dropdown) {
@@ -709,7 +766,7 @@
                     updateFilterKelasDropdown();
                     renderStudentList();
                 }
-            }).catch(e => console.log("Gagal konek Firestore, menggunakan data HP Lokal."));
+            }).catch(e => {});
 
             db.collection('attendance').where('mode', '==', currentSystemMode).get().then(snapshot => {
                 if (!snapshot.empty) {
@@ -720,7 +777,7 @@
                     renderLogs();
                     updateStats();
                 }
-            }).catch(e => console.log("Gagal konek Firestore, menggunakan data HP Lokal."));
+            }).catch(e => {});
         }
     }
 
@@ -752,7 +809,7 @@
     function hentikanSemuaAksiPindai() {
         hentikanKameraWajah();
         if(typeof html5QrcodeScanner !== 'undefined' && pemindaiQrAktif) {
-            html5QrcodeScanner.clear().catch(err => console.log(err));
+            html5QrcodeScanner.clear().catch(err => {});
             pemindaiQrAktif = false;
         }
     }
@@ -1178,7 +1235,6 @@
         }
     }
 
-    // RENDER LAPORAN TABEL RINGKAS (COMPACT GRID)
     function renderLogs() {
         const logsContainer = document.getElementById('attendance-logs');
         if(!logsContainer) return; 
@@ -1298,7 +1354,6 @@
         }
     }
 
-    // FITUR EKSPOR & IMPOR DATA (BACKUP & RESTORE)
     function exportBackupJSON() {
         const backupData = {
             systemMode: currentSystemMode,
@@ -1339,7 +1394,7 @@
                 alert('✓ Pemulihan data berhasil! Aplikasi akan dimuat ulang.');
                 location.reload();
             } catch (err) {
-                alert('✕ Gagal membaca file backup. Pastikan file berformat .json yang benar.');
+                alert('✕ Gagal membaca file backup.');
             }
         };
         reader.readAsText(file);
@@ -1372,26 +1427,6 @@
 
         const filename = `Laporan_AbsenO_${currentSystemMode}_${new Date().toISOString().slice(0,10)}.csv`;
 
-        if (window.cordova && window.cordova.file) {
-            const targetDir = window.cordova.file.externalDataDirectory || window.cordova.file.dataDirectory;
-            
-            window.resolveLocalFileSystemURL(targetDir, function (dirEntry) {
-                dirEntry.getFile(filename, { create: true, exclusive: false }, function (fileEntry) {
-                    fileEntry.createWriter(function (fileWriter) {
-                        fileWriter.onwriteend = function () {
-                            alert('✓ Berhasil! File CSV tersimpan di direktori aplikasi:\n' + fileEntry.nativeURL);
-                        };
-                        fileWriter.onerror = function (e) {
-                            alert('Gagal menulis file: ' + JSON.stringify(e));
-                        };
-                        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                        fileWriter.write(blob);
-                    }, function (err) { alert('Error writer: ' + JSON.stringify(err)); });
-                }, function (err) { alert('Error file: ' + JSON.stringify(err)); });
-            }, function (err) { alert('Gagal mengakses folder penyimpanan perangkat.'); });
-            return;
-        }
-
         try {
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -1413,7 +1448,7 @@
     }
 
     function loadSettings() {
-        const savedTheme = localStorage.getItem('abseno_theme') || 'heritage';
+        const savedTheme = localStorage.getItem('abseno_theme') || 'royal';
         document.body.setAttribute('data-theme', savedTheme);
         const themeSel = document.getElementById('theme-select');
         if (themeSel) themeSel.value = savedTheme;
