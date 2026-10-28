@@ -109,7 +109,7 @@
 
         .fab { position: fixed; bottom: 90px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #000000; border: none; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 6px 16px rgba(0,0,0,0.5); cursor: pointer; z-index: 10; }
 
-        /* Tabel Ringkas CSS */
+        /* TABEL RINGKAS CSS */
         .table-responsive { width: 100%; overflow-x: auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; margin-top: 10px; }
         .compact-table { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; white-space: nowrap; }
         .compact-table th, .compact-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-color); }
@@ -278,7 +278,7 @@
             <div id="attendance-logs"></div>
         </div>
 
-        <!-- TAB 5: AKUN & BACKUP RESTORE -->
+        <!-- TAB 5: AKUN & MANAJEMEN DATA DROPDOWN -->
         <div id="tab-akun" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Mode Sistem Operasional</div>
@@ -297,26 +297,30 @@
                     </select>
                 </div>
 
-                <!-- TOMBOL DOWNLOAD CSV -->
+                <!-- DROPDOWN MANAJEMEN DATA (RANGKUMAN DOWLOAD, EKSPOR, IMPOR) -->
                 <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 10px;">
-                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 8px; text-align: center;">Kelola Laporan Absen</div>
-                    <button class="btn-primary" style="margin-top:0; font-size:13px; background: rgba(56,189,248,0.2); color:#38bdf8; border:1px solid #38bdf8;" onclick="exportDataCSV()">
-                        <i class="fa-solid fa-file-arrow-down"></i> Download CSV (Excel / WPS)
-                    </button>
-                </div>
-
-                <!-- FITUR CADANGAN & PEMULIHAN DATA (BACKUP & RESTORE) -->
-                <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 10px;">
-                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 8px; text-align: center;">Cadangan & Pemulihan Data</div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn-primary" style="margin-top:0; font-size:12px; background: rgba(74,222,128,0.2); color:#4ade80; border:1px solid #4ade80;" onclick="exportBackupJSON()">
-                            📤 Ekspor Data
+                    <div style="position: relative; text-align: center;">
+                        <button class="btn-primary btn-secondary" style="font-size: 13px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-top:0;" onclick="toggleDropdown()">
+                            <i class="fa-solid fa-folder-tree"></i> Manajemen Data Absensi <i class="fa-solid fa-chevron-down" style="font-size: 10px;"></i>
                         </button>
-                        <button class="btn-primary" style="margin-top:0; font-size:12px; background: rgba(251,191,36,0.2); color:#fbbf24; border:1px solid #fbbf24;" onclick="document.getElementById('import-file-input').click()">
-                            📥 Impor Data
-                        </button>
+                        
+                        <div id="data-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px; margin-top: 6px; box-shadow: var(--shadow); z-index: 1000; flex-direction: column; gap: 8px;">
+                            
+                            <button class="btn-primary" style="margin-top:0; font-size:12px; background: rgba(56,189,248,0.2); color:#38bdf8; border:1px solid #38bdf8; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="exportDataCSV()">
+                                <i class="fa-solid fa-file-arrow-down"></i> Download CSV (Excel)
+                            </button>
+                            
+                            <button class="btn-primary" style="margin-top:0; font-size:12px; background: rgba(74,222,128,0.2); color:#4ade80; border:1px solid #4ade80; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="exportBackupJSON()">
+                                <i class="fa-solid fa-file-export"></i> Ekspor Cadangan (JSON)
+                            </button>
+                            
+                            <button class="btn-primary" style="margin-top:0; font-size:12px; background: rgba(251,191,36,0.2); color:#fbbf24; border:1px solid #fbbf24; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="document.getElementById('import-file-input').click()">
+                                <i class="fa-solid fa-file-import"></i> Impor Pulihkan (JSON)
+                            </button>
+                            
+                            <input type="file" id="import-file-input" style="display: none;" accept=".json" onchange="importBackupJSON(event)">
+                        </div>
                     </div>
-                    <input type="file" id="import-file-input" style="display: none;" accept=".json" onchange="importBackupJSON(event)">
                 </div>
 
                 <!-- OPSIONAL CLOUD CONFIG -->
@@ -500,6 +504,24 @@
     function closeFullscreenQRIS() {
         document.getElementById('fullscreen-qris-modal').classList.remove('active');
     }
+
+    // FUNGSI DROPDOWN MANAJEMEN DATA
+    function toggleDropdown() {
+        const dropdown = document.getElementById('data-dropdown');
+        if (dropdown) {
+            dropdown.style.display = dropdown.style.display === 'flex' ? 'none' : 'flex';
+        }
+    }
+
+    window.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('data-dropdown');
+        if (dropdown && dropdown.style.display === 'flex') {
+            if (!event.target.closest('#tab-akun')) return;
+            if (!event.target.closest('#data-dropdown') && !event.target.closest('button[onclick="toggleDropdown()"]')) {
+                dropdown.style.display = 'none';
+            }
+        }
+    });
 
     function playSuccessSound() {
         initAudioContext();
@@ -1156,7 +1178,7 @@
         }
     }
 
-    // RENDER LAPORAN DALAM BENTUK TABEL RINGKAS (COMPACT GRID)
+    // RENDER LAPORAN TABEL RINGKAS (COMPACT GRID)
     function renderLogs() {
         const logsContainer = document.getElementById('attendance-logs');
         if(!logsContainer) return; 
@@ -1224,7 +1246,6 @@
             return;
         }
 
-        // Susun ke dalam tabel ringkas
         let tableHTML = `
             <div class="table-responsive">
                 <table class="compact-table">
