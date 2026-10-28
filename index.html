@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AbsenO - Aplikasi Absensi</title>
+    <title>AbsenO - Sistem Absensi Offline</title>
     <style>
-        :root {
+        /* Variabel Tema Warna */
+        :root.theme-light {
             --bg-color: #f4f6f8;
             --card-bg: #ffffff;
             --text-color: #333333;
@@ -13,6 +14,39 @@
             --border-color: #e2e8f0;
         }
 
+        :root.theme-ocean {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --primary-color: #0ea5e9;
+            --border-color: #334155;
+        }
+
+        :root.theme-heritage {
+            --bg-color: #fdfbf7;
+            --card-bg: #ffffff;
+            --text-color: #2c221e;
+            --primary-color: #9a3412;
+            --border-color: #e7ded3;
+        }
+
+        :root.theme-emerald {
+            --bg-color: #f0fdf4;
+            --card-bg: #ffffff;
+            --text-color: #166534;
+            --primary-color: #16a34a;
+            --border-color: #bbf7d0;
+        }
+
+        :root.theme-midnight {
+            --bg-color: #000000;
+            --card-bg: #121212;
+            --text-color: #e0e0e0;
+            --primary-color: #bb86fc;
+            --border-color: #272727;
+        }
+
+        /* Styling Dasar */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
@@ -23,6 +57,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .app-container {
@@ -31,11 +66,19 @@
             height: 100%;
             max-height: 850px;
             background-color: var(--card-bg);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             display: flex;
             flex-direction: column;
             position: relative;
             overflow: hidden;
+            border-radius: 0;
+        }
+
+        @media (min-width: 481px) {
+            .app-container {
+                border-radius: 12px;
+                height: 90vh;
+            }
         }
 
         header {
@@ -52,9 +95,20 @@
             margin: 0;
         }
 
-        .status-icon {
-            font-size: 1.2rem;
+        .theme-selector select {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            outline: none;
             cursor: pointer;
+        }
+
+        .theme-selector select option {
+            background: #333;
+            color: white;
         }
 
         .content {
@@ -64,92 +118,92 @@
         }
 
         .card {
-            background: #ffffff;
+            background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 16px;
         }
 
-        /* Modal Bantuan */
-        .modal {
-            display: none;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 320px;
-        }
-
-        .modal-content h3 {
-            margin-top: 0;
-        }
-
-        .close-btn {
-            background: var(--primary-color);
+        .btn {
+            background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 10px 16px;
+            border-radius: 6px;
             cursor: pointer;
-            float: right;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .btn:active {
+            opacity: 0.9;
         }
     </style>
 </head>
-<body>
+<body class="theme-light" id="appBody">
 
     <div class="app-container">
-        <!-- Header -->
+        <!-- Header dengan Pengaturan Tema -->
         <header>
             <h1>AbsenO Mobile</h1>
-            <!-- Ikon Bantuan Tanda Tanya -->
-            <span class="status-icon" onclick="toggleModal(true)" title="Bantuan">❓</span>
+            <div class="theme-selector">
+                <select id="themeSelect" onchange="changeTheme(this.value)">
+                    <option value="light">Light</option>
+                    <option value="ocean">Ocean</option>
+                    <option value="heritage">Heritage</option>
+                    <option value="emerald">Emerald</option>
+                    <option value="midnight">Midnight</option>
+                </select>
+            </div>
         </header>
 
         <!-- Konten Utama -->
         <div class="content">
             <div class="card">
                 <h3>Selamat Datang, Wildan</h3>
-                <p>Silakan gunakan menu di bawah untuk melakukan absensi kehadiran Anda secara offline maupun online.</p>
+                <p>Sistem absensi offline siap digunakan tanpa hambatan jaringan.</p>
+                <button class="btn" onclick="simpanAbsensiLokal()">Simpan Absen (Lokal)</button>
+            </div>
+            
+            <div class="card" id="logContainer">
+                <strong>Log Absensi Terbaru:</strong>
+                <p id="logStatus" style="font-size: 0.9rem; opacity: 0.8; margin-top: 6px;">Belum ada data tersimpan.</p>
             </div>
         </div>
     </div>
 
-    <!-- Modal Panduan Singkat -->
-    <div class="modal" id="helpModal">
-        <div class="modal-content">
-            <h3>Panduan Singkat</h3>
-            <p>1. Gunakan menu utama untuk scan QR.<br>
-               2. Pastikan izin kamera aktif.<br>
-               3. Data tersimpan otomatis di perangkat.</p>
-            <button class="close-btn" onclick="toggleModal(false)">Tutup</button>
-        </div>
-    </div>
-
     <script>
-        function toggleModal(show) {
-            const modal = document.getElementById('helpModal');
-            modal.style.display = show ? 'flex' : 'none';
+        // Fungsi mengganti dan menyimpan pilihan tema ke LocalStorage
+        function changeTheme(themeName) {
+            const body = document.getElementById('appBody');
+            body.className = 'theme-' + themeName;
+            localStorage.setItem('abseno_theme', themeName);
         }
 
-        // Deteksi status online/offline secara dinamis agar ikon tetap aman tanpa error silang
-        window.addEventListener('online',  updateConnectionStatus);
-        window.addEventListener('offline', updateConnectionStatus);
+        // Memuat tema tersimpan saat aplikasi dibuka pertama kali
+        window.onload = function() {
+            const savedTheme = localStorage.getItem('abseno_theme') || 'light';
+            document.getElementById('appBody').className = 'theme-' + savedTheme;
+            document.getElementById('themeSelect').value = savedTheme;
+            muatLogLokal();
+        };
 
-        function updateConnectionStatus() {
-            if (!navigator.onLine) {
-                console.log("Aplikasi berjalan dalam mode offline lokal.");
+        // Contoh fungsi penyimpanan lokal (Local Storage) 100% offline
+        function simpanAbsensiLokal() {
+            const waktu = new Date().toLocaleString('id-ID');
+            const dataAbsen = `Hadir pada: ${waktu}`;
+            
+            localStorage.setItem('abseno_last_log', dataAbsen);
+            document.getElementById('logStatus').innerText = dataAbsen;
+            alert('Absensi berhasil disimpan secara lokal di perangkat!');
+        }
+
+        function muatLogLokal() {
+            const lastLog = localStorage.getItem('abseno_last_log');
+            if (lastLog) {
+                document.getElementById('logStatus').innerText = lastLog;
             }
         }
     </script>
