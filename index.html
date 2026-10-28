@@ -1419,7 +1419,7 @@
         window.downloadCsvDirect();
     };
 
-    // Fungsi khusus untuk mengunduh file CSV langsung ke folder Download ponsel
+    // Fungsi khusus untuk mengunduh file CSV menggunakan metode Base64 Data URI agar tembus di WebView APK
     window.downloadCsvDirect = function () {
         if (!generatedCsvContent) {
             alert('Tidak ada data laporan untuk diunduh!');
@@ -1427,27 +1427,24 @@
         }
 
         const filename = (generatedCsvFilename || `Laporan_AbsenO_${currentSystemMode}.csv`).replace(/[\\/:*?"<>|]/g, '_');
-        const mime = 'text/csv;charset=utf-8;';
         
         try {
-            const blob = new Blob(['\ufeff', generatedCsvContent], { type: mime });
-            const url = URL.createObjectURL(blob);
+            const utf8Content = '\ufeff' + generatedCsvContent;
+            const base64Data = btoa(unescape(encodeURIComponent(utf8Content)));
+            const dataUri = `data:text/csv;charset=utf-8;base64,${base64Data}`;
+
             const link = document.createElement('a');
-            link.href = url;
+            link.href = dataUri;
             link.download = filename;
             link.style.display = 'none';
             document.body.appendChild(link);
             link.click();
             link.remove();
-            
-            setTimeout(() => {
-                URL.revokeObjectURL(url);
-            }, 15000);
 
-            alert('✓ Perintah unduh dikirim! Silakan cek folder Unduhan (Download) di ponsel Anda.');
+            alert('✓ Perintah unduh dialihkan ke browser/pengelola sistem. Silakan periksa notifikasi atau folder Unduhan Anda.');
         } catch (error) {
-            console.error('Gagal mengunduh CSV:', error);
-            alert('Gagal mengunduh file pada perangkat ini.');
+            console.error('Gagal mengunduh:', error);
+            alert('Gagal memproses unduhan pada perangkat ini.');
         }
     };
 
