@@ -87,6 +87,11 @@
         .glass-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px; margin-bottom: 14px; box-shadow: var(--shadow); }
         .section-title { font-family: var(--font-heading); font-size: 18px; color: var(--primary); letter-spacing: 0.5px; margin-bottom: 12px; text-align: center; }
 
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+        .stat-box { background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 2px; text-align: center; }
+        .stat-num { font-size: 15px; font-weight: 700; color: var(--primary); }
+        .stat-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+
         #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color) !important; }
         .scan-result-box { margin-top: 14px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px dashed var(--border-color); text-align: center; min-height: 48px; display: flex; align-items: center; justify-content: center; }
 
@@ -107,7 +112,7 @@
         .fab { position: fixed; bottom: 90px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #000000; border: none; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 6px 16px rgba(0,0,0,0.5); cursor: pointer; z-index: 10; }
 
         nav.bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; height: 68px; background: var(--nav-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 100; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 11px; width: 25%; cursor: pointer; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 11px; width: 20%; cursor: pointer; }
         .nav-item.active { color: var(--primary); font-weight: 700; }
         .nav-item i { font-size: 17px; margin-bottom: 3px; }
 
@@ -120,7 +125,7 @@
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 12px; }
         .modal.active { display: flex; }
         .modal-content { background: var(--bg-card); border-radius: 18px; width: 100%; max-width: 450px; padding: 18px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; }
-        
+
         .printable-card { background: #ffffff; color: #000000; border: 2px solid #8c4a27; border-radius: 12px; padding: 20px; text-align: center; margin: 10px 0; }
         #qrcode img { margin: 12px auto; }
 
@@ -231,7 +236,43 @@
             </div>
         </div>
 
-        <!-- TAB 4: AKUN, CONFIG & DONASI -->
+        <!-- TAB 4: LAPORAN (DIPERTAHANKAN TANPA TOMBOL DOWNLOAD) -->
+        <div id="tab-laporan" class="tab-content">
+            <div class="glass-card">
+                <div class="section-title">Laporan & Statistik Absen</div>
+                <div class="stats-grid">
+                    <div class="stat-box"><div class="stat-num" id="stat-hadir">0</div><div class="stat-label">Hadir</div></div>
+                    <div class="stat-box"><div class="stat-num" id="stat-sakit">0</div><div class="stat-label">Sakit</div></div>
+                    <div class="stat-box"><div class="stat-num" id="stat-izin">0</div><div class="stat-label">Izin</div></div>
+                    <div class="stat-box"><div class="stat-num" id="stat-alpa">0</div><div class="stat-label">Alpa</div></div>
+                </div>
+                <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Pilih Mode Laporan</label>
+                <select id="mode-laporan" class="form-control" onchange="toggleReportMode()">
+                    <option value="harian">1. Rekap Harian</option>
+                    <option value="terlambat">2. Belum Masuk / Terlambat</option>
+                    <option value="mingguan">3. Rekap Mingguan</option>
+                    <option value="bulanan">4. Rekap Bulanan</option>
+                    <option value="tahunan">5. Rekap Tahunan</option>
+                </select>
+                <div id="box-filter-harian" style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="date" id="filter-tanggal" class="form-control" style="margin-bottom:0;" onchange="renderLogs()">
+                    <button class="btn-primary btn-secondary" style="width: auto; margin-top:0;" onclick="setTodayFilter()">Hari Ini</button>
+                </div>
+                <div id="box-filter-bulanan" style="display: none; gap: 8px; margin-bottom: 8px;">
+                    <input type="month" id="filter-bulan" class="form-control" style="margin-bottom:0;" onchange="renderLogs()">
+                </div>
+                <div id="box-filter-tahunan" style="display: none; gap: 8px; margin-bottom: 8px;">
+                    <select id="filter-tahun" class="form-control" style="margin-bottom:0;" onchange="renderLogs()">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2027">2027</option>
+                    </select>
+                </div>
+            </div>
+            <div id="attendance-logs"></div>
+        </div>
+
+        <!-- TAB 5: AKUN, CONFIG & DONASI -->
         <div id="tab-akun" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Mode Sistem Operasional</div>
@@ -287,6 +328,7 @@
         <div class="nav-item active" onclick="switchTab('pindai', this)"><i class="fa-solid fa-qrcode"></i><span>Pindai</span></div>
         <div class="nav-item" onclick="switchTab('siswa', this)"><i class="fa-solid fa-users"></i><span id="nav-label-anggota">Siswa</span></div>
         <div class="nav-item" onclick="switchTab('jadwal', this)"><i class="fa-solid fa-calendar-days"></i><span>Jadwal</span></div>
+        <div class="nav-item" onclick="switchTab('laporan', this)"><i class="fa-solid fa-chart-line"></i><span>Laporan</span></div>
         <div class="nav-item" onclick="switchTab('akun', this)"><i class="fa-solid fa-gear"></i><span>Akun</span></div>
     </nav>
 </div>
@@ -493,6 +535,14 @@
     window.onload = function() {
         applySystemModeUI();
         loadDataFromDatabase();
+        const today = new Date().toISOString().slice(0,10);
+        const filterTglElem = document.getElementById('filter-tanggal');
+        if (filterTglElem) filterTglElem.value = today;
+        const filterBlnElem = document.getElementById('filter-bulan');
+        if (filterBlnElem) filterBlnElem.value = today.slice(0,7);
+        const filterThnElem = document.getElementById('filter-tahun');
+        if (filterThnElem) filterThnElem.value = today.slice(0,4);
+
         loadSettings();
         loadSchedule();
         updateOnlineStatus();
@@ -519,28 +569,28 @@
         const inputKelas = document.getElementById('input-kelas');
         const boxShift = document.getElementById('box-pilihan-shift');
 
-        selectMode.value = currentSystemMode;
+        if (selectMode) selectMode.value = currentSystemMode;
 
         if (currentSystemMode === 'pabrik') {
-            modeBadge.innerText = 'PABRIK';
-            navLabelAnggota.innerText = 'Karyawan';
-            titleLabelData.innerText = 'Data Karyawan';
-            titlePindaiQr.innerText = 'Pindai QR Code Karyawan';
-            modalCardTitle.innerText = 'Kartu Presensi Karyawan';
-            modalStudentTitle.innerText = 'Tambah Karyawan Baru';
-            inputNis.placeholder = 'NIK Karyawan...';
-            inputKelas.placeholder = 'Departemen...';
-            boxShift.style.display = 'block';
+            if (modeBadge) modeBadge.innerText = 'PABRIK';
+            if (navLabelAnggota) navLabelAnggota.innerText = 'Karyawan';
+            if (titleLabelData) titleLabelData.innerText = 'Data Karyawan';
+            if (titlePindaiQr) titlePindaiQr.innerText = 'Pindai QR Code Karyawan';
+            if (modalCardTitle) modalCardTitle.innerText = 'Kartu Presensi Karyawan';
+            if (modalStudentTitle) modalStudentTitle.innerText = 'Tambah Karyawan Baru';
+            if (inputNis) inputNis.placeholder = 'NIK Karyawan...';
+            if (inputKelas) inputKelas.placeholder = 'Departemen...';
+            if (boxShift) boxShift.style.display = 'block';
         } else {
-            modeBadge.innerText = 'SEKOLAH';
-            navLabelAnggota.innerText = 'Siswa';
-            titleLabelData.innerText = 'Data Siswa';
-            titlePindaiQr.innerText = 'Pindai QR Code Siswa';
-            modalCardTitle.innerText = 'Kartu Presensi Siswa';
-            modalStudentTitle.innerText = 'Tambah Siswa Baru';
-            inputNis.placeholder = 'NIS Siswa...';
-            inputKelas.placeholder = 'Nama Kelas...';
-            boxShift.style.display = 'none';
+            if (modeBadge) modeBadge.innerText = 'SEKOLAH';
+            if (navLabelAnggota) navLabelAnggota.innerText = 'Siswa';
+            if (titleLabelData) titleLabelData.innerText = 'Data Siswa';
+            if (titlePindaiQr) titlePindaiQr.innerText = 'Pindai QR Code Siswa';
+            if (modalCardTitle) modalCardTitle.innerText = 'Kartu Presensi Siswa';
+            if (modalStudentTitle) modalStudentTitle.innerText = 'Tambah Siswa Baru';
+            if (inputNis) inputNis.placeholder = 'NIS Siswa...';
+            if (inputKelas) inputKelas.placeholder = 'Nama Kelas...';
+            if (boxShift) boxShift.style.display = 'none';
         }
     }
 
@@ -582,6 +632,8 @@
         students = [];
         attendanceLogs = [];
         renderStudentList();
+        renderLogs();
+        updateStats();
 
         unsubscribeStudentsListener = db.collection('students')
             .where('mode', '==', modeAtLoad)
@@ -599,6 +651,7 @@
                 students = Array.from(uniqueStudents.values());
                 updateFilterKelasDropdown();
                 renderStudentList();
+                if (document.getElementById('mode-laporan') && document.getElementById('mode-laporan').value === 'terlambat') renderLogs();
             }, error => {
                 console.error('Gagal memuat anggota dari database:', error);
             });
@@ -613,6 +666,8 @@
                     const item = { id: doc.id, ...doc.data() };
                     if (item.mode === modeAtLoad) attendanceLogs.push(item);
                 });
+                renderLogs();
+                updateStats();
             }, error => {
                 console.error('Gagal memuat presensi dari database:', error);
             });
@@ -622,6 +677,7 @@
 
     function updateOnlineStatus() {
         const badge = document.getElementById('connection-status');
+        if (!badge) return;
         if (navigator.onLine) {
             badge.innerText = 'ONLINE'; badge.className = 'status-badge status-online';
             syncOfflineCache();
@@ -664,7 +720,7 @@
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
         document.getElementById('tab-' + tabId).classList.add('active');
-        el.classList.add('active');
+        if (el) el.classList.add('active');
 
         if(tabId === 'pindai') {
             gantiModePindai(modePindai);
@@ -687,12 +743,16 @@
         const btnQr = document.getElementById('btn-mode-qr'), btnWajah = document.getElementById('btn-mode-wajah'), areaQr = document.getElementById('area-qr'), areaWajah = document.getElementById('area-wajah');
 
         if(mode === 'qr') {
-            btnQr.className = 'btn-primary'; btnWajah.className = 'btn-secondary';
-            areaQr.style.display = 'block'; areaWajah.style.display = 'none';
+            if (btnQr) btnQr.className = 'btn-primary'; 
+            if (btnWajah) btnWajah.className = 'btn-secondary';
+            if (areaQr) areaQr.style.display = 'block'; 
+            if (areaWajah) areaWajah.style.display = 'none';
             inisialisasiQrScanner();
         } else {
-            btnQr.className = 'btn-secondary'; btnWajah.className = 'btn-primary';
-            areaQr.style.display = 'none'; areaWajah.style.display = 'block';
+            if (btnQr) btnQr.className = 'btn-secondary'; 
+            if (btnWajah) btnWajah.className = 'btn-primary';
+            if (areaQr) areaQr.style.display = 'none'; 
+            if (areaWajah) areaWajah.style.display = 'block';
             await loadFaceApiModels();
             inisialisasiKameraWajah();
         }
@@ -707,18 +767,20 @@
 
     async function inisialisasiKameraWajah() {
         const video = document.getElementById('video-wajah'), statusText = document.getElementById('text-status-wajah');
-        statusText.innerText = "Memeriksa perangkat kamera...";
+        if (statusText) statusText.innerText = "Memeriksa perangkat kamera...";
         if (streamKamera) streamKamera.getTracks().forEach(track => track.stop());
 
         try {
             const constraints = { video: { facingMode: useFrontCamera ? "user" : "environment" } };
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
             streamKamera = stream; 
-            video.srcObject = stream;
-            video.style.transform = useFrontCamera ? "scaleX(-1)" : "scaleX(1)";
-            statusText.innerHTML = `<span style="font-size: 13px; color: var(--text-muted);">Kamera Aktif. Silakan Pindai.</span>`;
+            if (video) {
+                video.srcObject = stream;
+                video.style.transform = useFrontCamera ? "scaleX(-1)" : "scaleX(1)";
+            }
+            if (statusText) statusText.innerHTML = `<span style="font-size: 13px; color: var(--text-muted);">Kamera Aktif. Silakan Pindai.</span>`;
         } catch (err) {
-            statusText.innerText = "✕ Gagal mengakses kamera.";
+            if (statusText) statusText.innerText = "✕ Gagal mengakses kamera.";
         }
     }
 
@@ -735,14 +797,14 @@
         const video = document.getElementById('video-wajah');
         const statusText = document.getElementById('text-status-wajah');
 
-        if (!video.srcObject || video.paused) {
+        if (!video || !video.srcObject || video.paused) {
             await inisialisasiKameraWajah();
             return;
         }
 
         const modelLoaded = await loadFaceApiModels();
         if (!modelLoaded) return;
-        statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah...</span>`;
+        if (statusText) statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah...</span>`;
 
         try {
             const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
@@ -750,7 +812,7 @@
 
             if (!detection) {
                 playErrorSound();
-                statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Terdeteksi</span>`;
+                if (statusText) statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Terdeteksi</span>`;
             } else {
                 const labeledDescriptors = students
                     .filter(s => s.faceVector && Array.isArray(s.faceVector))
@@ -758,7 +820,7 @@
 
                 if (labeledDescriptors.length === 0) {
                     playWarningSound();
-                    statusText.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ Belum ada biometrik terdaftar!</span>`;
+                    if (statusText) statusText.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ Belum ada biometrik terdaftar!</span>`;
                 } else {
                     const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
                     const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
@@ -768,13 +830,13 @@
                         prosesAbsensi(matchedStudent.nis, 'AI Wajah');
                     } else {
                         playErrorSound();
-                        statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Dikenali</span>`;
+                        if (statusText) statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Dikenali</span>`;
                     }
                 }
             }
         } catch (err) {
             playErrorSound();
-            statusText.innerHTML = `<span style="color: #f87171;">✕ Error sistem</span>`;
+            if (statusText) statusText.innerHTML = `<span style="color: #f87171;">✕ Error sistem</span>`;
         }
     }
 
@@ -864,6 +926,8 @@
             offlineLogs.push(logData);
             localStorage.setItem(cacheKey, JSON.stringify(offlineLogs));
             attendanceLogs.unshift(logData);
+            renderLogs();
+            updateStats();
             if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #38bdf8; font-weight:700;">✓ Disimpan Offline: ${namaSiswa}</span>`;
         }
     }
@@ -879,16 +943,21 @@
                             const stWajah = document.getElementById('text-status-wajah');
                             if(stWajah) stWajah.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa}</span>`;
                         }
+                        renderLogs();
+                        updateStats();
                     });
                 }
             });
         } else {
+            renderLogs();
+            updateStats();
             if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Diperbarui: ${namaSiswa}</span>`;
         }
     }
 
     function updateFilterKelasDropdown() {
         const filterSelect = document.getElementById('filter-kelas');
+        if (!filterSelect) return;
         const currentSelected = filterSelect.value;
         const uniqueClasses = [...new Set(students.map(s => s.kelas).filter(Boolean))].sort();
         const labelSemua = currentSystemMode === 'pabrik' ? 'Semua Departemen' : 'Semua Kelas';
@@ -901,7 +970,9 @@
     }
 
     function renderStudentList() {
-        const listContainer = document.getElementById('student-list'), filterKelas = document.getElementById('filter-kelas').value, searchQuery = document.getElementById('search-siswa').value.toLowerCase();
+        const listContainer = document.getElementById('student-list');
+        const filterKelas = document.getElementById('filter-kelas') ? document.getElementById('filter-kelas').value : '';
+        const searchQuery = document.getElementById('search-siswa') ? document.getElementById('search-siswa').value.toLowerCase() : '';
         if(!listContainer) return;
         listContainer.innerHTML = '';
 
@@ -1054,6 +1125,153 @@
 
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
+    function updateStats() {
+        let hadir = 0, sakit = 0, izin = 0, alpa = 0;
+        const todayDate = new Date().toISOString().slice(0,10);
+        
+        const deduplicated = getDeduplicatedLogs().filter(l => l.tanggal === todayDate);
+        deduplicated.forEach(l => {
+            if(l.status === 'Hadir' || l.status === 'Terlambat') hadir++;
+            else if(l.status === 'Sakit') sakit++;
+            else if(l.status === 'Izin' || l.status === 'Izin Pulang') izin++;
+            else if(l.status === 'Alpa') alpa++;
+        });
+        if (document.getElementById('stat-hadir')) document.getElementById('stat-hadir').innerText = hadir;
+        if (document.getElementById('stat-sakit')) document.getElementById('stat-sakit').innerText = sakit;
+        if (document.getElementById('stat-izin')) document.getElementById('stat-izin').innerText = izin;
+        if (document.getElementById('stat-alpa')) document.getElementById('stat-alpa').innerText = alpa;
+    }
+
+    function toggleReportMode() {
+        const modeElem = document.getElementById('mode-laporan');
+        if (!modeElem) return;
+        const mode = modeElem.value;
+        if (document.getElementById('box-filter-harian')) document.getElementById('box-filter-harian').style.display = (mode === 'harian' || mode === 'terlambat') ? 'flex' : 'none';
+        if (document.getElementById('box-filter-bulanan')) document.getElementById('box-filter-bulanan').style.display = (mode === 'bulanan') ? 'flex' : 'none';
+        if (document.getElementById('box-filter-tahunan')) document.getElementById('box-filter-tahunan').style.display = (mode === 'tahunan') ? 'flex' : 'none';
+        renderLogs();
+    }
+
+    function setTodayFilter() {
+        if (document.getElementById('filter-tanggal')) {
+            document.getElementById('filter-tanggal').value = new Date().toISOString().slice(0,10);
+            renderLogs();
+        }
+    }
+
+    function getDeduplicatedLogs() {
+        const mode = currentSystemMode;
+        const map = new Map();
+        const sorted = [...attendanceLogs]
+            .filter(log => log.mode === mode && log.nis != null && String(log.nis).trim() !== '' && log.tanggal)
+            .sort((a, b) => {
+                const aTime = `${a.tanggal} ${a.waktu || '00:00'}`;
+                const bTime = `${b.tanggal} ${b.waktu || '00:00'}`;
+                return aTime.localeCompare(bTime);
+            });
+
+        sorted.forEach(log => {
+            const nis = String(log.nis).trim();
+            const key = `${mode}|${nis}|${log.tanggal}`;
+            if (!map.has(key)) {
+                map.set(key, { ...log });
+                return;
+            }
+
+            const existing = map.get(key);
+            const existingMasuk = existing.waktu && existing.waktu !== '-' ? existing.waktu : '';
+            const newMasuk = log.waktu && log.waktu !== '-' ? log.waktu : '';
+            if (newMasuk && (!existingMasuk || newMasuk < existingMasuk)) {
+                existing.waktu = newMasuk;
+            }
+            if (log.waktuPulang && log.waktuPulang !== '-') {
+                existing.waktuPulang = log.waktuPulang;
+            } else if (newMasuk && newMasuk !== existing.waktu) {
+                existing.waktuPulang = newMasuk;
+            }
+            if (log.status && log.status !== 'Hadir') existing.status = log.status;
+            if (log.keteranganPulang) existing.keteranganPulang = log.keteranganPulang;
+            if (log.metode) existing.metode = log.metode;
+        });
+        return Array.from(map.values());
+    }
+
+    function renderLogs() {
+        const logsContainer = document.getElementById('attendance-logs');
+        if(!logsContainer) return; 
+        logsContainer.innerHTML = '';
+        
+        const modeLapElem = document.getElementById('mode-laporan');
+        if (!modeLapElem) return;
+        const modeLap = modeLapElem.value;
+        const filterTanggal = document.getElementById('filter-tanggal') ? document.getElementById('filter-tanggal').value : new Date().toISOString().slice(0,10);
+
+        if (modeLap === 'terlambat') {
+            const hadirNis = new Set(attendanceLogs.filter(l => l.tanggal === filterTanggal && l.mode === currentSystemMode).map(l => l.nis));
+            const belumMasuk = students.filter(s => !hadirNis.has(s.nis));
+
+            const headerInfo = document.createElement('div');
+            headerInfo.innerHTML = `<div style="font-size: 13px; font-weight: 600; color: var(--primary); margin-bottom: 8px; text-align:center;">Belum Melakukan Presensi (${filterTanggal})</div>`;
+            logsContainer.appendChild(headerInfo);
+
+            if(belumMasuk.length === 0) {
+                logsContainer.innerHTML += `<div class="student-item" style="justify-content:center; color: #4ade80; font-weight:600;">Semua anggota sudah presensi!</div>`;
+                return;
+            }
+
+            belumMasuk.forEach(student => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <div style="flex:1;">
+                        <div style="font-weight:600; font-size:14px;">${student.nama}</div>
+                        <div style="font-size:12px; color:var(--text-muted);">${student.kelas} • Belum Absen</div>
+                    </div>
+                `;
+                logsContainer.appendChild(item);
+            });
+            return;
+        }
+
+        let filteredLogs = getDeduplicatedLogs();
+        if (modeLap === 'harian') {
+            filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
+        } else if (modeLap === 'bulanan') {
+            const filterBulan = document.getElementById('filter-bulan') ? document.getElementById('filter-bulan').value : '';
+            filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterBulan));
+        } else if (modeLap === 'tahunan') {
+            const filterTahun = document.getElementById('filter-tahun') ? document.getElementById('filter-tahun').value : '';
+            filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterTahun));
+        }
+
+        if(filteredLogs.length === 0) {
+            logsContainer.innerHTML = `<div class="student-item" style="justify-content:center; color: var(--text-muted);">Tidak ada data laporan untuk filter ini.</div>`;
+            return;
+        }
+
+        filteredLogs.forEach(log => {
+            let colorStatus = '#4ade80';
+            if(log.status === 'Sakit') colorStatus = '#fbbf24';
+            else if(log.status === 'Izin' || log.status === 'Izin Pulang') colorStatus = '#38bdf8';
+            else if(log.status === 'Terlambat') colorStatus = '#f59e0b';
+            else if(log.status === 'Alpa') colorStatus = '#f87171';
+
+            const item = document.createElement('div');
+            item.className = 'student-item';
+            item.innerHTML = `
+                <div style="flex:1;">
+                    <div style="font-weight:600; font-size:14px;">${log.nama}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${log.kelas} ${log.shift ? '• '+log.shift : ''} • ${log.tanggal} (Masuk: ${log.waktu}${log.waktuPulang && log.waktuPulang !== '-' ? ' • Pulang: '+log.waktuPulang : ''})</div>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-weight:700; font-size:12px; color: ${colorStatus}; display: block;">${log.status}</span>
+                    <span style="font-size:10px; color: var(--text-muted);">${log.keteranganPulang || log.metode || ''}</span>
+                </div>
+            `;
+            logsContainer.appendChild(item);
+        });
+    }
+
     function changeTheme(themeName) {
         document.body.setAttribute('data-theme', themeName);
         localStorage.setItem('abseno_theme', themeName);
@@ -1062,12 +1280,13 @@
     function loadSettings() {
         const savedTheme = localStorage.getItem('abseno_theme') || 'heritage';
         document.body.setAttribute('data-theme', savedTheme);
-        document.getElementById('theme-select').value = savedTheme;
+        const themeSel = document.getElementById('theme-select');
+        if (themeSel) themeSel.value = savedTheme;
 
         const currentConfig = JSON.parse(localStorage.getItem('abseno_school_database'));
         if (currentConfig) {
-            document.getElementById('fb-apikey').value = currentConfig.apiKey || '';
-            document.getElementById('fb-projectid').value = currentConfig.projectId || '';
+            if (document.getElementById('fb-apikey')) document.getElementById('fb-apikey').value = currentConfig.apiKey || '';
+            if (document.getElementById('fb-projectid')) document.getElementById('fb-projectid').value = currentConfig.projectId || '';
         }
     }
 
@@ -1076,10 +1295,10 @@
         const jamMasuk = document.getElementById('input-jam-masuk');
         const jamPulang = document.getElementById('input-jam-pulang');
 
-        if(jenisShift === 'shift1') { jamMasuk.value = '07:00'; jamPulang.value = '15:00'; }
-        else if(jenisShift === 'shift2') { jamMasuk.value = '15:00'; jamPulang.value = '23:00'; }
-        else if(jenisShift === 'shift3') { jamMasuk.value = '23:00'; jamPulang.value = '07:00'; }
-        else { jamMasuk.value = '08:00'; jamPulang.value = '17:00'; }
+        if(jenisShift === 'shift1') { if (jamMasuk) jamMasuk.value = '07:00'; if (jamPulang) jamPulang.value = '15:00'; }
+        else if(jenisShift === 'shift2') { if (jamMasuk) jamMasuk.value = '15:00'; if (jamPulang) jamPulang.value = '23:00'; }
+        else if(jenisShift === 'shift3') { if (jamMasuk) jamMasuk.value = '23:00'; if (jamPulang) jamPulang.value = '07:00'; }
+        else { if (jamMasuk) jamMasuk.value = '08:00'; if (jamPulang) jamPulang.value = '17:00'; }
     }
 
     function saveSchedule() {
@@ -1089,19 +1308,21 @@
         
         activeSchedule = { jamMasuk: masuk, jamPulang: pulang };
         localStorage.setItem('abseno_schedule', JSON.stringify(activeSchedule));
-        document.getElementById('display-schedule').innerText = `Shift: ${shiftPilihan.toUpperCase()} | Masuk: ${masuk} - Pulang: ${pulang}`;
+        const schedDisplay = document.getElementById('display-schedule');
+        if (schedDisplay) schedDisplay.innerText = `Shift: ${shiftPilihan.toUpperCase()} | Masuk: ${masuk} - Pulang: ${pulang}`;
         alert('Jadwal shift berhasil disimpan!');
     }
 
     function loadSchedule() {
         const savedSch = JSON.parse(localStorage.getItem('abseno_schedule'));
+        const schedDisplay = document.getElementById('display-schedule');
         if(savedSch) {
             activeSchedule = savedSch;
-            document.getElementById('input-jam-masuk').value = savedSch.jamMasuk;
-            document.getElementById('input-jam-pulang').value = savedSch.jamPulang;
-            document.getElementById('display-schedule').innerText = `Masuk: ${savedSch.jamMasuk} - Pulang: ${savedSch.jamPulang}`;
+            if (document.getElementById('input-jam-masuk')) document.getElementById('input-jam-masuk').value = savedSch.jamMasuk;
+            if (document.getElementById('input-jam-pulang')) document.getElementById('input-jam-pulang').value = savedSch.jamPulang;
+            if (schedDisplay) schedDisplay.innerText = `Masuk: ${savedSch.jamMasuk} - Pulang: ${savedSch.jamPulang}`;
         } else {
-            document.getElementById('display-schedule').innerText = `Masuk: 07:00 - Pulang: 14:00`;
+            if (schedDisplay) schedDisplay.innerText = `Masuk: 07:00 - Pulang: 14:00`;
         }
     }
 </script>
