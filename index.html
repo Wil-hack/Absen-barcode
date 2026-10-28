@@ -73,7 +73,7 @@
         .brand-title { font-family: var(--font-heading); font-size: 26px; font-weight: 700; color: var(--primary); line-height: 1; letter-spacing: 0.5px; }
         .brand-subtitle { font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; margin-top: 4px; }
         
-        .status-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.4); letter-spacing: 0.5px; }
+        .status-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.4); letter-spacing: 0.5px; pointer-events: none; }
         .status-online { color: #4ade80; border-color: rgba(74, 222, 128, 0.4); }
         .status-offline { color: #fbbf24; border-color: rgba(251, 191, 36, 0.4); }
         .status-sync { color: #38bdf8; border-color: rgba(56, 189, 248, 0.4); animation: pulseSync 1.5s infinite; }
@@ -149,7 +149,8 @@
         </div>
         <div style="display: flex; gap: 6px; align-items: center;">
             <div id="mode-badge" class="status-badge" style="color: var(--primary); border-color: var(--primary);">SEKOLAH</div>
-            <div id="connection-status" class="status-badge status-offline">LOCAL LOKAL</div>
+            <!-- Indikator Status Non-Klik -->
+            <div id="connection-status" class="status-badge status-offline">LOKAL</div>
         </div>
     </header>
 
@@ -274,7 +275,7 @@
             <div id="attendance-logs"></div>
         </div>
 
-        <!-- TAB 5: AKUN & DOWNLOAD CSV -->
+        <!-- TAB 5: AKUN -->
         <div id="tab-akun" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Mode Sistem Operasional</div>
@@ -312,7 +313,8 @@
                     <label style="font-size: 11px; margin-bottom: 2px; display: block; color: var(--text-muted);">Database Project ID</label>
                     <input type="text" id="fb-projectid" class="form-control" placeholder="Kosongkan jika hanya memakai HP lokal...">
 
-                    <button class="btn-primary" onclick="saveSchoolDatabaseConfig()">Simpan Config Firebase</button>
+                    <!-- Tombol yang telah disederhanakan -->
+                    <button class="btn-primary" onclick="saveSchoolDatabaseConfig()">Simpan Config Database</button>
                     <button class="btn-primary btn-secondary" style="margin-top: 6px;" onclick="resetDatabaseConfig()">Reset & Gunakan HP Lokal 100%</button>
                 </div>
             </div>
@@ -387,7 +389,6 @@
         <input type="text" id="input-nama" class="form-control" placeholder="Nama Lengkap...">
         <input type="text" id="input-kelas" class="form-control" placeholder="Kelas / Departemen...">
         
-        <!-- Pilihan Shift hanya muncul jika Mode Pabrik -->
         <div id="box-pilihan-shift" style="display:none; margin-bottom:10px;">
             <label style="font-size: 11px; margin-bottom: 2px; display: block; color: var(--text-muted);">Shift Kerja Karyawan</label>
             <select id="input-student-shift" class="form-control" style="margin-bottom:0;">
@@ -427,7 +428,6 @@
     let db = null;
     let useFirebase = false;
 
-    // Cek Konfigurasi Firebase
     const savedConfig = JSON.parse(localStorage.getItem('abseno_school_database'));
     if (savedConfig && savedConfig.apiKey && savedConfig.projectId) {
         try {
@@ -634,21 +634,17 @@
         }
     }
 
-    // MANAJEMEN PENYIMPANAN DATA (LOKAL STANDALONE + OPTIONAL CLOUD)
     function loadDataFromDatabase() {
-        // 1. Muat Anggota / Siswa dari HP Lokal
         const localStudents = JSON.parse(localStorage.getItem('abseno_local_students_' + currentSystemMode)) || [];
         students = localStudents;
         updateFilterKelasDropdown();
         renderStudentList();
 
-        // 2. Muat Absensi dari HP Lokal
         const localLogs = JSON.parse(localStorage.getItem('abseno_local_attendance_' + currentSystemMode)) || [];
         attendanceLogs = localLogs;
         renderLogs();
         updateStats();
 
-        // 3. Jika tersambung Firebase, lakukan sinkronisasi data tambahan jika online
         if (useFirebase && navigator.onLine) {
             db.collection('students').where('mode', '==', currentSystemMode).get().then(snapshot => {
                 if (!snapshot.empty) {
@@ -678,9 +674,11 @@
         const badge = document.getElementById('connection-status');
         if (!badge) return;
         if (useFirebase && navigator.onLine) {
-            badge.innerText = 'CLOUD ONLINE'; badge.className = 'status-badge status-online';
+            badge.innerText = 'CLOUD ONLINE'; 
+            badge.className = 'status-badge status-online';
         } else {
-            badge.innerText = 'MEMORI HP LOKAL'; badge.className = 'status-badge status-offline';
+            badge.innerText = 'LOKAL'; 
+            badge.className = 'status-badge status-offline';
         }
     }
 
@@ -889,7 +887,6 @@
         renderLogs();
         updateStats();
 
-        // Jika Firebase aktif dan online, simpan juga di Cloud
         if (useFirebase && navigator.onLine) {
             attendanceLogs.forEach(log => {
                 db.collection("attendance").doc(log.id).set(log, { merge: true });
@@ -1055,14 +1052,12 @@
             if (idx !== -1) students[idx] = studentData;
         }
 
-        // Simpan ke HP Lokal
         localStorage.setItem('abseno_local_students_' + currentSystemMode, JSON.stringify(students));
         updateFilterKelasDropdown();
         renderStudentList();
         closeModal('student-modal');
         tempFaceVector = null;
 
-        // Opsional Firebase Cloud
         if (useFirebase && navigator.onLine) {
             db.collection("students").doc(studentData.id).set(studentData, { merge: true });
         }
@@ -1232,7 +1227,6 @@
         }
     }
 
-    // DOWNLOAD CSV EXCEL DARI MEMORI HP LOKAL
     function exportDataCSV() {
         const filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
 
