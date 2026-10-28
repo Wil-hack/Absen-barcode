@@ -75,7 +75,7 @@
         
         .status-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.4); letter-spacing: 0.5px; }
         .status-online { color: #4ade80; border-color: rgba(74, 222, 128, 0.4); }
-        .status-offline { color: #f87171; border-color: rgba(248, 113, 113, 0.4); }
+        .status-offline { color: #fbbf24; border-color: rgba(251, 191, 36, 0.4); }
         .status-sync { color: #38bdf8; border-color: rgba(56, 189, 248, 0.4); animation: pulseSync 1.5s infinite; }
         @keyframes pulseSync { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
@@ -95,7 +95,7 @@
         #reader { width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color) !important; }
         .scan-result-box { margin-top: 14px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 10px; border: 1px dashed var(--border-color); text-align: center; min-height: 48px; display: flex; align-items: center; justify-content: center; }
 
-        .form-control { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 14px; outline: none; margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); background: rgba(0,0,0,0.2); color: var(--text-main); font-size: 14px; outline: none; margin-bottom: 10px; }
         .form-control option { background: var(--bg-card); color: var(--text-main); }
 
         .student-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border-color); margin-bottom: 8px; }
@@ -107,9 +107,7 @@
         .btn-qr { background: rgba(217, 119, 6, 0.2); color: #fbbf24; }
         .btn-delete { background: rgba(220, 38, 38, 0.2); color: #f87171; }
         
-        .badge-face { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-color); letter-spacing: 0.5px; }
-        .badge-face-active { background: rgba(74, 222, 128, 0.15); color: #4ade80; border-color: rgba(74, 222, 128, 0.4); }
-        .badge-face-inactive { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); text-decoration: line-through; }
+        .badge-shift { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: rgba(212,175,55,0.15); color: var(--primary); border: 1px solid var(--border-color); }
 
         .fab { position: fixed; bottom: 90px; right: 20px; width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #000000; border: none; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 6px 16px rgba(0,0,0,0.5); cursor: pointer; z-index: 10; }
 
@@ -118,15 +116,16 @@
         .nav-item.active { color: var(--primary); font-weight: 700; }
         .nav-item i { font-size: 17px; margin-bottom: 3px; }
 
-        .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: #000000; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 10px; }
+        .btn-primary { width: 100%; padding: 12px; background: var(--primary); color: #000000; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; margin-top: 6px; }
         .btn-secondary { background: rgba(212, 175, 55, 0.15); color: var(--primary); border: 1px solid var(--primary); }
 
         #video-container { position: relative; width: 100%; max-width: 300px; height: 300px; margin: 0 auto; border-radius: 15px; overflow: hidden; border: 2px solid var(--primary); background: #000; }
         #video-wajah { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; padding: 12px; }
         .modal.active { display: flex; }
-        .modal-content { background: var(--bg-card); border-radius: 18px; width: 100%; max-width: 380px; padding: 20px; border: 1px solid var(--border-color); }
+        .modal-content { background: var(--bg-card); border-radius: 18px; width: 100%; max-width: 450px; padding: 18px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; }
+
         .printable-card { background: #ffffff; color: #000000; border: 2px solid #8c4a27; border-radius: 12px; padding: 20px; text-align: center; margin: 10px 0; }
         #qrcode img { margin: 12px auto; }
 
@@ -150,7 +149,7 @@
         </div>
         <div style="display: flex; gap: 6px; align-items: center;">
             <div id="mode-badge" class="status-badge" style="color: var(--primary); border-color: var(--primary);">SEKOLAH</div>
-            <div id="connection-status" class="status-badge status-online">ONLINE</div>
+            <div id="connection-status" class="status-badge status-offline">LOCAL LOKAL</div>
         </div>
     </header>
 
@@ -196,37 +195,46 @@
             <div class="glass-card">
                 <div class="section-title" id="title-label-data">Data Siswa</div>
                 <div style="display:flex; gap:8px; margin-bottom:10px;">
-                    <select id="filter-kelas" class="form-control" onchange="renderStudentList()">
+                    <select id="filter-kelas" class="form-control" style="margin-bottom:0;" onchange="renderStudentList()">
                         <option value="">Semua Kelas</option>
                     </select>
                 </div>
-                <input type="text" id="search-siswa" class="form-control" placeholder="Cari Nama atau NIS/NIK..." oninput="renderStudentList()">
+                <input type="text" id="search-siswa" class="form-control" style="margin-bottom:0;" placeholder="Cari Nama atau NIS/NIK..." oninput="renderStudentList()">
             </div>
             <div id="student-list"></div>
             <button class="fab" onclick="openAddStudentModal()"><i class="fa-solid fa-plus"></i></button>
         </div>
 
-        <!-- TAB 3: JADWAL & KETERLAMBATAN -->
+        <!-- TAB 3: JADWAL & SHIFT -->
         <div id="tab-jadwal" class="tab-content">
             <div class="glass-card">
-                <div class="section-title">Atur Jam Presensi & Toleransi</div>
-                <label style="font-size: 13px; margin-bottom: 6px; display: block;">Hari Operasional</label>
-                <input type="text" id="input-hari" class="form-control" placeholder="Contoh: Senin - Sabtu" style="margin-bottom: 12px;">
-                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <div class="section-title" id="title-jadwal-box">Atur Jam Presensi & Shift Pabrik</div>
+                
+                <div id="container-shift-pilihan" style="display: none;">
+                    <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Pilih Shift Kerja</label>
+                    <select id="input-shift-pilihan" class="form-control" onchange="muatPengaturanShift()">
+                        <option value="reguler">Reguler / Umum</option>
+                        <option value="shift1">Shift 1 (Pagi: 07:00 - 15:00)</option>
+                        <option value="shift2">Shift 2 (Sore: 15:00 - 23:00)</option>
+                        <option value="shift3">Shift 3 (Malam: 23:00 - 07:00)</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 8px;">
                     <div style="flex: 1;">
-                        <label style="font-size: 13px; margin-bottom: 6px; display: block;">Jam Masuk</label>
-                        <input type="time" id="input-jam-masuk" class="form-control">
+                        <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Jam Masuk</label>
+                        <input type="time" id="input-jam-masuk" class="form-control" style="margin-bottom:0;">
                     </div>
                     <div style="flex: 1;">
-                        <label style="font-size: 13px; margin-bottom: 6px; display: block;">Jam Pulang</label>
-                        <input type="time" id="input-jam-pulang" class="form-control">
+                        <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Jam Pulang</label>
+                        <input type="time" id="input-jam-pulang" class="form-control" style="margin-bottom:0;">
                     </div>
                 </div>
                 <button class="btn-primary" onclick="saveSchedule()">Simpan Jadwal</button>
             </div>
             <div class="glass-card" style="text-align: center;">
-                <div class="section-title">Jadwal & Deteksi Terlambat Aktif</div>
-                <div id="display-schedule" style="font-size: 15px; font-weight: 600; color: var(--primary); margin-top: 8px;">Memuat jadwal...</div>
+                <div class="section-title">Status Jadwal Aktif</div>
+                <div id="display-schedule" style="font-size: 14px; font-weight: 600; color: var(--primary); margin-top: 4px;">Memuat jadwal...</div>
             </div>
         </div>
 
@@ -240,79 +248,88 @@
                     <div class="stat-box"><div class="stat-num" id="stat-izin">0</div><div class="stat-label">Izin</div></div>
                     <div class="stat-box"><div class="stat-num" id="stat-alpa">0</div><div class="stat-label">Alpa</div></div>
                 </div>
-                <label style="font-size: 13px; margin-bottom: 4px; display: block;">Pilih Mode Laporan</label>
-                <select id="mode-laporan" class="form-control" onchange="toggleReportMode()" style="margin-bottom: 10px;">
+                <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Pilih Mode Laporan</label>
+                <select id="mode-laporan" class="form-control" onchange="toggleReportMode()">
                     <option value="harian">1. Rekap Harian</option>
                     <option value="terlambat">2. Belum Masuk / Terlambat</option>
                     <option value="mingguan">3. Rekap Mingguan</option>
                     <option value="bulanan">4. Rekap Bulanan</option>
                     <option value="tahunan">5. Rekap Tahunan</option>
                 </select>
-                <div id="box-filter-harian" style="display: flex; gap: 8px; margin-bottom: 10px;">
-                    <input type="date" id="filter-tanggal" class="form-control" onchange="renderLogs()">
+                <div id="box-filter-harian" style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="date" id="filter-tanggal" class="form-control" style="margin-bottom:0;" onchange="renderLogs()">
                     <button class="btn-primary btn-secondary" style="width: auto; margin-top:0;" onclick="setTodayFilter()">Hari Ini</button>
                 </div>
-                <div id="box-filter-bulanan" style="display: none; gap: 8px; margin-bottom: 10px;">
-                    <input type="month" id="filter-bulan" class="form-control" onchange="renderLogs()">
+                <div id="box-filter-bulanan" style="display: none; gap: 8px; margin-bottom: 8px;">
+                    <input type="month" id="filter-bulan" class="form-control" style="margin-bottom:0;" onchange="renderLogs()">
                 </div>
-                <div id="box-filter-tahunan" style="display: none; gap: 8px; margin-bottom: 10px;">
-                    <select id="filter-tahun" class="form-control" onchange="renderLogs()">
+                <div id="box-filter-tahunan" style="display: none; gap: 8px; margin-bottom: 8px;">
+                    <select id="filter-tahun" class="form-control" style="margin-bottom:0;" onchange="renderLogs()">
                         <option value="2026">2026</option>
                         <option value="2025">2025</option>
                         <option value="2027">2027</option>
                     </select>
                 </div>
-                <button class="btn-primary" onclick="exportCSV()"><i class="fa-solid fa-file-excel"></i> Download CSV</button>
             </div>
             <div id="attendance-logs"></div>
         </div>
 
-        <!-- TAB 5: AKUN, CONFIG & DONASI -->
+        <!-- TAB 5: AKUN & DOWNLOAD CSV -->
         <div id="tab-akun" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Mode Sistem Operasional</div>
-                <label style="font-size: 13px; margin-bottom: 6px; display: block;">Pilih Mode Instansi</label>
-                <select id="select-system-mode" class="form-control" onchange="changeSystemMode(this.value)" style="margin-bottom: 14px;">
+                <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Pilih Mode Instansi</label>
+                <select id="select-system-mode" class="form-control" onchange="changeSystemMode(this.value)">
                     <option value="sekolah">Mode Sekolah (Siswa / Kelas)</option>
-                    <option value="pabrik">Mode Pabrik (Karyawan / Departemen)</option>
+                    <option value="pabrik">Mode Pabrik (Karyawan / Shift)</option>
                 </select>
 
-                <div style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 14px;">
-                    <label style="font-size: 13px; margin-bottom: 6px; display: block;">Tema Visual</label>
-                    <select id="theme-select" class="form-control" onchange="changeTheme(this.value)" style="margin-bottom: 14px;">
+                <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 10px;">
+                    <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Tema Visual</label>
+                    <select id="theme-select" class="form-control" onchange="changeTheme(this.value)">
                         <option value="heritage">Jawa Heritage (Cokelat Emas)</option>
                         <option value="ocean">Ocean Blue (Modern)</option>
                         <option value="light">Light Heritage (Terang)</option>
                     </select>
                 </div>
 
-                <div style="border-top: 1px solid var(--border-color); padding-top: 14px; margin-top: 14px;">
-                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 10px; text-align: center;">Konfigurasi Database Cloud</div>
+                <!-- TOMBOL DOWNLOAD CSV -->
+                <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 10px;">
+                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 8px; text-align: center;">Kelola Laporan Absen</div>
+                    <button class="btn-primary" style="margin-top:0; font-size:13px; background: rgba(56,189,248,0.2); color:#38bdf8; border:1px solid #38bdf8;" onclick="exportDataCSV()">
+                        <i class="fa-solid fa-file-arrow-down"></i> Download CSV (Excel / WPS)
+                    </button>
+                </div>
+
+                <!-- OPSIONAL CLOUD CONFIG -->
+                <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 10px;">
+                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 4px; text-align: center;">Konfigurasi Database Cloud (Opsional)</div>
+                    <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-bottom: 8px;">Aplikasi secara otomatis menggunakan memori HP lokal jika Cloud kosong.</p>
                     
-                    <label style="font-size: 12px; margin-bottom: 4px; display: block;">Database API Key</label>
-                    <input type="text" id="fb-apikey" class="form-control" placeholder="Masukkan API Key..." style="margin-bottom: 8px;">
+                    <label style="font-size: 11px; margin-bottom: 2px; display: block; color: var(--text-muted);">Database API Key</label>
+                    <input type="text" id="fb-apikey" class="form-control" placeholder="Kosongkan jika hanya memakai HP lokal...">
 
-                    <label style="font-size: 12px; margin-bottom: 4px; display: block;">Database Project ID</label>
-                    <input type="text" id="fb-projectid" class="form-control" placeholder="Masukkan Project ID..." style="margin-bottom: 8px;">
+                    <label style="font-size: 11px; margin-bottom: 2px; display: block; color: var(--text-muted);">Database Project ID</label>
+                    <input type="text" id="fb-projectid" class="form-control" placeholder="Kosongkan jika hanya memakai HP lokal...">
 
-                    <button class="btn-primary" onclick="saveSchoolDatabaseConfig()">Simpan & Hubungkan Database</button>
-                    <button class="btn-primary btn-secondary" style="margin-top: 8px;" onclick="resetDatabaseConfig()">Reset ke Default Database</button>
+                    <button class="btn-primary" onclick="saveSchoolDatabaseConfig()">Simpan Config Firebase</button>
+                    <button class="btn-primary btn-secondary" style="margin-top: 6px;" onclick="resetDatabaseConfig()">Reset & Gunakan HP Lokal 100%</button>
                 </div>
             </div>
 
             <!-- KARTU QRIS DONASI DI BAWAH -->
-            <div class="glass-card" style="text-align: center; padding: 20px 14px;">
-                <div class="section-title" style="color: var(--primary); font-size: 16px; margin-bottom: 6px;">Dukung Pengembang</div>
-                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.4;">
-                    Terima kasih telah menggunakan aplikasi <b>AbsenO</b>! Berikan dukungan pengembangan sukarela melalui QRIS di bawah ini. ☕
+            <div class="glass-card" style="text-align: center; padding: 16px 14px;">
+                <div class="section-title" style="color: var(--primary); font-size: 15px; margin-bottom: 4px;">Dukung Pengembang</div>
+                <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
+                    Dukung pengembangan aplikasi <b>AbsenO</b> melalui QRIS di bawah ini. ☕
                 </p>
                 
-                <div style="background: #ffffff; padding: 12px; border-radius: 14px; display: inline-block; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border: 2px solid var(--primary); margin-bottom: 8px; cursor: pointer;" onclick="openFullscreenQRIS()" title="Ketuk untuk memperbesar gambar">
-                    <img src="qris.jpg" alt="QRIS Donasi" style="width: 150px; height: 150px; object-fit: contain; display: block; border-radius: 6px;" onerror="this.src='https://via.placeholder.com/150?text=QRIS+Barcode'">
-                    <div style="font-size: 10px; font-weight: 700; color: #333; margin-top: 6px; letter-spacing: 0.5px;"><i class="fa-solid fa-expand"></i> KETUK PERBESAR</div>
+                <div style="background: #ffffff; padding: 10px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border: 2px solid var(--primary); margin-bottom: 6px; cursor: pointer;" onclick="openFullscreenQRIS()" title="Ketuk untuk memperbesar gambar">
+                    <img src="qris.jpg" alt="QRIS Donasi" style="width: 130px; height: 130px; object-fit: contain; display: block; border-radius: 6px;" onerror="this.src='https://via.placeholder.com/130?text=QRIS+Barcode'">
+                    <div style="font-size: 9px; font-weight: 700; color: #333; margin-top: 4px; letter-spacing: 0.5px;"><i class="fa-solid fa-expand"></i> KETUK PERBESAR</div>
                 </div>
 
-                <div style="font-size: 11px; color: var(--accent); font-weight: 600;">
+                <div style="font-size: 10px; color: var(--accent); font-weight: 600;">
                     Scan via GoPay, OVO, Dana, ShopeePay, BCA, dll.
                 </div>
             </div>
@@ -361,19 +378,30 @@
 <!-- Modal Tambah/Edit Anggota & Pendaftaran Wajah -->
 <div id="student-modal" class="modal">
     <div class="modal-content">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
             <div style="font-weight: 700;" id="modal-student-title">Tambah Siswa Baru</div>
             <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeModal('student-modal')"></i>
         </div>
         <input type="hidden" id="edit-index">
-        <input type="text" id="input-nis" class="form-control" placeholder="NIS / NIK Karyawan..." style="margin-bottom: 10px;">
-        <input type="text" id="input-nama" class="form-control" placeholder="Nama Lengkap..." style="margin-bottom: 10px;">
-        <input type="text" id="input-kelas" class="form-control" placeholder="Kelas / Departemen..." style="margin-bottom: 10px;">
+        <input type="text" id="input-nis" class="form-control" placeholder="NIS / NIK Karyawan...">
+        <input type="text" id="input-nama" class="form-control" placeholder="Nama Lengkap...">
+        <input type="text" id="input-kelas" class="form-control" placeholder="Kelas / Departemen...">
         
+        <!-- Pilihan Shift hanya muncul jika Mode Pabrik -->
+        <div id="box-pilihan-shift" style="display:none; margin-bottom:10px;">
+            <label style="font-size: 11px; margin-bottom: 2px; display: block; color: var(--text-muted);">Shift Kerja Karyawan</label>
+            <select id="input-student-shift" class="form-control" style="margin-bottom:0;">
+                <option value="Reguler">Shift Reguler</option>
+                <option value="Shift 1">Shift 1 (Pagi)</option>
+                <option value="Shift 2">Shift 2 (Sore)</option>
+                <option value="Shift 3">Shift 3 (Malam)</option>
+            </select>
+        </div>
+
         <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--border-color); border-radius: 10px; padding: 10px; text-align: center; margin-bottom: 10px;">
-            <div style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 6px;">Ekstraksi Kode Biometrik Wajah</div>
-            <div id="face-preview-box" style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Belum ada biometrik terdaftar</div>
-            <button type="button" class="btn-primary btn-secondary" style="margin-top:0; font-size: 12px; padding: 8px;" onclick="bukaKameraDaftarWajah()"><i class="fa-solid fa-face-smile"></i> Rekam Kode Wajah</button>
+            <div style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 4px;">Ekstraksi Kode Biometrik Wajah</div>
+            <div id="face-preview-box" style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Belum ada biometrik terdaftar</div>
+            <button type="button" class="btn-primary btn-secondary" style="margin-top:0; font-size: 11px; padding: 6px;" onclick="bukaKameraDaftarWajah()"><i class="fa-solid fa-face-smile"></i> Rekam Kode Wajah</button>
         </div>
 
         <button class="btn-primary" onclick="saveStudent()">Simpan Data</button>
@@ -387,32 +415,30 @@
             <div style="font-weight: 700;">Pengambilan Vektor Biometrik</div>
             <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="tutupKameraDaftarWajah()"></i>
         </div>
-        <div style="position: relative; width: 100%; max-width: 260px; height: 260px; margin: 0 auto 10px; border-radius: 12px; overflow: hidden; border: 2px solid var(--primary); background: #000;">
+        <div style="position: relative; width: 100%; max-width: 240px; height: 240px; margin: 0 auto 10px; border-radius: 12px; overflow: hidden; border: 2px solid var(--primary); background: #000;">
             <video id="video-daftar-wajah" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
         </div>
-        <div id="status-capture-wajah" style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Posisikan wajah tepat di tengah kamera...</div>
+        <div id="status-capture-wajah" style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">Posisikan wajah tepat di tengah kamera...</div>
         <button class="btn-primary" onclick="generateAndSaveFaceVector()">Kunci & Generate Kode Biometrik</button>
     </div>
 </div>
 
 <script>
-    const defaultDatabaseConfig = {
-        apiKey: "AIzaSyCXZM7dme50d-4Yo-dpvcvlbEKrI6dhDS8",
-        authDomain: "absen-barcode-wajah.firebaseapp.com",
-        projectId: "absen-barcode-wajah",
-        storageBucket: "absen-barcode-wajah.firebasestorage.app",
-        messagingSenderId: "1018925253403",
-        appId: "1:1018925253403:web:ff9faa88fa567cadaac9be"
-    };
+    let db = null;
+    let useFirebase = false;
 
-    let savedConfig = JSON.parse(localStorage.getItem('abseno_school_database')) || defaultDatabaseConfig;
-
-    try {
-        firebase.initializeApp(savedConfig);
-    } catch (e) {
-        firebase.initializeApp(defaultDatabaseConfig);
+    // Cek Konfigurasi Firebase
+    const savedConfig = JSON.parse(localStorage.getItem('abseno_school_database'));
+    if (savedConfig && savedConfig.apiKey && savedConfig.projectId) {
+        try {
+            firebase.initializeApp(savedConfig);
+            db = firebase.firestore();
+            useFirebase = true;
+        } catch (e) {
+            console.log("Gagal inisialisasi Firebase Cloud, berpindah ke Penyimpanan HP Lokal.");
+            useFirebase = false;
+        }
     }
-    const db = firebase.firestore();
 
     let students = [];
     let attendanceLogs = [];
@@ -486,7 +512,7 @@
 
     function speakText(text) {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // Hentikan antrean suara sebelumnya agar langsung responsif
+            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'id-ID';
             utterance.rate = 1.0;
@@ -497,9 +523,10 @@
     async function loadFaceApiModels() {
         if (faceApiLoaded) return true;
         const statusText = document.getElementById('text-status-wajah') || document.getElementById('status-capture-wajah');
-        if (statusText) statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat Model AI Online...</span>`;
+        if (statusText) statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memuat Model AI...</span>`;
         
         try {
+            if (!window.faceapi) throw new Error("Face-API script belum dimuat");
             const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
             await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
             await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
@@ -508,7 +535,7 @@
             if (statusText) statusText.innerHTML = `<span style="color: #4ade80;">Model AI Siap!</span>`;
             return true;
         } catch (err) {
-            if (statusText) statusText.innerHTML = `<span style="color: #f87171;">✕ Gagal memuat AI Online</span>`;
+            if (statusText) statusText.innerHTML = `<span style="color: #f87171;">✕ AI offline / terbatas. Gunakan QR Code.</span>`;
             return false;
         }
     }
@@ -517,14 +544,17 @@
         applySystemModeUI();
         loadDataFromDatabase();
         const today = new Date().toISOString().slice(0,10);
-        document.getElementById('filter-tanggal').value = today;
-        document.getElementById('filter-bulan').value = today.slice(0,7);
-        document.getElementById('filter-tahun').value = today.slice(0,4);
-        
+        const filterTglElem = document.getElementById('filter-tanggal');
+        if (filterTglElem) filterTglElem.value = today;
+        const filterBlnElem = document.getElementById('filter-bulan');
+        if (filterBlnElem) filterBlnElem.value = today.slice(0,7);
+        const filterThnElem = document.getElementById('filter-tahun');
+        if (filterThnElem) filterThnElem.value = today.slice(0,4);
+
         loadSettings();
         loadSchedule();
         updateOnlineStatus();
-        window.addEventListener('online', () => { updateOnlineStatus(); syncOfflineCache(); });
+        window.addEventListener('online', updateOnlineStatus);
         window.addEventListener('offline', updateOnlineStatus);
     };
 
@@ -545,27 +575,36 @@
         const modalStudentTitle = document.getElementById('modal-student-title');
         const inputNis = document.getElementById('input-nis');
         const inputKelas = document.getElementById('input-kelas');
+        const boxShift = document.getElementById('box-pilihan-shift');
+        const containerShiftPilihan = document.getElementById('container-shift-pilihan');
+        const titleJadwalBox = document.getElementById('title-jadwal-box');
 
-        selectMode.value = currentSystemMode;
+        if (selectMode) selectMode.value = currentSystemMode;
 
         if (currentSystemMode === 'pabrik') {
-            modeBadge.innerText = 'PABRIK';
-            navLabelAnggota.innerText = 'Karyawan';
-            titleLabelData.innerText = 'Data Karyawan';
-            titlePindaiQr.innerText = 'Pindai QR Code Karyawan';
-            modalCardTitle.innerText = 'Kartu Presensi Karyawan';
-            modalStudentTitle.innerText = 'Tambah Karyawan Baru';
-            inputNis.placeholder = 'NIK Karyawan...';
-            inputKelas.placeholder = 'Departemen...';
+            if (modeBadge) modeBadge.innerText = 'PABRIK';
+            if (navLabelAnggota) navLabelAnggota.innerText = 'Karyawan';
+            if (titleLabelData) titleLabelData.innerText = 'Data Karyawan';
+            if (titlePindaiQr) titlePindaiQr.innerText = 'Pindai QR Code Karyawan';
+            if (modalCardTitle) modalCardTitle.innerText = 'Kartu Presensi Karyawan';
+            if (modalStudentTitle) modalStudentTitle.innerText = 'Tambah Karyawan Baru';
+            if (inputNis) inputNis.placeholder = 'NIK Karyawan...';
+            if (inputKelas) inputKelas.placeholder = 'Departemen...';
+            if (boxShift) boxShift.style.display = 'block';
+            if (containerShiftPilihan) containerShiftPilihan.style.display = 'block';
+            if (titleJadwalBox) titleJadwalBox.innerText = 'Atur Jam Presensi & Shift Pabrik';
         } else {
-            modeBadge.innerText = 'SEKOLAH';
-            navLabelAnggota.innerText = 'Siswa';
-            titleLabelData.innerText = 'Data Siswa';
-            titlePindaiQr.innerText = 'Pindai QR Code Siswa';
-            modalCardTitle.innerText = 'Kartu Presensi Siswa';
-            modalStudentTitle.innerText = 'Tambah Siswa Baru';
-            inputNis.placeholder = 'NIS Siswa...';
-            inputKelas.placeholder = 'Nama Kelas...';
+            if (modeBadge) modeBadge.innerText = 'SEKOLAH';
+            if (navLabelAnggota) navLabelAnggota.innerText = 'Siswa';
+            if (titleLabelData) titleLabelData.innerText = 'Data Siswa';
+            if (titlePindaiQr) titlePindaiQr.innerText = 'Pindai QR Code Siswa';
+            if (modalCardTitle) modalCardTitle.innerText = 'Kartu Presensi Siswa';
+            if (modalStudentTitle) modalStudentTitle.innerText = 'Tambah Siswa Baru';
+            if (inputNis) inputNis.placeholder = 'NIS Siswa...';
+            if (inputKelas) inputKelas.placeholder = 'Nama Kelas...';
+            if (boxShift) boxShift.style.display = 'none';
+            if (containerShiftPilihan) containerShiftPilihan.style.display = 'none';
+            if (titleJadwalBox) titleJadwalBox.innerText = 'Atur Jam Presensi Sekolah';
         }
     }
 
@@ -589,63 +628,59 @@
     }
 
     function resetDatabaseConfig() {
-        if(confirm('Kembalikan ke konfigurasi default database?')) {
+        if(confirm('Kembalikan ke penyimpanan internal HP Lokal?')) {
             localStorage.removeItem('abseno_school_database');
             location.reload();
         }
     }
 
+    // MANAJEMEN PENYIMPANAN DATA (LOKAL STANDALONE + OPTIONAL CLOUD)
     function loadDataFromDatabase() {
-        db.collection("students").where("mode", "==", currentSystemMode).onSnapshot(snapshot => {
-            students = [];
-            snapshot.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
-            updateFilterKelasDropdown();
-            renderStudentList();
-            if(document.getElementById('mode-laporan').value === 'terlambat') renderLogs();
-        });
+        // 1. Muat Anggota / Siswa dari HP Lokal
+        const localStudents = JSON.parse(localStorage.getItem('abseno_local_students_' + currentSystemMode)) || [];
+        students = localStudents;
+        updateFilterKelasDropdown();
+        renderStudentList();
 
-        const todayDate = new Date().toISOString().slice(0,10);
-        db.collection("attendance").where("mode", "==", currentSystemMode).where("tanggal", "==", todayDate).onSnapshot(snapshot => {
-            attendanceLogs = [];
-            snapshot.forEach(doc => attendanceLogs.push(doc.data()));
-            renderLogs();
-            updateStats();
-        });
+        // 2. Muat Absensi dari HP Lokal
+        const localLogs = JSON.parse(localStorage.getItem('abseno_local_attendance_' + currentSystemMode)) || [];
+        attendanceLogs = localLogs;
+        renderLogs();
+        updateStats();
 
-        db.collection("attendance").where("mode", "==", currentSystemMode).onSnapshot(snapshot => {
-            const allLogs = [];
-            snapshot.forEach(doc => allLogs.push(doc.data()));
-            if(allLogs.length > 0) attendanceLogs = allLogs;
-            renderLogs();
-            updateStats();
-        });
+        // 3. Jika tersambung Firebase, lakukan sinkronisasi data tambahan jika online
+        if (useFirebase && navigator.onLine) {
+            db.collection('students').where('mode', '==', currentSystemMode).get().then(snapshot => {
+                if (!snapshot.empty) {
+                    const cloudStudents = [];
+                    snapshot.forEach(doc => cloudStudents.push({ id: doc.id, ...doc.data() }));
+                    students = cloudStudents;
+                    localStorage.setItem('abseno_local_students_' + currentSystemMode, JSON.stringify(students));
+                    updateFilterKelasDropdown();
+                    renderStudentList();
+                }
+            }).catch(e => console.log("Gagal konek Firestore, menggunakan data HP Lokal."));
+
+            db.collection('attendance').where('mode', '==', currentSystemMode).get().then(snapshot => {
+                if (!snapshot.empty) {
+                    const cloudLogs = [];
+                    snapshot.forEach(doc => cloudLogs.push({ id: doc.id, ...doc.data() }));
+                    attendanceLogs = cloudLogs;
+                    localStorage.setItem('abseno_local_attendance_' + currentSystemMode, JSON.stringify(attendanceLogs));
+                    renderLogs();
+                    updateStats();
+                }
+            }).catch(e => console.log("Gagal konek Firestore, menggunakan data HP Lokal."));
+        }
     }
 
     function updateOnlineStatus() {
         const badge = document.getElementById('connection-status');
-        if (navigator.onLine) {
-            badge.innerText = 'ONLINE'; badge.className = 'status-badge status-online';
-            syncOfflineCache();
+        if (!badge) return;
+        if (useFirebase && navigator.onLine) {
+            badge.innerText = 'CLOUD ONLINE'; badge.className = 'status-badge status-online';
         } else {
-            badge.innerText = 'OFFLINE'; badge.className = 'status-badge status-offline';
-        }
-    }
-
-    function syncOfflineCache() {
-        const offlineLogs = JSON.parse(localStorage.getItem('abseno_offline_cache_' + currentSystemMode)) || [];
-        if (offlineLogs.length > 0 && navigator.onLine) {
-            const badge = document.getElementById('connection-status');
-            badge.innerText = 'SYNCING...'; badge.className = 'status-badge status-sync';
-            let count = offlineLogs.length;
-            offlineLogs.forEach(log => {
-                db.collection("attendance").add(log).then(() => {
-                    count--;
-                    if(count === 0) {
-                        localStorage.removeItem('abseno_offline_cache_' + currentSystemMode);
-                        updateOnlineStatus();
-                    }
-                });
-            });
+            badge.innerText = 'MEMORI HP LOKAL'; badge.className = 'status-badge status-offline';
         }
     }
 
@@ -653,7 +688,7 @@
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
         document.getElementById('tab-' + tabId).classList.add('active');
-        el.classList.add('active');
+        if (el) el.classList.add('active');
 
         if(tabId === 'pindai') {
             gantiModePindai(modePindai);
@@ -676,12 +711,16 @@
         const btnQr = document.getElementById('btn-mode-qr'), btnWajah = document.getElementById('btn-mode-wajah'), areaQr = document.getElementById('area-qr'), areaWajah = document.getElementById('area-wajah');
 
         if(mode === 'qr') {
-            btnQr.className = 'btn-primary'; btnWajah.className = 'btn-secondary';
-            areaQr.style.display = 'block'; areaWajah.style.display = 'none';
+            if (btnQr) btnQr.className = 'btn-primary'; 
+            if (btnWajah) btnWajah.className = 'btn-secondary';
+            if (areaQr) areaQr.style.display = 'block'; 
+            if (areaWajah) areaWajah.style.display = 'none';
             inisialisasiQrScanner();
         } else {
-            btnQr.className = 'btn-secondary'; btnWajah.className = 'btn-primary';
-            areaQr.style.display = 'none'; areaWajah.style.display = 'block';
+            if (btnQr) btnQr.className = 'btn-secondary'; 
+            if (btnWajah) btnWajah.className = 'btn-primary';
+            if (areaQr) areaQr.style.display = 'none'; 
+            if (areaWajah) areaWajah.style.display = 'block';
             await loadFaceApiModels();
             inisialisasiKameraWajah();
         }
@@ -696,18 +735,20 @@
 
     async function inisialisasiKameraWajah() {
         const video = document.getElementById('video-wajah'), statusText = document.getElementById('text-status-wajah');
-        statusText.innerText = "Memeriksa perangkat kamera...";
+        if (statusText) statusText.innerText = "Memeriksa perangkat kamera...";
         if (streamKamera) streamKamera.getTracks().forEach(track => track.stop());
 
         try {
             const constraints = { video: { facingMode: useFrontCamera ? "user" : "environment" } };
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
             streamKamera = stream; 
-            video.srcObject = stream;
-            video.style.transform = useFrontCamera ? "scaleX(-1)" : "scaleX(1)";
-            statusText.innerHTML = `<span style="font-size: 13px; color: var(--text-muted);">Kamera Aktif. Silakan Pindai.</span>`;
+            if (video) {
+                video.srcObject = stream;
+                video.style.transform = useFrontCamera ? "scaleX(-1)" : "scaleX(1)";
+            }
+            if (statusText) statusText.innerHTML = `<span style="font-size: 13px; color: var(--text-muted);">Kamera Aktif. Silakan Pindai.</span>`;
         } catch (err) {
-            statusText.innerText = "✕ Gagal mengakses kamera.";
+            if (statusText) statusText.innerText = "✕ Gagal mengakses kamera.";
         }
     }
 
@@ -724,14 +765,14 @@
         const video = document.getElementById('video-wajah');
         const statusText = document.getElementById('text-status-wajah');
 
-        if (!video.srcObject || video.paused) {
+        if (!video || !video.srcObject || video.paused) {
             await inisialisasiKameraWajah();
             return;
         }
 
         const modelLoaded = await loadFaceApiModels();
         if (!modelLoaded) return;
-        statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah...</span>`;
+        if (statusText) statusText.innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Memindai Wajah...</span>`;
 
         try {
             const options = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 });
@@ -739,7 +780,7 @@
 
             if (!detection) {
                 playErrorSound();
-                statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Terdeteksi</span>`;
+                if (statusText) statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Terdeteksi</span>`;
             } else {
                 const labeledDescriptors = students
                     .filter(s => s.faceVector && Array.isArray(s.faceVector))
@@ -747,7 +788,7 @@
 
                 if (labeledDescriptors.length === 0) {
                     playWarningSound();
-                    statusText.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ Belum ada biometrik terdaftar!</span>`;
+                    if (statusText) statusText.innerHTML = `<span style="color: #fbbf24; font-weight:700;">⚠ Belum ada biometrik terdaftar!</span>`;
                 } else {
                     const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
                     const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
@@ -757,13 +798,13 @@
                         prosesAbsensi(matchedStudent.nis, 'AI Wajah');
                     } else {
                         playErrorSound();
-                        statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Dikenali</span>`;
+                        if (statusText) statusText.innerHTML = `<span style="color: #f87171; font-weight:700;">✕ Wajah Tidak Dikenali</span>`;
                     }
                 }
             }
         } catch (err) {
             playErrorSound();
-            statusText.innerHTML = `<span style="color: #f87171;">✕ Error sistem</span>`;
+            if (statusText) statusText.innerHTML = `<span style="color: #f87171;">✕ Error sistem AI</span>`;
         }
     }
 
@@ -780,14 +821,15 @@
             return;
         }
 
-        const existingLog = attendanceLogs.find(l => l.nis === student.nis && l.tanggal === todayDate && l.mode === currentSystemMode);
+        const existingLogIndex = attendanceLogs.findIndex(l => l.nis === student.nis && l.tanggal === todayDate && l.mode === currentSystemMode);
 
-        if (existingLog && (statusManual === 'Izin Pulang' || statusManual === 'Pulang')) {
-            existingLog.waktuPulang = nowTimeStr;
-            existingLog.keteranganPulang = `Pulang jam ${nowTimeStr}`;
+        if (existingLogIndex !== -1 && (statusManual === 'Izin Pulang' || statusManual === 'Pulang')) {
+            attendanceLogs[existingLogIndex].waktuPulang = nowTimeStr;
+            attendanceLogs[existingLogIndex].keteranganPulang = `Pulang jam ${nowTimeStr}`;
             playSuccessSound();
             speakText(`${student.nama} izin pulang`);
-            updateLogKeDatabase(existingLog, resultBox, student.nama, `Pulang Jam ${nowTimeStr}`);
+            simpanSemuaLogLokal();
+            tampilkanStatusProses(resultBox, student.nama, `Pulang Jam ${nowTimeStr}`);
             return;
         }
 
@@ -808,21 +850,24 @@
             catatan = statusManual;
         }
 
-        if (existingLog) {
-            existingLog.waktu = nowTimeStr;
-            existingLog.status = statusFinal;
-            existingLog.keteranganPulang = catatan;
-            existingLog.metode = metode;
+        if (existingLogIndex !== -1) {
+            attendanceLogs[existingLogIndex].waktu = nowTimeStr;
+            attendanceLogs[existingLogIndex].status = statusFinal;
+            attendanceLogs[existingLogIndex].keteranganPulang = catatan;
+            attendanceLogs[existingLogIndex].metode = metode;
             playSuccessSound();
             speakText(`${student.nama} ${statusFinal}`);
-            updateLogKeDatabase(existingLog, resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}`);
+            simpanSemuaLogLokal();
+            tampilkanStatusProses(resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}`);
             return;
         }
 
         const logData = {
+            id: 'log_' + Date.now(),
             nis: student.nis,
             nama: student.nama,
             kelas: student.kelas,
+            shift: currentSystemMode === 'pabrik' ? (student.shift || 'Reguler') : '-',
             tanggal: todayDate,
             waktu: nowTimeStr,
             waktuPulang: '-',
@@ -832,54 +877,37 @@
             mode: currentSystemMode
         };
 
+        attendanceLogs.unshift(logData);
+        simpanSemuaLogLokal();
         playSuccessSound();
         speakText(`${student.nama} ${statusFinal}`);
-        simpanLogKeDatabase(logData, resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}`);
+        tampilkanStatusProses(resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}`);
     }
 
-    function simpanLogKeDatabase(logData, resultBox, namaSiswa, infoPesan) {
-        if (navigator.onLine) {
-            db.collection("attendance").add(logData).then(() => {
-                if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil: ${namaSiswa} - ${infoPesan}</span>`;
-                if(modePindai === 'wajah') {
-                    const stWajah = document.getElementById('text-status-wajah');
-                    if(stWajah) stWajah.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ ${namaSiswa} (${infoPesan})</span>`;
-                }
+    function simpanSemuaLogLokal() {
+        localStorage.setItem('abseno_local_attendance_' + currentSystemMode, JSON.stringify(attendanceLogs));
+        renderLogs();
+        updateStats();
+
+        // Jika Firebase aktif dan online, simpan juga di Cloud
+        if (useFirebase && navigator.onLine) {
+            attendanceLogs.forEach(log => {
+                db.collection("attendance").doc(log.id).set(log, { merge: true });
             });
-        } else {
-            const cacheKey = 'abseno_offline_cache_' + currentSystemMode;
-            const offlineLogs = JSON.parse(localStorage.getItem(cacheKey)) || [];
-            offlineLogs.push(logData);
-            localStorage.setItem(cacheKey, JSON.stringify(offlineLogs));
-            attendanceLogs.unshift(logData);
-            renderLogs();
-            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #38bdf8; font-weight:700;">✓ Disimpan Offline: ${namaSiswa}</span>`;
         }
     }
 
-    function updateLogKeDatabase(logData, resultBox, namaSiswa, infoPesan) {
-        if (navigator.onLine) {
-            db.collection("attendance").where("nis", "==", logData.nis).where("tanggal", "==", logData.tanggal).where("mode", "==", currentSystemMode).get().then(snapshot => {
-                if (!snapshot.empty) {
-                    const docId = snapshot.docs[0].id;
-                    db.collection("attendance").doc(docId).update(logData).then(() => {
-                        if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa} - ${infoPesan}</span>`;
-                        if(modePindai === 'wajah') {
-                            const stWajah = document.getElementById('text-status-wajah');
-                            if(stWajah) stWajah.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Update: ${namaSiswa}</span>`;
-                        }
-                        renderLogs();
-                    });
-                }
-            });
-        } else {
-            renderLogs();
-            if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Diperbarui: ${namaSiswa}</span>`;
+    function tampilkanStatusProses(resultBox, namaSiswa, infoPesan) {
+        if(resultBox && modePindai === 'qr') resultBox.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ Berhasil: ${namaSiswa} - ${infoPesan}</span>`;
+        if(modePindai === 'wajah') {
+            const stWajah = document.getElementById('text-status-wajah');
+            if(stWajah) stWajah.innerHTML = `<span style="color: #4ade80; font-weight:700;">✓ ${namaSiswa} (${infoPesan})</span>`;
         }
     }
 
     function updateFilterKelasDropdown() {
         const filterSelect = document.getElementById('filter-kelas');
+        if (!filterSelect) return;
         const currentSelected = filterSelect.value;
         const uniqueClasses = [...new Set(students.map(s => s.kelas).filter(Boolean))].sort();
         const labelSemua = currentSystemMode === 'pabrik' ? 'Semua Departemen' : 'Semua Kelas';
@@ -892,7 +920,10 @@
     }
 
     function renderStudentList() {
-        const listContainer = document.getElementById('student-list'), filterKelas = document.getElementById('filter-kelas').value, searchQuery = document.getElementById('search-siswa').value.toLowerCase();
+        const listContainer = document.getElementById('student-list');
+        const filterKelas = document.getElementById('filter-kelas') ? document.getElementById('filter-kelas').value : '';
+        const searchQuery = document.getElementById('search-siswa') ? document.getElementById('search-siswa').value.toLowerCase() : '';
+        if(!listContainer) return;
         listContainer.innerHTML = '';
 
         students.filter(student => {
@@ -900,15 +931,17 @@
             const matchSearch = student.nama.toLowerCase().includes(searchQuery) || student.nis.includes(searchQuery);
             return matchKelas && matchSearch;
         }).forEach((student) => {
-            const hasVector = student.faceVector && student.faceVector.length > 0;
-            const faceClass = hasVector ? 'badge-face badge-face-active' : 'badge-face badge-face-inactive';
+            const shiftBadge = (currentSystemMode === 'pabrik' && student.shift) ? `<span class="badge-shift">${student.shift}</span>` : '';
 
             const item = document.createElement('div');
             item.className = 'student-item';
             item.innerHTML = `
                 <div class="student-avatar">${student.nama.charAt(0)}</div>
                 <div style="flex:1; min-width: 0; padding-right: 4px;">
-                    <div style="font-weight:600; font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${student.nama}</div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="font-weight:600; font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${student.nama}</div>
+                        ${shiftBadge}
+                    </div>
                     <div style="font-size:11px; color:var(--text-muted);">${student.nis} • ${student.kelas}</div>
                     <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
                         <button onclick="prosesAbsensi('${student.nis}', 'Manual', 'Hadir')" style="font-size:9px; padding:2px 6px; background:rgba(74,222,128,0.2); color:#4ade80; border:1px solid rgba(74,222,128,0.4); border-radius:4px; cursor:pointer;">Hadir</button>
@@ -941,6 +974,7 @@
         document.getElementById('input-nis').value = '';
         document.getElementById('input-nama').value = '';
         document.getElementById('input-kelas').value = '';
+        document.getElementById('input-student-shift').value = 'Reguler';
         tempFaceVector = null;
         document.getElementById('face-preview-box').innerHTML = 'Belum ada biometrik terdaftar';
         document.getElementById('student-modal').classList.add('active');
@@ -999,28 +1033,49 @@
         const nis = document.getElementById('input-nis').value.trim();
         const nama = document.getElementById('input-nama').value.trim();
         const kelas = document.getElementById('input-kelas').value.trim() || 'Umum';
-        const docId = document.getElementById('edit-index').value;
+        const shift = document.getElementById('input-student-shift').value;
+        const targetId = document.getElementById('edit-index').value;
 
         if(!nis || !nama) return alert('ID/NIK dan Nama wajib diisi!');
 
-        const studentData = { nis, nama, kelas, mode: currentSystemMode };
+        const studentData = { 
+            id: targetId || ('std_' + Date.now()),
+            nis, 
+            nama, 
+            kelas, 
+            mode: currentSystemMode 
+        };
+        if (currentSystemMode === 'pabrik') studentData.shift = shift;
         if (tempFaceVector) studentData.faceVector = tempFaceVector;
 
-        if(docId === '') {
-            db.collection("students").add(studentData).then(() => {
-                closeModal('student-modal');
-                tempFaceVector = null;
-            });
+        if(targetId === '') {
+            students.push(studentData);
         } else {
-            db.collection("students").doc(docId).update(studentData).then(() => {
-                closeModal('student-modal');
-                tempFaceVector = null;
-            });
+            const idx = students.findIndex(s => s.id === targetId);
+            if (idx !== -1) students[idx] = studentData;
+        }
+
+        // Simpan ke HP Lokal
+        localStorage.setItem('abseno_local_students_' + currentSystemMode, JSON.stringify(students));
+        updateFilterKelasDropdown();
+        renderStudentList();
+        closeModal('student-modal');
+        tempFaceVector = null;
+
+        // Opsional Firebase Cloud
+        if (useFirebase && navigator.onLine) {
+            db.collection("students").doc(studentData.id).set(studentData, { merge: true });
         }
     }
 
     function deleteStudent(docId) {
-        if(confirm('Hapus data ini?')) db.collection("students").doc(docId).delete();
+        if(confirm('Hapus data ini?')) {
+            students = students.filter(s => s.id !== docId);
+            localStorage.setItem('abseno_local_students_' + currentSystemMode, JSON.stringify(students));
+            updateFilterKelasDropdown();
+            renderStudentList();
+            if (useFirebase && navigator.onLine) db.collection("students").doc(docId).delete();
+        }
     }
 
     function editStudent(docId) {
@@ -1031,6 +1086,7 @@
         document.getElementById('input-nis').value = s.nis;
         document.getElementById('input-nama').value = s.nama;
         document.getElementById('input-kelas').value = s.kelas;
+        document.getElementById('input-student-shift').value = s.shift || 'Reguler';
         tempFaceVector = s.faceVector || null;
         
         document.getElementById('face-preview-box').innerHTML = tempFaceVector ? '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Biometrik Terdaftar</span>' : 'Belum ada biometrik terdaftar';
@@ -1042,36 +1098,46 @@
     function updateStats() {
         let hadir = 0, sakit = 0, izin = 0, alpa = 0;
         const todayDate = new Date().toISOString().slice(0,10);
-        attendanceLogs.filter(l => l.tanggal === todayDate && l.mode === currentSystemMode).forEach(l => {
+        
+        const logsHariIni = attendanceLogs.filter(l => l.tanggal === todayDate && l.mode === currentSystemMode);
+        logsHariIni.forEach(l => {
             if(l.status === 'Hadir' || l.status === 'Terlambat') hadir++;
             else if(l.status === 'Sakit') sakit++;
             else if(l.status === 'Izin' || l.status === 'Izin Pulang') izin++;
             else if(l.status === 'Alpa') alpa++;
         });
-        document.getElementById('stat-hadir').innerText = hadir;
-        document.getElementById('stat-sakit').innerText = sakit;
-        document.getElementById('stat-izin').innerText = izin;
-        document.getElementById('stat-alpa').innerText = alpa;
+        if (document.getElementById('stat-hadir')) document.getElementById('stat-hadir').innerText = hadir;
+        if (document.getElementById('stat-sakit')) document.getElementById('stat-sakit').innerText = sakit;
+        if (document.getElementById('stat-izin')) document.getElementById('stat-izin').innerText = izin;
+        if (document.getElementById('stat-alpa')) document.getElementById('stat-alpa').innerText = alpa;
     }
 
     function toggleReportMode() {
-        const mode = document.getElementById('mode-laporan').value;
-        document.getElementById('box-filter-harian').style.display = (mode === 'harian' || mode === 'terlambat') ? 'flex' : 'none';
-        document.getElementById('box-filter-bulanan').style.display = (mode === 'bulanan') ? 'flex' : 'none';
-        document.getElementById('box-filter-tahunan').style.display = (mode === 'tahunan') ? 'flex' : 'none';
+        const modeElem = document.getElementById('mode-laporan');
+        if (!modeElem) return;
+        const mode = modeElem.value;
+        if (document.getElementById('box-filter-harian')) document.getElementById('box-filter-harian').style.display = (mode === 'harian' || mode === 'terlambat') ? 'flex' : 'none';
+        if (document.getElementById('box-filter-bulanan')) document.getElementById('box-filter-bulanan').style.display = (mode === 'bulanan') ? 'flex' : 'none';
+        if (document.getElementById('box-filter-tahunan')) document.getElementById('box-filter-tahunan').style.display = (mode === 'tahunan') ? 'flex' : 'none';
         renderLogs();
     }
 
     function setTodayFilter() {
-        document.getElementById('filter-tanggal').value = new Date().toISOString().slice(0,10);
-        renderLogs();
+        if (document.getElementById('filter-tanggal')) {
+            document.getElementById('filter-tanggal').value = new Date().toISOString().slice(0,10);
+            renderLogs();
+        }
     }
 
     function renderLogs() {
         const logsContainer = document.getElementById('attendance-logs');
-        if(!logsContainer) return; logsContainer.innerHTML = '';
-        const modeLap = document.getElementById('mode-laporan').value;
-        const filterTanggal = document.getElementById('filter-tanggal').value || new Date().toISOString().slice(0,10);
+        if(!logsContainer) return; 
+        logsContainer.innerHTML = '';
+        
+        const modeLapElem = document.getElementById('mode-laporan');
+        if (!modeLapElem) return;
+        const modeLap = modeLapElem.value;
+        const filterTanggal = document.getElementById('filter-tanggal') ? document.getElementById('filter-tanggal').value : new Date().toISOString().slice(0,10);
 
         if (modeLap === 'terlambat') {
             const hadirNis = new Set(attendanceLogs.filter(l => l.tanggal === filterTanggal && l.mode === currentSystemMode).map(l => l.nis));
@@ -1104,11 +1170,11 @@
         if (modeLap === 'harian') {
             filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
         } else if (modeLap === 'bulanan') {
-            const filterBulan = document.getElementById('filter-bulan').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterBulan));
+            const filterBulan = document.getElementById('filter-bulan') ? document.getElementById('filter-bulan').value : '';
+            filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterBulan));
         } else if (modeLap === 'tahunan') {
-            const filterTahun = document.getElementById('filter-tahun').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterTahun));
+            const filterTahun = document.getElementById('filter-tahun') ? document.getElementById('filter-tahun').value : '';
+            filteredLogs = filteredLogs.filter(log => log.tanggal && log.tanggal.startsWith(filterTahun));
         }
 
         if(filteredLogs.length === 0) {
@@ -1128,15 +1194,105 @@
             item.innerHTML = `
                 <div style="flex:1;">
                     <div style="font-weight:600; font-size:14px;">${log.nama}</div>
-                    <div style="font-size:11px; color:var(--text-muted);">${log.kelas} • ${log.tanggal} (Masuk: ${log.waktu}${log.waktuPulang !== '-' ? ' • Pulang: '+log.waktuPulang : ''})</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${log.kelas} ${log.shift && log.shift !== '-' ? '• '+log.shift : ''} • ${log.tanggal} (Masuk: ${log.waktu}${log.waktuPulang && log.waktuPulang !== '-' ? ' • Pulang: '+log.waktuPulang : ''})</div>
+                    <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
+                        <button onclick="ubahStatusLog('${log.id}', 'Hadir')" style="font-size:9px; padding:2px 6px; background:rgba(74,222,128,0.2); color:#4ade80; border:1px solid rgba(74,222,128,0.4); border-radius:4px; cursor:pointer;">Hadir</button>
+                        <button onclick="ubahStatusLog('${log.id}', 'Sakit')" style="font-size:9px; padding:2px 6px; background:rgba(251,191,36,0.2); color:#fbbf24; border:1px solid rgba(251,191,36,0.4); border-radius:4px; cursor:pointer;">Sakit</button>
+                        <button onclick="ubahStatusLog('${log.id}', 'Izin')" style="font-size:9px; padding:2px 6px; background:rgba(56,189,248,0.2); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); border-radius:4px; cursor:pointer;">Izin</button>
+                        <button onclick="ubahStatusLog('${log.id}', 'Izin Pulang')" style="font-size:9px; padding:2px 6px; background:rgba(168,85,247,0.2); color:#d8b4fe; border:1px solid rgba(168,85,247,0.4); border-radius:4px; cursor:pointer;">Pulang Cepat</button>
+                    </div>
                 </div>
-                <div style="text-align: right;">
-                    <span style="font-weight:700; font-size:12px; color: ${colorStatus}; display: block;">${log.status}</span>
-                    <span style="font-size:10px; color: var(--text-muted);">${log.keteranganPulang || log.metode || ''}</span>
+                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                    <div>
+                        <span style="font-weight:700; font-size:12px; color: ${colorStatus}; display: block;">${log.status}</span>
+                        <span style="font-size:10px; color: var(--text-muted);">${log.keteranganPulang || log.metode || ''}</span>
+                    </div>
+                    <button class="btn-icon btn-delete" style="width:26px; height:26px; font-size:11px;" onclick="hapusLogAbsen('${log.id}')" title="Hapus Log"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `;
             logsContainer.appendChild(item);
         });
+    }
+
+    function ubahStatusLog(logId, statusBaru) {
+        const idx = attendanceLogs.findIndex(l => l.id === logId);
+        if (idx !== -1) {
+            attendanceLogs[idx].status = statusBaru;
+            simpanSemuaLogLokal();
+            alert('✓ Status absensi diubah ke ' + statusBaru);
+        }
+    }
+
+    function hapusLogAbsen(logId) {
+        if (confirm('Hapus catatan absensi ini?')) {
+            attendanceLogs = attendanceLogs.filter(l => l.id !== logId);
+            simpanSemuaLogLokal();
+            if (useFirebase && navigator.onLine) db.collection('attendance').doc(logId).delete();
+            alert('✓ Catatan absensi berhasil dihapus.');
+        }
+    }
+
+    // DOWNLOAD CSV EXCEL DARI MEMORI HP LOKAL
+    function exportDataCSV() {
+        const filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
+
+        if (!filteredLogs || filteredLogs.length === 0) {
+            alert('Tidak ada data riwayat absensi untuk diunduh.');
+            return;
+        }
+
+        let csvContent = "\uFEFFNIS/NIK,Nama,Kelas/Departemen,Shift,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan,Metode\n";
+        filteredLogs.forEach(log => {
+            const row = [
+                `"${log.nis || ''}"`,
+                `"${log.nama || ''}"`,
+                `"${log.kelas || ''}"`,
+                `"${log.shift || '-'}"`,
+                `"${log.tanggal || ''}"`,
+                `"${log.waktu || ''}"`,
+                `"${log.waktuPulang || '-'}"`,
+                `"${log.status || ''}"`,
+                `"${log.keteranganPulang || log.metode || ''}"`,
+                `"${log.metode || ''}"`
+            ];
+            csvContent += row.join(",") + "\n";
+        });
+
+        const filename = `Laporan_AbsenO_${currentSystemMode}_${new Date().toISOString().slice(0,10)}.csv`;
+
+        if (window.cordova && window.cordova.file) {
+            const targetDir = window.cordova.file.externalDataDirectory || window.cordova.file.dataDirectory;
+            
+            window.resolveLocalFileSystemURL(targetDir, function (dirEntry) {
+                dirEntry.getFile(filename, { create: true, exclusive: false }, function (fileEntry) {
+                    fileEntry.createWriter(function (fileWriter) {
+                        fileWriter.onwriteend = function () {
+                            alert('✓ Berhasil! File CSV tersimpan di direktori aplikasi:\n' + fileEntry.nativeURL);
+                        };
+                        fileWriter.onerror = function (e) {
+                            alert('Gagal menulis file: ' + JSON.stringify(e));
+                        };
+                        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                        fileWriter.write(blob);
+                    }, function (err) { alert('Error writer: ' + JSON.stringify(err)); });
+                }, function (err) { alert('Error file: ' + JSON.stringify(err)); });
+            }, function (err) { alert('Gagal mengakses folder penyimpanan perangkat.'); });
+            return;
+        }
+
+        try {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.href = url;
+            downloadAnchor.download = filename;
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            alert('✓ Berhasil! File CSV sedang diunduh.');
+        } catch (err) {
+            alert('Gagal mengunduh file CSV.');
+        }
     }
 
     function changeTheme(themeName) {
@@ -1147,83 +1303,61 @@
     function loadSettings() {
         const savedTheme = localStorage.getItem('abseno_theme') || 'heritage';
         document.body.setAttribute('data-theme', savedTheme);
-        document.getElementById('theme-select').value = savedTheme;
+        const themeSel = document.getElementById('theme-select');
+        if (themeSel) themeSel.value = savedTheme;
 
         const currentConfig = JSON.parse(localStorage.getItem('abseno_school_database'));
         if (currentConfig) {
-            document.getElementById('fb-apikey').value = currentConfig.apiKey || '';
-            document.getElementById('fb-projectid').value = currentConfig.projectId || '';
+            if (document.getElementById('fb-apikey')) document.getElementById('fb-apikey').value = currentConfig.apiKey || '';
+            if (document.getElementById('fb-projectid')) document.getElementById('fb-projectid').value = currentConfig.projectId || '';
         }
     }
 
+    function muatPengaturanShift() {
+        const jenisShift = document.getElementById('input-shift-pilihan').value;
+        const jamMasuk = document.getElementById('input-jam-masuk');
+        const jamPulang = document.getElementById('input-jam-pulang');
+
+        if(jenisShift === 'shift1') { if (jamMasuk) jamMasuk.value = '07:00'; if (jamPulang) jamPulang.value = '15:00'; }
+        else if(jenisShift === 'shift2') { if (jamMasuk) jamMasuk.value = '15:00'; if (jamPulang) jamPulang.value = '23:00'; }
+        else if(jenisShift === 'shift3') { if (jamMasuk) jamMasuk.value = '23:00'; if (jamPulang) jamPulang.value = '07:00'; }
+        else { if (jamMasuk) jamMasuk.value = '08:00'; if (jamPulang) jamPulang.value = '17:00'; }
+    }
+
     function saveSchedule() {
-        const hari = document.getElementById('input-hari').value || 'Senin - Sabtu';
+        const shiftPilihan = document.getElementById('input-shift-pilihan') ? document.getElementById('input-shift-pilihan').value : 'reguler';
         const masuk = document.getElementById('input-jam-masuk').value || '07:00';
         const pulang = document.getElementById('input-jam-pulang').value || '14:00';
         
         activeSchedule = { jamMasuk: masuk, jamPulang: pulang };
         localStorage.setItem('abseno_schedule', JSON.stringify(activeSchedule));
-        document.getElementById('display-schedule').innerText = `${hari} | Masuk: ${masuk} (Batas Terlambat Otomatis)`;
-        alert('Jadwal dan toleransi keterlambatan berhasil disimpan!');
+        const schedDisplay = document.getElementById('display-schedule');
+        if (schedDisplay) {
+            if (currentSystemMode === 'pabrik') {
+                schedDisplay.innerText = `Shift: ${shiftPilihan.toUpperCase()} | Masuk: ${masuk} - Pulang: ${pulang}`;
+            } else {
+                schedDisplay.innerText = `Jam Masuk: ${masuk} - Jam Pulang: ${pulang}`;
+            }
+        }
+        alert('Jadwal berhasil disimpan di memori HP!');
     }
 
     function loadSchedule() {
         const savedSch = JSON.parse(localStorage.getItem('abseno_schedule'));
+        const schedDisplay = document.getElementById('display-schedule');
         if(savedSch) {
             activeSchedule = savedSch;
-            document.getElementById('input-jam-masuk').value = savedSch.jamMasuk;
-            document.getElementById('input-jam-pulang').value = savedSch.jamPulang;
-            document.getElementById('display-schedule').innerText = `Senin - Sabtu | Masuk: ${savedSch.jamMasuk}`;
+            if (document.getElementById('input-jam-masuk')) document.getElementById('input-jam-masuk').value = savedSch.jamMasuk;
+            if (document.getElementById('input-jam-pulang')) document.getElementById('input-jam-pulang').value = savedSch.jamPulang;
+            if (schedDisplay) {
+                if (currentSystemMode === 'pabrik') {
+                    schedDisplay.innerText = `Masuk: ${savedSch.jamMasuk} - Pulang: ${savedSch.jamPulang}`;
+                } else {
+                    schedDisplay.innerText = `Jam Masuk: ${savedSch.jamMasuk} - Jam Pulang: ${savedSch.jamPulang}`;
+                }
+            }
         } else {
-            document.getElementById('display-schedule').innerText = `Senin - Sabtu | Masuk: 07:00`;
-        }
-        document.getElementById('input-hari').value = 'Senin - Sabtu';
-    }
-
-    // FUNGSI DOWNLOAD / EKSPOR CSV YANG DISEMPURNAKAN
-    function exportCSV() {
-        const modeLap = document.getElementById('mode-laporan').value;
-        let filteredLogs = attendanceLogs.filter(l => l.mode === currentSystemMode);
-        
-        if (modeLap === 'harian') {
-            const filterTanggal = document.getElementById('filter-tanggal').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal === filterTanggal);
-        } else if (modeLap === 'bulanan') {
-            const filterBulan = document.getElementById('filter-bulan').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterBulan));
-        } else if (modeLap === 'tahunan') {
-            const filterTahun = document.getElementById('filter-tahun').value;
-            filteredLogs = filteredLogs.filter(log => log.tanggal.startsWith(filterTahun));
-        }
-
-        if (!filteredLogs || filteredLogs.length === 0) {
-            alert('Tidak ada data laporan untuk di-download!');
-            return;
-        }
-
-        let csv = '\ufeffID/NIK,Nama,Kelas/Departemen,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan/Metode\n';
-        filteredLogs.forEach(l => {
-            csv += `"${l.nis || ''}","${l.nama || ''}","${l.kelas || ''}","${l.tanggal || '-'}","${l.waktu || ''}","${l.waktuPulang || '-'}","${l.status || ''}","${l.keteranganPulang || l.metode || ''}"\n`;
-        });
-
-        try {
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Laporan_AbsenO_${currentSystemMode}_${modeLap}_${new Date().toISOString().slice(0,10)}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-        } catch (e) {
-            const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csv);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', `Laporan_AbsenO_${currentSystemMode}_${modeLap}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            if (schedDisplay) schedDisplay.innerText = `Jam Masuk: 07:00 - Jam Pulang: 14:00`;
         }
     }
 </script>
