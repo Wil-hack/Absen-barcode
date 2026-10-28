@@ -1,122 +1,49 @@
-name: Build AbsenO APK
+name: Build Android APK
 
 on:
   push:
-    branches: ["main", "master"]
-  workflow_dispatch:
-
-permissions:
-  contents: read
+    branches: [ main, master ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
 
-      - name: Setup Java JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: "zulu"
-          java-version: "17"
+    - name: Install Cordova CLI
+      run: npm install -g cordova
 
-      - name: Install Cordova
-        run: npm install -g cordova
+    - name: Create Cordova Project
+      run: |
+        cordova create my-app com.abseno.app AbsenO
+        cd my-app
+        cordova platform add android
 
-      - name: Check Project Files
-        run: |
-          test -f index.html || {
-            echo "ERROR: index.html tidak ditemukan"
-            exit 1
-          }
+    - name: Copy Web Files & Configure App
+      run: |
+        # Menyalin file index.html ke folder www proyek Cordova
+        cp index.html my-app/www/index.html
+        cd my-app
 
-          test -f logo-abseno.png || {
-            echo "ERROR: logo-abseno.png tidak ditemukan di folder utama"
-            exit 1
-          }
+        # Plugin penting untuk ekspor file CSV & fitur pendukung
+        cordova plugin add cordova-plugin-file
+        cordova plugin add cordova-plugin-file-transfer
+        cordova plugin add cordova-plugin-x-socialsharing
 
-      - name: Create Cordova Project
-        run: |
-          cordova create myApp com.abseno.app AbsenO
+    - name: Build APK with Cordova
+      run: |
+        cd my-app
+        cordova build android --release
 
-          rm -rf myApp/www/*
-          rsync -a \
-            --exclude='.git/' \
-            --exclude='.github/' \
-            --exclude='myApp/' \
-            --exclude='node_modules/' \
-            --exclude='platforms/' \
-            --exclude='plugins/' \
-            ./ myApp/www/
-
-          mkdir -p myApp/res
-          cp logo-abseno.png myApp/res/abseno-icon.png
-
-      - name: Prepare Transparent Splash Icon
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y imagemagick
-
-          convert -size 512x512 xc:none \
-            myApp/res/transparent-splash.png
-
-      - name: Configure Android App
-        working-directory: myApp
-        run: |
-          cat > config.xml <<'EOF'
-          <?xml version='1.0' encoding='utf-8'?>
-          <widget id="com.abseno.app"
-                  version="1.0.0"
-                  xmlns="http://www.w3.org/ns/widgets"
-                  xmlns:cdv="http://cordova.apache.org/ns/1.0">
-
-              <name>AbsenO</name>
-              <description>Sistem Presensi AbsenO</description>
-              <author email="admin@abseno.com">AbsenO Team</author>
-
-              <content src="index.html" />
-
-              <access origin="*" />
-              <allow-intent href="http://*/*" />
-              <allow-intent href="https://*/*" />
-              <allow-navigation href="*" />
-
-              <preference name="BackgroundColor" value="#14100c" />
-
-              <platform name="android">
-                  <icon src="res/abseno-icon.png" />
-
-                  <preference
-                      name="AndroidWindowSplashScreenBackground"
-                      value="#14100c" />
-
-                  <preference
-                      name="AndroidWindowSplashScreenAnimatedIcon"
-                      value="res/transparent-splash.png" />
-              </platform>
-          </widget>
-          EOF
-
-          cordova plugin add cordova-plugin-file
-          cordova plugin add cordova-plugin-x-socialsharing
-          cordova plugin add cordova-plugin-file-transfer
-
-          cordova platform add android
-
-      - name: Build Android APK
-        working-directory: myApp
-        run: cordova build android --debug
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: AbsenO-APK
-          path: myApp/platforms/android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: AbsenO-APK
+        path: my-app/platforms/android/app/build/outputs/apk/release/app-release-unsigned.apk
