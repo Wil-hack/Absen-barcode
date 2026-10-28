@@ -272,7 +272,7 @@
             <div id="attendance-logs"></div>
         </div>
 
-        <!-- TAB 5: AKUN, BACKUP & DONASI -->
+        <!-- TAB 5: AKUN, EKSPOR CSV & IMPOR DATA -->
         <div id="tab-akun" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Mode Sistem Operasional</div>
@@ -291,12 +291,15 @@
                     </select>
                 </div>
 
-                <!-- TOMBOL EKSPOR & IMPOR DATA (BACKUP / RESTORE) -->
+                <!-- TOMBOL EKSPOR CSV & IMPOR DATA (.JSON) -->
                 <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 10px;">
-                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 8px; text-align: center;">Cadangkan & Pulihkan Data</div>
+                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 8px; text-align: center;">Kelola Data & Laporan</div>
                     <div style="display: flex; gap: 8px;">
-                        <button class="btn-primary" style="margin-top:0; font-size:12px; background: rgba(56,189,248,0.2); color:#38bdf8; border:1px solid #38bdf8;" onclick="exportDataJSON()"><i class="fa-solid fa-file-arrow-down"></i> Ekspor Data</button>
-                        <button class="btn-primary" style="margin-top:0; font-size:12px; background: rgba(74,222,128,0.2); color:#4ade80; border:1px solid #4ade80;" onclick="document.getElementById('import-file-input').click()"><i class="fa-solid fa-file-arrow-up"></i> Impor Data</button>
+                        <button class="btn-primary" style="margin-top:0; font-size:12px; background: rgba(56,189,248,0.2); color:#38bdf8; border:1px solid #38bdf8;" onclick="exportDataCSV()"><i class="fa-solid fa-file-csv"></i> Ekspor CSV</button>
+                        <button class="btn-primary" style="margin-top:0; font-size:12px; background: rgba(212,175,55,0.2); color:var(--primary); border:1px solid var(--primary);" onclick="exportDataJSON()"><i class="fa-solid fa-file-arrow-down"></i> Backup JSON</button>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-top: 6px;">
+                        <button class="btn-primary" style="margin-top:0; width:100%; font-size:12px; background: rgba(74,222,128,0.2); color:#4ade80; border:1px solid #4ade80;" onclick="document.getElementById('import-file-input').click()"><i class="fa-solid fa-file-arrow-up"></i> Impor Data (.json)</button>
                         <input type="file" id="import-file-input" style="display:none" accept=".json" onchange="importDataJSON(event)">
                     </div>
                 </div>
@@ -1282,7 +1285,44 @@
         });
     }
 
-    // FITUR EKSPOR DATA (BACKUP KE FILE JSON)
+    // FITUR EKSPOR DATA KE FORMAT CSV (KOMPATIBEL EXCEL / WPS)
+    function exportDataCSV() {
+        if (!attendanceLogs || attendanceLogs.length === 0) {
+            alert('Tidak ada data riwayat absensi untuk diekspor.');
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
+        csvContent += "NIS/NIK,Nama,Kelas/Departemen,Shift,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan,Metode\n";
+
+        const deduplicated = getDeduplicatedLogs();
+        deduplicated.forEach(log => {
+            const row = [
+                `"${log.nis || ''}"`,
+                `"${log.nama || ''}"`,
+                `"${log.kelas || ''}"`,
+                `"${log.shift || 'Reguler'}"`,
+                `"${log.tanggal || ''}"`,
+                `"${log.waktu || ''}"`,
+                `"${log.waktuPulang || '-'}"`,
+                `"${log.status || ''}"`,
+                `"${log.keteranganPulang || log.metode || ''}"`,
+                `"${log.metode || ''}"`
+            ];
+            csvContent += row.join(",") + "\n";
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", encodedUri);
+        downloadAnchor.setAttribute("download", `Laporan_AbsenO_${currentSystemMode}_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        alert('✓ Laporan berhasil diekspor ke format CSV (.csv)! File dapat dibuka via Excel / WPS.');
+    }
+
+    // FITUR EKSPOR DATA BACKUP (JSON)
     function exportDataJSON() {
         const backupData = {
             mode: currentSystemMode,
@@ -1298,7 +1338,7 @@
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
-        alert('✓ Data berhasil diekspor (diunduh sebagai file backup JSON).');
+        alert('✓ Cadangan data berhasil diunduh (JSON).');
     }
 
     // FITUR IMPOR DATA (RESTORE DARI FILE JSON)
@@ -1310,8 +1350,7 @@
             try {
                 const imported = JSON.parse(e.target.result);
                 if (imported.students && Array.isArray(imported.students)) {
-                    if (confirm(`Impor data ditemukan: ${imported.students.length} anggota dan ${imported.attendanceLogs ? imported.attendanceLogs.length : 0} riwayat absen. Timpa/gabungkan data sekarang?`)) {
-                        // Simpan siswa ke Firestore batch atau local
+                    if (confirm(`Impor data ditemukan: ${imported.students.length} anggota dan ${imported.attendanceLogs ? imported.attendanceLogs.length : 0} riwayat absen. Masukkan ke database sekarang?`)) {
                         imported.students.forEach(s => {
                             delete s.id;
                             db.collection('students').add(s);
@@ -1322,7 +1361,7 @@
                                 db.collection('attendance').add(l);
                             });
                         }
-                        alert('✓ Berhasil mengimpor data ke database!');
+                        alert('✓ Berhasil mengimpor data!');
                         location.reload();
                     }
                 } else {
