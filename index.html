@@ -236,7 +236,7 @@
             </div>
         </div>
 
-        <!-- TAB 4: LAPORAN (DIPERTAHANKAN LENGKAP) -->
+        <!-- TAB 4: LAPORAN -->
         <div id="tab-laporan" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Laporan & Statistik Absen</div>
@@ -1285,16 +1285,14 @@
         });
     }
 
-    // FITUR EKSPOR DATA KE FORMAT CSV (KOMPATIBEL EXCEL / WPS)
+    // FITUR EKSPOR DATA KE FORMAT CSV (MENGGUNAKAN CORDOVA FILE API)
     function exportDataCSV() {
         if (!attendanceLogs || attendanceLogs.length === 0) {
             alert('Tidak ada data riwayat absensi untuk diekspor.');
             return;
         }
 
-        let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
-        csvContent += "NIS/NIK,Nama,Kelas/Departemen,Shift,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan,Metode\n";
-
+        let csvContent = "\uFEFFNIS/NIK,Nama,Kelas/Departemen,Shift,Tanggal,Jam Masuk,Jam Pulang,Status,Keterangan,Metode\n";
         const deduplicated = getDeduplicatedLogs();
         deduplicated.forEach(log => {
             const row = [
@@ -1312,14 +1310,41 @@
             csvContent += row.join(",") + "\n";
         });
 
-        const encodedUri = encodeURI(csvContent);
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", encodedUri);
-        downloadAnchor.setAttribute("download", `Laporan_AbsenO_${currentSystemMode}_${new Date().toISOString().slice(0,10)}.csv`);
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-        alert('✓ Laporan berhasil diekspor ke format CSV (.csv)! File dapat dibuka via Excel / WPS.');
+        const filename = `Laporan_AbsenO_${currentSystemMode}_${new Date().toISOString().slice(0,10)}.csv`;
+
+        if (window.cordova && window.cordova.file) {
+            const targetDir = window.cordova.file.externalDataDirectory || window.cordova.file.dataDirectory;
+            
+            window.resolveLocalFileSystemURL(targetDir, function (dirEntry) {
+                dirEntry.getFile(filename, { create: true, exclusive: false }, function (fileEntry) {
+                    fileEntry.createWriter(function (fileWriter) {
+                        fileWriter.onwriteend = function () {
+                            alert('✓ Berhasil! File CSV tersimpan di direktori aplikasi:\n' + fileEntry.nativeURL);
+                        };
+                        fileWriter.onerror = function (e) {
+                            alert('Gagal menulis file: ' + JSON.stringify(e));
+                        };
+                        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                        fileWriter.write(blob);
+                    }, function (err) { alert('Error writer: ' + JSON.stringify(err)); });
+                }, function (err) { alert('Error file: ' + JSON.stringify(err)); });
+            }, function (err) { alert('Gagal mengakses folder penyimpanan perangkat.'); });
+            return;
+        }
+
+        try {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.href = url;
+            downloadAnchor.download = filename;
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            alert('✓ Berhasil! File CSV diunduh melalui browser.');
+        } catch (err) {
+            alert('Gagal mengekspor file CSV.');
+        }
     }
 
     // FITUR EKSPOR DATA BACKUP (JSON)
