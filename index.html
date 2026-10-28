@@ -208,15 +208,17 @@
         <!-- TAB 3: JADWAL & SHIFT -->
         <div id="tab-jadwal" class="tab-content">
             <div class="glass-card">
-                <div class="section-title">Atur Jam Presensi & Shift Pabrik</div>
+                <div class="section-title" id="title-jadwal-box">Atur Jam Presensi & Shift Pabrik</div>
                 
-                <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Pilih Shift Kerja</label>
-                <select id="input-shift-pilihan" class="form-control" onchange="muatPengaturanShift()">
-                    <option value="reguler">Reguler / Umum</option>
-                    <option value="shift1">Shift 1 (Pagi: 07:00 - 15:00)</option>
-                    <option value="shift2">Shift 2 (Sore: 15:00 - 23:00)</option>
-                    <option value="shift3">Shift 3 (Malam: 23:00 - 07:00)</option>
-                </select>
+                <div id="container-shift-pilihan" style="display: none;">
+                    <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Pilih Shift Kerja</label>
+                    <select id="input-shift-pilihan" class="form-control" onchange="muatPengaturanShift()">
+                        <option value="reguler">Reguler / Umum</option>
+                        <option value="shift1">Shift 1 (Pagi: 07:00 - 15:00)</option>
+                        <option value="shift2">Shift 2 (Sore: 15:00 - 23:00)</option>
+                        <option value="shift3">Shift 3 (Malam: 23:00 - 07:00)</option>
+                    </select>
+                </div>
 
                 <div style="display: flex; gap: 10px; margin-bottom: 8px;">
                     <div style="flex: 1;">
@@ -228,7 +230,7 @@
                         <input type="time" id="input-jam-pulang" class="form-control" style="margin-bottom:0;">
                     </div>
                 </div>
-                <button class="btn-primary" onclick="saveSchedule()">Simpan Jadwal Shift</button>
+                <button class="btn-primary" onclick="saveSchedule()">Simpan Jadwal</button>
             </div>
             <div class="glass-card" style="text-align: center;">
                 <div class="section-title">Status Jadwal Aktif</div>
@@ -272,7 +274,7 @@
             <div id="attendance-logs"></div>
         </div>
 
-        <!-- TAB 5: AKUN, EKSPOR CSV & IMPOR DATA -->
+        <!-- TAB 5: AKUN & DOWNLOAD CSV -->
         <div id="tab-akun" class="tab-content">
             <div class="glass-card">
                 <div class="section-title">Mode Sistem Operasional</div>
@@ -291,17 +293,12 @@
                     </select>
                 </div>
 
-                <!-- TOMBOL EKSPOR CSV & IMPOR DATA (.JSON) -->
+                <!-- TOMBOL DOWNLOAD CSV (BERSIH DARI EKSPOR/IMPOR JSON) -->
                 <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 10px;">
-                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 8px; text-align: center;">Kelola Data & Laporan</div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn-primary" style="margin-top:0; font-size:12px; background: rgba(56,189,248,0.2); color:#38bdf8; border:1px solid #38bdf8;" onclick="exportDataCSV()"><i class="fa-solid fa-file-csv"></i> Ekspor CSV</button>
-                        <button class="btn-primary" style="margin-top:0; font-size:12px; background: rgba(212,175,55,0.2); color:var(--primary); border:1px solid var(--primary);" onclick="exportDataJSON()"><i class="fa-solid fa-file-arrow-down"></i> Backup JSON</button>
-                    </div>
-                    <div style="display: flex; gap: 8px; margin-top: 6px;">
-                        <button class="btn-primary" style="margin-top:0; width:100%; font-size:12px; background: rgba(74,222,128,0.2); color:#4ade80; border:1px solid #4ade80;" onclick="document.getElementById('import-file-input').click()"><i class="fa-solid fa-file-arrow-up"></i> Impor Data (.json)</button>
-                        <input type="file" id="import-file-input" style="display:none" accept=".json" onchange="importDataJSON(event)">
-                    </div>
+                    <div style="font-weight: 700; font-size: 14px; color: var(--primary); margin-bottom: 8px; text-align: center;">Kelola Laporan Absen</div>
+                    <button class="btn-primary" style="margin-top:0; font-size:13px; background: rgba(56,189,248,0.2); color:#38bdf8; border:1px solid #38bdf8;" onclick="exportDataCSV()">
+                        <i class="fa-solid fa-file-arrow-down"></i> Download CSV (Excel / WPS)
+                    </button>
                 </div>
 
                 <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 10px;">
@@ -388,6 +385,7 @@
         <input type="text" id="input-nama" class="form-control" placeholder="Nama Lengkap...">
         <input type="text" id="input-kelas" class="form-control" placeholder="Kelas / Departemen...">
         
+        <!-- Pilihan Shift hanya muncul jika Mode Pabrik -->
         <div id="box-pilihan-shift" style="display:none; margin-bottom:10px;">
             <label style="font-size: 11px; margin-bottom: 2px; display: block; color: var(--text-muted);">Shift Kerja Karyawan</label>
             <select id="input-student-shift" class="form-control" style="margin-bottom:0;">
@@ -581,6 +579,8 @@
         const inputNis = document.getElementById('input-nis');
         const inputKelas = document.getElementById('input-kelas');
         const boxShift = document.getElementById('box-pilihan-shift');
+        const containerShiftPilihan = document.getElementById('container-shift-pilihan');
+        const titleJadwalBox = document.getElementById('title-jadwal-box');
 
         if (selectMode) selectMode.value = currentSystemMode;
 
@@ -594,6 +594,8 @@
             if (inputNis) inputNis.placeholder = 'NIK Karyawan...';
             if (inputKelas) inputKelas.placeholder = 'Departemen...';
             if (boxShift) boxShift.style.display = 'block';
+            if (containerShiftPilihan) containerShiftPilihan.style.display = 'block';
+            if (titleJadwalBox) titleJadwalBox.innerText = 'Atur Jam Presensi & Shift Pabrik';
         } else {
             if (modeBadge) modeBadge.innerText = 'SEKOLAH';
             if (navLabelAnggota) navLabelAnggota.innerText = 'Siswa';
@@ -604,6 +606,8 @@
             if (inputNis) inputNis.placeholder = 'NIS Siswa...';
             if (inputKelas) inputKelas.placeholder = 'Nama Kelas...';
             if (boxShift) boxShift.style.display = 'none';
+            if (containerShiftPilihan) containerShiftPilihan.style.display = 'none';
+            if (titleJadwalBox) titleJadwalBox.innerText = 'Atur Jam Presensi Sekolah';
         }
     }
 
@@ -909,7 +913,7 @@
             nis: student.nis,
             nama: student.nama,
             kelas: student.kelas,
-            shift: student.shift || 'Reguler',
+            shift: currentSystemMode === 'pabrik' ? (student.shift || 'Reguler') : '-',
             tanggal: todayDate,
             waktu: nowTimeStr,
             waktuPulang: '-',
@@ -1101,7 +1105,8 @@
 
         if(!nis || !nama) return alert('ID/NIK dan Nama wajib diisi!');
 
-        const studentData = { nis, nama, kelas, shift, mode: currentSystemMode };
+        const studentData = { nis, nama, kelas, mode: currentSystemMode };
+        if (currentSystemMode === 'pabrik') studentData.shift = shift;
         if (tempFaceVector) studentData.faceVector = tempFaceVector;
 
         if(docId === '') {
@@ -1269,26 +1274,59 @@
             else if(log.status === 'Terlambat') colorStatus = '#f59e0b';
             else if(log.status === 'Alpa') colorStatus = '#f87171';
 
+            // Cari docId asli dari attendanceLogs untuk tombol ubah status / hapus
+            const originalLog = attendanceLogs.find(l => l.nis === log.nis && l.tanggal === log.tanggal && l.mode === currentSystemMode);
+            const docId = originalLog ? originalLog.id : '';
+
             const item = document.createElement('div');
             item.className = 'student-item';
             item.innerHTML = `
                 <div style="flex:1;">
                     <div style="font-weight:600; font-size:14px;">${log.nama}</div>
-                    <div style="font-size:11px; color:var(--text-muted);">${log.kelas} ${log.shift ? '• '+log.shift : ''} • ${log.tanggal} (Masuk: ${log.waktu}${log.waktuPulang && log.waktuPulang !== '-' ? ' • Pulang: '+log.waktuPulang : ''})</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${log.kelas} ${log.shift && log.shift !== '-' ? '• '+log.shift : ''} • ${log.tanggal} (Masuk: ${log.waktu}${log.waktuPulang && log.waktuPulang !== '-' ? ' • Pulang: '+log.waktuPulang : ''})</div>
+                    <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
+                        <button onclick="ubahStatusLog('${docId}', 'Hadir')" style="font-size:9px; padding:2px 6px; background:rgba(74,222,128,0.2); color:#4ade80; border:1px solid rgba(74,222,128,0.4); border-radius:4px; cursor:pointer;">Hadir</button>
+                        <button onclick="ubahStatusLog('${docId}', 'Sakit')" style="font-size:9px; padding:2px 6px; background:rgba(251,191,36,0.2); color:#fbbf24; border:1px solid rgba(251,191,36,0.4); border-radius:4px; cursor:pointer;">Sakit</button>
+                        <button onclick="ubahStatusLog('${docId}', 'Izin')" style="font-size:9px; padding:2px 6px; background:rgba(56,189,248,0.2); color:#38bdf8; border:1px solid rgba(56,189,248,0.4); border-radius:4px; cursor:pointer;">Izin</button>
+                        <button onclick="ubahStatusLog('${docId}', 'Izin Pulang')" style="font-size:9px; padding:2px 6px; background:rgba(168,85,247,0.2); color:#d8b4fe; border:1px solid rgba(168,85,247,0.4); border-radius:4px; cursor:pointer;">Pulang Cepat</button>
+                    </div>
                 </div>
-                <div style="text-align: right;">
-                    <span style="font-weight:700; font-size:12px; color: ${colorStatus}; display: block;">${log.status}</span>
-                    <span style="font-size:10px; color: var(--text-muted);">${log.keteranganPulang || log.metode || ''}</span>
+                <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                    <div>
+                        <span style="font-weight:700; font-size:12px; color: ${colorStatus}; display: block;">${log.status}</span>
+                        <span style="font-size:10px; color: var(--text-muted);">${log.keteranganPulang || log.metode || ''}</span>
+                    </div>
+                    <button class="btn-icon btn-delete" style="width:26px; height:26px; font-size:11px;" onclick="hapusLogAbsen('${docId}')" title="Hapus Log"><i class="fa-solid fa-trash"></i></button>
                 </div>
             `;
             logsContainer.appendChild(item);
         });
     }
 
-    // FITUR EKSPOR DATA KE FORMAT CSV (MENGGUNAKAN CORDOVA FILE API)
+    function ubahStatusLog(docId, statusBaru) {
+        if (!docId) return alert('ID log tidak valid.');
+        db.collection('attendance').doc(docId).update({ status: statusBaru }).then(() => {
+            alert('✓ Status absensi berhasil diubah ke ' + statusBaru);
+        }).catch(err => {
+            alert('Gagal mengubah status.');
+        });
+    }
+
+    function hapusLogAbsen(docId) {
+        if (!docId) return alert('ID log tidak valid.');
+        if (confirm('Hapus catatan absensi ini?')) {
+            db.collection('attendance').doc(docId).delete().then(() => {
+                alert('✓ Catatan absensi berhasil dihapus.');
+            }).catch(err => {
+                alert('Gagal menghapus data.');
+            });
+        }
+    }
+
+    // FITUR DOWNLOAD CSV KHUSUS LAPORAN
     function exportDataCSV() {
         if (!attendanceLogs || attendanceLogs.length === 0) {
-            alert('Tidak ada data riwayat absensi untuk diekspor.');
+            alert('Tidak ada data riwayat absensi untuk diunduh.');
             return;
         }
 
@@ -1299,7 +1337,7 @@
                 `"${log.nis || ''}"`,
                 `"${log.nama || ''}"`,
                 `"${log.kelas || ''}"`,
-                `"${log.shift || 'Reguler'}"`,
+                `"${log.shift || '-'}"`,
                 `"${log.tanggal || ''}"`,
                 `"${log.waktu || ''}"`,
                 `"${log.waktuPulang || '-'}"`,
@@ -1341,62 +1379,10 @@
             document.body.appendChild(downloadAnchor);
             downloadAnchor.click();
             downloadAnchor.remove();
-            alert('✓ Berhasil! File CSV diunduh melalui browser.');
+            alert('✓ Berhasil! File CSV sedang diunduh.');
         } catch (err) {
-            alert('Gagal mengekspor file CSV.');
+            alert('Gagal mengunduh file CSV.');
         }
-    }
-
-    // FITUR EKSPOR DATA BACKUP (JSON)
-    function exportDataJSON() {
-        const backupData = {
-            mode: currentSystemMode,
-            students: students,
-            attendanceLogs: attendanceLogs,
-            schedule: activeSchedule,
-            timestamp: new Date().toISOString()
-        };
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `Backup_AbsenO_${currentSystemMode}_${new Date().toISOString().slice(0,10)}.json`);
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-        alert('✓ Cadangan data berhasil diunduh (JSON).');
-    }
-
-    // FITUR IMPOR DATA (RESTORE DARI FILE JSON)
-    function importDataJSON(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const imported = JSON.parse(e.target.result);
-                if (imported.students && Array.isArray(imported.students)) {
-                    if (confirm(`Impor data ditemukan: ${imported.students.length} anggota dan ${imported.attendanceLogs ? imported.attendanceLogs.length : 0} riwayat absen. Masukkan ke database sekarang?`)) {
-                        imported.students.forEach(s => {
-                            delete s.id;
-                            db.collection('students').add(s);
-                        });
-                        if (imported.attendanceLogs) {
-                            imported.attendanceLogs.forEach(l => {
-                                delete l.id;
-                                db.collection('attendance').add(l);
-                            });
-                        }
-                        alert('✓ Berhasil mengimpor data!');
-                        location.reload();
-                    }
-                } else {
-                    alert('Format file cadangan tidak valid.');
-                }
-            } catch (err) {
-                alert('Gagal membaca file JSON.');
-            }
-        };
-        reader.readAsText(file);
     }
 
     function changeTheme(themeName) {
@@ -1429,15 +1415,21 @@
     }
 
     function saveSchedule() {
-        const shiftPilihan = document.getElementById('input-shift-pilihan').value;
+        const shiftPilihan = document.getElementById('input-shift-pilihan') ? document.getElementById('input-shift-pilihan').value : 'reguler';
         const masuk = document.getElementById('input-jam-masuk').value || '07:00';
         const pulang = document.getElementById('input-jam-pulang').value || '14:00';
         
         activeSchedule = { jamMasuk: masuk, jamPulang: pulang };
         localStorage.setItem('abseno_schedule', JSON.stringify(activeSchedule));
         const schedDisplay = document.getElementById('display-schedule');
-        if (schedDisplay) schedDisplay.innerText = `Shift: ${shiftPilihan.toUpperCase()} | Masuk: ${masuk} - Pulang: ${pulang}`;
-        alert('Jadwal shift berhasil disimpan!');
+        if (schedDisplay) {
+            if (currentSystemMode === 'pabrik') {
+                schedDisplay.innerText = `Shift: ${shiftPilihan.toUpperCase()} | Masuk: ${masuk} - Pulang: ${pulang}`;
+            } else {
+                schedDisplay.innerText = `Jam Masuk: ${masuk} - Jam Pulang: ${pulang}`;
+            }
+        }
+        alert('Jadwal berhasil disimpan!');
     }
 
     function loadSchedule() {
@@ -1447,9 +1439,15 @@
             activeSchedule = savedSch;
             if (document.getElementById('input-jam-masuk')) document.getElementById('input-jam-masuk').value = savedSch.jamMasuk;
             if (document.getElementById('input-jam-pulang')) document.getElementById('input-jam-pulang').value = savedSch.jamPulang;
-            if (schedDisplay) schedDisplay.innerText = `Masuk: ${savedSch.jamMasuk} - Pulang: ${savedSch.jamPulang}`;
+            if (schedDisplay) {
+                if (currentSystemMode === 'pabrik') {
+                    schedDisplay.innerText = `Masuk: ${savedSch.jamMasuk} - Pulang: ${savedSch.jamPulang}`;
+                } else {
+                    schedDisplay.innerText = `Jam Masuk: ${savedSch.jamMasuk} - Jam Pulang: ${savedSch.jamPulang}`;
+                }
+            }
         } else {
-            if (schedDisplay) schedDisplay.innerText = `Masuk: 07:00 - Pulang: 14:00`;
+            if (schedDisplay) schedDisplay.innerText = `Jam Masuk: 07:00 - Jam Pulang: 14:00`;
         }
     }
 </script>
