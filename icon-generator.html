@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>AbsenO - Icon Generator</title>
+    <style>
+        body {
+            background: #14100c;
+            color: #f5eedc;
+            font-family: system-ui, sans-serif;
+            text-align: center;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        h1 { color: #d4af37; margin-bottom: 8px; }
+        .subtitle { color: #a39585; margin-bottom: 30px; }
+        .preview {
+            display: inline-block;
+            margin: 15px;
+        }
+        .preview canvas {
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+            border: 2px solid #d4af37;
+            display: block;
+        }
+        .preview p {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #a39585;
+            font-family: monospace;
+        }
+        button {
+            background: #d4af37;
+            color: #14100c;
+            border: none;
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            margin: 20px 10px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        }
+        button:hover {
+            background: #f3d55a;
+            transform: translateY(-2px);
+        }
+        button:active { transform: translateY(0); }
+        .info {
+            max-width: 620px;
+            margin: 40px auto;
+            padding: 20px 24px;
+            background: rgba(212, 175, 55, 0.08);
+            border: 1px solid #4a3a2a;
+            border-radius: 12px;
+            text-align: left;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+        .info strong { color: #d4af37; display: block; margin-bottom: 8px; font-size: 15px; }
+        .info code {
+            background: #0a0806;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #d4af37;
+            font-family: monospace;
+            font-size: 13px;
+        }
+        .done {
+            color: #4ade80;
+            font-weight: 700;
+            margin-top: 10px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 AbsenO Icon Generator</h1>
+    <p class="subtitle">Klik tombol di bawah untuk mengunduh 3 file icon PWA</p>
+
+    <div class="preview">
+        <canvas id="icon-192" width="192" height="192"></canvas>
+        <p>icon-192.png</p>
+    </div>
+    <div class="preview">
+        <canvas id="icon-512" width="512" height="512"></canvas>
+        <p>icon-512.png</p>
+    </div>
+    <div class="preview">
+        <canvas id="icon-maskable" width="512" height="512"></canvas>
+        <p>icon-maskable-512.png</p>
+    </div>
+
+    <br>
+    <button onclick="downloadAll()">⬇️ Download Semua Icon</button>
+    <div class="done" id="status"></div>
+
+    <div class="info">
+        <strong>📋 Cara Pakai:</strong>
+        1. Klik tombol <em>"Download Semua Icon"</em> di atas<br>
+        2. Browser akan mengunduh 3 file: <code>icon-192.png</code>, <code>icon-512.png</code>, <code>icon-maskable-512.png</code><br>
+        3. Pindahkan ketiga file tadi ke folder yang sama dengan <code>index.html</code><br>
+        4. Hapus file <code>icon-generator.html</code> (sudah tidak perlu)<br>
+        5. Refresh aplikasi AbsenO — icon akan muncul saat install PWA ✓
+    </div>
+
+    <script>
+        function drawIcon(canvas, size, maskable) {
+            const ctx = canvas.getContext('2d');
+            
+            // Background gelap
+            ctx.fillStyle = '#14100c';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Padding lebih besar untuk maskable (biar tidak terpotong)
+            const padding = maskable ? size * 0.20 : size * 0.06;
+            const radius = (size - padding * 2) / 2;
+            const cx = size / 2;
+            const cy = size / 2;
+            
+            // Lingkaran gradient
+            const grad = ctx.createRadialGradient(cx, cy - radius * 0.3, 0, cx, cy, radius);
+            grad.addColorStop(0, '#3d301a');
+            grad.addColorStop(0.7, '#1f1813');
+            grad.addColorStop(1, '#0a0806');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Border emas
+            ctx.strokeStyle = '#d4af37';
+            ctx.lineWidth = size * 0.028;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Inner border (tipis)
+            ctx.strokeStyle = 'rgba(212, 175, 55, 0.3)';
+            ctx.lineWidth = size * 0.008;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * 0.88, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Teks "AO"
+            ctx.fillStyle = '#d4af37';
+            ctx.font = `bold ${size * 0.34}px Georgia, "Times New Roman", serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('AO', cx, cy - size * 0.03);
+            
+            // Subtitle "AbsenO"
+            ctx.fillStyle = '#f5eedc';
+            ctx.font = `600 ${size * 0.075}px system-ui, -apple-system, sans-serif`;
+            ctx.fillText('AbsenO', cx, cy + size * 0.24);
+        }
+
+        drawIcon(document.getElementById('icon-192'), 192, false);
+        drawIcon(document.getElementById('icon-512'), 512, false);
+        drawIcon(document.getElementById('icon-maskable'), 512, true);
+
+        function downloadCanvas(canvas, filename) {
+            return new Promise((resolve) => {
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    resolve();
+                }, 'image/png');
+            });
+        }
+
+        async function downloadAll() {
+            const status = document.getElementById('status');
+            status.textContent = '⏳ Mengunduh 3 file...';
+            
+            await downloadCanvas(document.getElementById('icon-192'), 'icon-192.png');
+            await new Promise((r) => setTimeout(r, 400));
+            await downloadCanvas(document.getElementById('icon-512'), 'icon-512.png');
+            await new Promise((r) => setTimeout(r, 400));
+            await downloadCanvas(document.getElementById('icon-maskable'), 'icon-maskable-512.png');
+            
+            status.textContent = '✓ Selesai! Cek folder Download.';
+        }
+    </script>
+</body>
+</html>
