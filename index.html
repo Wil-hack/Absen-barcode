@@ -317,7 +317,9 @@
         <div id="tab-jadwal" class="tab-content">
             <div class="glass-card">
                 <div class="section-title" id="title-jadwal-box">Atur Jam Presensi & Shift Pabrik</div>
-                <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-bottom: 12px;">
+                
+                <!-- Info shift otomatis (hanya tampil di mode pabrik) -->
+                <p id="info-text-shift" style="font-size: 11px; color: var(--text-muted); text-align: center; margin-bottom: 12px; display: none;">
                     ℹ️ Shift karyawan <b>otomatis terdeteksi</b> dari jam scan. Atur jam masuk untuk tiap shift di sini.
                 </p>
                 
@@ -787,6 +789,7 @@
         const inputKelas = document.getElementById('input-kelas');
         const containerShiftPilihan = document.getElementById('container-shift-pilihan');
         const titleJadwalBox = document.getElementById('title-jadwal-box');
+        const infoTextShift = document.getElementById('info-text-shift');
 
         if (selectMode) selectMode.value = currentSystemMode;
 
@@ -801,6 +804,7 @@
             if (inputKelas) inputKelas.placeholder = 'Departemen...';
             if (containerShiftPilihan) containerShiftPilihan.style.display = 'block';
             if (titleJadwalBox) titleJadwalBox.innerText = 'Atur Jam Presensi & Shift Pabrik';
+            if (infoTextShift) infoTextShift.style.display = 'block';
         } else {
             if (modeBadge) modeBadge.innerText = 'SEKOLAH';
             if (navLabelAnggota) navLabelAnggota.innerText = 'Siswa';
@@ -812,6 +816,7 @@
             if (inputKelas) inputKelas.placeholder = 'Nama Kelas...';
             if (containerShiftPilihan) containerShiftPilihan.style.display = 'none';
             if (titleJadwalBox) titleJadwalBox.innerText = 'Atur Jam Presensi Sekolah';
+            if (infoTextShift) infoTextShift.style.display = 'none';
         }
     }
 
