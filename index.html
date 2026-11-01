@@ -317,6 +317,9 @@
         <div id="tab-jadwal" class="tab-content">
             <div class="glass-card">
                 <div class="section-title" id="title-jadwal-box">Atur Jam Presensi & Shift Pabrik</div>
+                <p style="font-size: 11px; color: var(--text-muted); text-align: center; margin-bottom: 12px;">
+                    ℹ️ Shift karyawan <b>otomatis terdeteksi</b> dari jam scan. Atur jam masuk untuk tiap shift di sini.
+                </p>
                 
                 <div id="container-shift-pilihan" style="display: none;">
                     <label style="font-size: 12px; margin-bottom: 4px; display: block; color: var(--text-muted);">Pilih Shift Kerja</label>
@@ -533,16 +536,6 @@
         <input type="text" id="input-nis" class="form-control" placeholder="NIS / NIK Karyawan...">
         <input type="text" id="input-nama" class="form-control" placeholder="Nama Lengkap...">
         <input type="text" id="input-kelas" class="form-control" placeholder="Kelas / Departemen...">
-        
-        <div id="box-pilihan-shift" style="display:none; margin-bottom:10px;">
-            <label style="font-size: 11px; margin-bottom: 2px; display: block; color: var(--text-muted);">Shift Kerja Karyawan</label>
-            <select id="input-student-shift" class="form-control" style="margin-bottom:0;">
-                <option value="Reguler">Shift Reguler</option>
-                <option value="Shift 1">Shift 1 (Pagi)</option>
-                <option value="Shift 2">Shift 2 (Sore)</option>
-                <option value="Shift 3">Shift 3 (Malam)</option>
-            </select>
-        </div>
 
         <div style="background: rgba(0,0,0,0.2); border: 1px dashed var(--border-color); border-radius: 10px; padding: 10px; text-align: center; margin-bottom: 10px;">
             <div style="font-size: 12px; font-weight: 600; color: var(--primary); margin-bottom: 4px;">Ekstraksi Kode Biometrik Wajah</div>
@@ -792,7 +785,6 @@
         const modalStudentTitle = document.getElementById('modal-student-title');
         const inputNis = document.getElementById('input-nis');
         const inputKelas = document.getElementById('input-kelas');
-        const boxShift = document.getElementById('box-pilihan-shift');
         const containerShiftPilihan = document.getElementById('container-shift-pilihan');
         const titleJadwalBox = document.getElementById('title-jadwal-box');
 
@@ -807,7 +799,6 @@
             if (modalStudentTitle) modalStudentTitle.innerText = 'Tambah Karyawan Baru';
             if (inputNis) inputNis.placeholder = 'NIK Karyawan...';
             if (inputKelas) inputKelas.placeholder = 'Departemen...';
-            if (boxShift) boxShift.style.display = 'block';
             if (containerShiftPilihan) containerShiftPilihan.style.display = 'block';
             if (titleJadwalBox) titleJadwalBox.innerText = 'Atur Jam Presensi & Shift Pabrik';
         } else {
@@ -819,7 +810,6 @@
             if (modalStudentTitle) modalStudentTitle.innerText = 'Tambah Siswa Baru';
             if (inputNis) inputNis.placeholder = 'NIS Siswa...';
             if (inputKelas) inputKelas.placeholder = 'Nama Kelas...';
-            if (boxShift) boxShift.style.display = 'none';
             if (containerShiftPilihan) containerShiftPilihan.style.display = 'none';
             if (titleJadwalBox) titleJadwalBox.innerText = 'Atur Jam Presensi Sekolah';
         }
@@ -1042,7 +1032,41 @@
         }
     }
 
-    // ============ FUNGSI ABSEN (DIPERBAIKI) ============
+    // ✅ DETEKSI SHIFT OTOMATIS dari jam scan (Mode Pabrik)
+    function detectShiftFromTime(nowObj) {
+        const hour = nowObj.getHours();
+        if (hour >= 5 && hour < 13) {
+            return { key: 'shift1', label: 'Shift 1', jamMasuk: shiftSchedules.shift1.jamMasuk };
+        } else if (hour >= 13 && hour < 21) {
+            return { key: 'shift2', label: 'Shift 2', jamMasuk: shiftSchedules.shift2.jamMasuk };
+        } else {
+            return { key: 'shift3', label: 'Shift 3', jamMasuk: shiftSchedules.shift3.jamMasuk };
+        }
+    }
+
+    // ✅ HITUNG ULANG STATUS saat admin koreksi shift
+    function recalculateLogStatus(log) {
+        if (!log.shiftKey || !shiftSchedules[log.shiftKey]) {
+            return { status: log.status, keterangan: log.keteranganPulang };
+        }
+        const sched = shiftSchedules[log.shiftKey];
+        const [jamM, menitM] = sched.jamMasuk.split(':').map(Number);
+        const [jamScan, menitScan] = (log.waktu || '00:00').split(':').map(Number);
+        
+        const batasMenitTotal = jamM * 60 + menitM;
+        let scanMenitTotal = jamScan * 60 + menitScan;
+        
+        // Cross-midnight (Shift 3 masuk 23:00, scan jam 01:00)
+        if (jamM >= 12 && jamScan < 12) scanMenitTotal += 24 * 60;
+        
+        if (scanMenitTotal > batasMenitTotal) {
+            const telat = scanMenitTotal - batasMenitTotal;
+            return { status: 'Terlambat', keterangan: `Telat ${telat} mnt` };
+        }
+        return { status: 'Hadir', keterangan: '' };
+    }
+
+    // ============ FUNGSI ABSEN (OTOMATIS) ============
     function prosesAbsensi(identifier, metode, statusManual = null) {
         const student = students.find(s => s.nis === identifier.toString());
         const resultBox = (modePindai === 'qr') ? document.getElementById('scan-result') : document.getElementById('scan-result-wajah');
@@ -1115,12 +1139,14 @@
         let statusFinal = statusManual || 'Hadir';
         let catatan = '';
         let selisihTelat = 0;
+        let detectedShift = null;
 
         if (!statusManual) {
             let scheduleForStudent = activeSchedule;
-            if (currentSystemMode === 'pabrik' && student.shift) {
-                const key = student.shift.toLowerCase().replace('shift ', 'shift');
-                if (shiftSchedules[key]) scheduleForStudent = shiftSchedules[key];
+            
+            if (currentSystemMode === 'pabrik') {
+                detectedShift = detectShiftFromTime(nowObj);
+                scheduleForStudent = { jamMasuk: detectedShift.jamMasuk };
             }
             
             if (scheduleForStudent.jamMasuk) {
@@ -1128,9 +1154,7 @@
                 const batasMenitTotal = (jamM * 60) + menitM;
                 let sekarangMenitTotal = (nowObj.getHours() * 60) + nowObj.getMinutes();
                 
-                if (jamM >= 12 && nowObj.getHours() < 12) {
-                    sekarangMenitTotal += 24 * 60;
-                }
+                if (jamM >= 12 && nowObj.getHours() < 12) sekarangMenitTotal += 24 * 60;
                 
                 if (sekarangMenitTotal > batasMenitTotal) {
                     selisihTelat = sekarangMenitTotal - batasMenitTotal;
@@ -1147,7 +1171,9 @@
             nis: student.nis,
             nama: student.nama,
             kelas: student.kelas,
-            shift: currentSystemMode === 'pabrik' ? (student.shift || 'Reguler') : '-',
+            shift: currentSystemMode === 'pabrik' ? (detectedShift ? detectedShift.label : (student.shift || 'Reguler')) : '-',
+            shiftKey: currentSystemMode === 'pabrik' ? (detectedShift ? detectedShift.key : 'reguler') : null,
+            shiftManual: false,
             tanggal: todayDate,
             waktu: nowTimeStr,
             waktuPulang: '-',
@@ -1171,7 +1197,8 @@
             speakText(`${student.nama}, dicatat ${statusFinal}.`);
         }
 
-        tampilkanStatusProses(resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}`);
+        const shiftInfo = detectedShift ? ` [${detectedShift.label}]` : '';
+        tampilkanStatusProses(resultBox, student.nama, `${statusFinal} ${catatan ? '('+catatan+')' : ''}${shiftInfo}`);
     }
 
     function simpanSemuaLogLokal() {
@@ -1220,17 +1247,12 @@
             const matchSearch = student.nama.toLowerCase().includes(searchQuery) || student.nis.includes(searchQuery);
             return matchKelas && matchSearch;
         }).forEach((student) => {
-            const shiftBadge = (currentSystemMode === 'pabrik' && student.shift) ? `<span class="badge-shift">${student.shift}</span>` : '';
-
             const item = document.createElement('div');
             item.className = 'student-item';
             item.innerHTML = `
                 <div class="student-avatar">${student.nama.charAt(0)}</div>
                 <div style="flex:1; min-width: 0; padding-right: 4px;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <div style="font-weight:600; font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${student.nama}</div>
-                        ${shiftBadge}
-                    </div>
+                    <div style="font-weight:600; font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${student.nama}</div>
                     <div style="font-size:11px; color:var(--text-muted);">${student.nis} • ${student.kelas}</div>
                     <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
                         <button onclick="prosesAbsensi('${student.nis}', 'Manual', 'Hadir')" style="font-size:9px; padding:2px 6px; background:rgba(74,222,128,0.2); color:#4ade80; border:1px solid rgba(74,222,128,0.4); border-radius:4px; cursor:pointer;">Hadir</button>
@@ -1263,7 +1285,6 @@
         document.getElementById('input-nis').value = '';
         document.getElementById('input-nama').value = '';
         document.getElementById('input-kelas').value = '';
-        document.getElementById('input-student-shift').value = 'Reguler';
         tempFaceVector = null;
         document.getElementById('face-preview-box').innerHTML = 'Belum ada biometrik terdaftar';
         document.getElementById('student-modal').classList.add('active');
@@ -1329,7 +1350,6 @@
         const nis = document.getElementById('input-nis').value.trim();
         const nama = document.getElementById('input-nama').value.trim();
         const kelas = document.getElementById('input-kelas').value.trim() || 'Umum';
-        const shift = document.getElementById('input-student-shift').value;
         const targetId = document.getElementById('edit-index').value;
 
         if(!nis || !nama) return alert('ID/NIK dan Nama wajib diisi!');
@@ -1347,7 +1367,6 @@
             kelas, 
             mode: currentSystemMode 
         };
-        if (currentSystemMode === 'pabrik') studentData.shift = shift;
         if (tempFaceVector) studentData.faceVector = tempFaceVector;
 
         if(targetId === '') {
@@ -1386,7 +1405,6 @@
         document.getElementById('input-nis').value = s.nis;
         document.getElementById('input-nama').value = s.nama;
         document.getElementById('input-kelas').value = s.kelas;
-        document.getElementById('input-student-shift').value = s.shift || 'Reguler';
         tempFaceVector = s.faceVector || null;
         
         document.getElementById('face-preview-box').innerHTML = tempFaceVector ? '<span style="color: #4ade80; font-weight:700;"><i class="fa-solid fa-check"></i> Biometrik Terdaftar</span>' : 'Belum ada biometrik terdaftar';
@@ -1435,7 +1453,9 @@
                 nis: student.nis,
                 nama: student.nama,
                 kelas: student.kelas,
-                shift: currentSystemMode === 'pabrik' ? (student.shift || 'Reguler') : '-',
+                shift: currentSystemMode === 'pabrik' ? 'Alpa' : '-',
+                shiftKey: currentSystemMode === 'pabrik' ? 'reguler' : null,
+                shiftManual: true,
                 tanggal: todayDate,
                 waktu: nowTimeStr,
                 waktuPulang: '-',
@@ -1546,6 +1566,7 @@
             return;
         }
 
+        const showShiftCol = currentSystemMode === 'pabrik';
         let tableHTML = `
             <div class="table-responsive">
                 <table class="compact-table">
@@ -1554,6 +1575,7 @@
                             <th>NIS/NIK</th>
                             <th>Nama</th>
                             <th>Kelas</th>
+                            ${showShiftCol ? '<th>Shift</th>' : ''}
                             <th>Masuk</th>
                             <th>Pulang</th>
                             <th>Status</th>
@@ -1570,11 +1592,25 @@
             else if(log.status === 'Terlambat') colorStatus = '#f59e0b';
             else if(log.status === 'Alpa') colorStatus = '#f87171';
 
+            const shiftCell = showShiftCol 
+                ? `<td>
+                    <span class="badge-shift" 
+                          style="cursor:pointer; background: ${log.shiftManual ? 'rgba(56,189,248,0.2)' : 'rgba(212,175,55,0.15)'}; 
+                                 color: ${log.shiftManual ? '#38bdf8' : 'var(--primary)'};
+                                 border: 1px solid ${log.shiftManual ? '#38bdf8' : 'var(--border-color)'};" 
+                          onclick="ubahShiftLog('${log.id}')" 
+                          title="Klik untuk koreksi shift">
+                        ${log.shift || '-'} <i class="fa-solid fa-pen" style="font-size:8px;"></i>
+                    </span>
+                </td>`
+                : '';
+
             tableHTML += `
                 <tr>
                     <td><b>${log.nis}</b></td>
                     <td>${log.nama}</td>
                     <td>${log.kelas}</td>
+                    ${shiftCell}
                     <td>${log.waktu}</td>
                     <td>${log.waktuPulang}</td>
                     <td><span style="color: ${colorStatus}; font-weight: bold;">${log.status}</span></td>
@@ -1596,6 +1632,59 @@
             if (useFirebase && navigator.onLine) db.collection('attendance').doc(logId).delete();
             alert('✓ Catatan absensi berhasil dihapus.');
         }
+    }
+
+    function ubahShiftLog(logId) {
+        const log = attendanceLogs.find(l => l.id === logId);
+        if (!log) return;
+        
+        const shiftSekarang = log.shift || 'Reguler';
+        const pilihan = prompt(
+            `🔧 KOREKSI SHIFT\n\n` +
+            `Nama: ${log.nama}\n` +
+            `Tanggal: ${log.tanggal}\n` +
+            `Jam scan: ${log.waktu}\n` +
+            `Shift terdeteksi: ${shiftSekarang}\n\n` +
+            `Pilih shift yang BENAR:\n` +
+            `1 = Reguler\n` +
+            `2 = Shift 1 (Pagi)\n` +
+            `3 = Shift 2 (Sore)\n` +
+            `4 = Shift 3 (Malam)`,
+            "1"
+        );
+        
+        if (pilihan === null) return;
+        
+        let shiftBaru, shiftKeyBaru;
+        if (pilihan === '2') { shiftBaru = 'Shift 1'; shiftKeyBaru = 'shift1'; }
+        else if (pilihan === '3') { shiftBaru = 'Shift 2'; shiftKeyBaru = 'shift2'; }
+        else if (pilihan === '4') { shiftBaru = 'Shift 3'; shiftKeyBaru = 'shift3'; }
+        else if (pilihan === '1') { shiftBaru = 'Reguler'; shiftKeyBaru = 'reguler'; }
+        else { alert('❌ Pilihan tidak valid.'); return; }
+        
+        if (shiftBaru === shiftSekarang) {
+            alert('Tidak ada perubahan.');
+            return;
+        }
+        
+        log.shiftSebelumKoreksi = log.shift;
+        log.shift = shiftBaru;
+        log.shiftKey = shiftKeyBaru;
+        log.shiftManual = true;
+        
+        if (log.status === 'Hadir' || log.status === 'Terlambat') {
+            const newState = recalculateLogStatus(log);
+            log.status = newState.status;
+            log.keteranganPulang = newState.keterangan;
+        }
+        
+        simpanSemuaLogLokal();
+        if (useFirebase && navigator.onLine) {
+            db.collection('attendance').doc(log.id).set(log, { merge: true });
+        }
+        
+        playSuccessSound();
+        alert(`✓ Shift ${log.nama} dikoreksi ke ${shiftBaru}.\n📊 Status baru: ${log.status}`);
     }
 
     function exportBackupJSON() {
